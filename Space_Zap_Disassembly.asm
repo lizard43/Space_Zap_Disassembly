@@ -9631,220 +9631,241 @@ TEXT_SECOND_PLAYER:
 	 inc  bc
 	 ld   l,l
 	 inc  a
-	 ld   b,$CF
-	 pop  af
-	 jp   p,$F4F3
-	 dec  de
-	 inc  h
-	 ret  nc
-	 ld   c,d
-	 dec  de
-	 ld   c,$D0
-	 dec  h
-	 inc  bc
-	 dec  b
-	 dec  a
-	 dec  de
-	 ld   c,$D0
-	 add  hl,hl
-	 dec  de
-	 ld   bc,$4AD0
-	 dec  de
-	 ld   b,$D0
-	 add  hl,hl
-	 dec  de
-	 rlca
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 ld   (bc),a
-	 dec  a
-	 dec  de
-	 rlca
-	 ret  nc
-	 ld   d,e
-	 ld   b,(hl)
-	 dec  h
-	 dec  a
-	 dec  de
-	 ld   bc,$25D0
-	 daa
-	 inc  bc
-	 dec  h
-	 dec  a
-	 dec  de
-	 ld   (de),a
-	 ret  nc
-	 dec  h
-	 ld   c,$0D
-	 ld   (bc),a
-	 inc  bc
-	 dec  h
-	 dec  a
-	 dec  de
-	 inc  de
-	 ret  nc
-	 dec  h
-	 ld   c,$0D
-	 ld   (bc),a
-	 inc  bc
-	 dec  h
-	 dec  a
-	 dec  de
-	 inc  h
-	 ret  nc
-	 add  hl,hl
-	 ld   c,$10
-	 ld   hl,$040E
-	 ld   c,h
-	 daa
-	 inc  bc
-	 ld   l,e
-	 dec  a
-	 dec  bc
-	 ld   c,$09
-	 add  hl,bc
-	 inc  hl
-	 dec  bc
-	 dec  de
-	 nop
-	 ex   af,af'
-	 dec  bc
-	 inc  hl
-	 push af
-	 inc  h
-	 rrca
-	 dec  h
-	 rrca
-	 ld   c,$10
-	 ld   hl,$2605
-	 ld   c,$FF
-	 ld   c,h
-	 ld   c,$FF
-	 ld   b,h
-	 daa
-	 inc  bc
-	 ld   h,d
-	 dec  a
-	 dec  de
-	 ld   ($1BD4),a
-	 sbc  a,b
-	 ret  nc
-	 djnz $3D7A
-	 dec  c
-	 rrca
-	 dec  c
-	 rrca
-	 dec  c
-	 rrca
-	 dec  bc
-	 ld   c,$0C
-	 add  hl,bc
-	 inc  h
-	 cp   a
-	 dec  de
-	 nop
-	 ex   af,af'
-	 rrca
-	 ld   h,$0B
-	 inc  bc
-	 ld   h,a
-	 dec  a
-	 ret  nc
-	 di
-	 inc  (hl)
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 ld   c,c
-	 ld   c,$55
-	 dec  de
-	 adc  a,e
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 ld   bc,$4AD0
-	 dec  de
-	 inc  l
-	 call nc,$1B1D
-	 dec  l
-	 call nc,$1B1C
-	 adc  a,d
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,e
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,h
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,l
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,(hl)
-	 ret  nc
-	 dec  e
-	 ld   c,$3F
-	 dec  de
-	 add  hl,de
-	 call nc,$0E08
-	 rrca
-	 dec  de
-	 ld   a,(de)
-	 call nc,$1B08
-	 add  a,a
-	 ret  nc
-	 dec  e
-	 dec  de
-	 cp   d
-	 call nc,$1BD1
-	 di
-	 call nc,$1BD1
-	 sbc  a,b
-	 call nc,$98D1
-	 or   c
-	 sbc  a,a
-	 or   d
-	 dec  de
-	 ret
-	 out  ($F6),a
-	 sbc  a,h
-	 or   h
-	 and  d
-	 or   e
-	 dec  de
-	 inc  d
-	 ret  nc
-	 ld   c,d
-	 dec  de
-	 ld   c,l
-	 jp   nc,$1B92
-	 ld   ($F7D4),a
-	 dec  de
-	 ld   bc,$F8D2
-	 dec  de
-	 or   l
-	 pop  de
-	 or   l
-	 dec  de
-	 call c,$F9D4
-	 dec  de
-	 ret
-	 out  ($F6),a
-	 dec  de
-	 halt
-	 call nc,$1BFA
-	 or   a
-	 add  hl,sp
-	 dec  de
-	 add  a,b
-	 ret  nc
-	 djnz $3DE3
-	 ld   b,$F3
+; $3CDA: end of preceding compiled TERSE word.
+	 .DB $06 ; TERSE_EXIT (token $06)
+; $3CDB: RST 08 colon entry; cold start sets BC to the following byte.
+SPACE_ZAP_MAIN_COLON:
+	 .DB $CF ; RST $08
+; $3CDC-$3DE8: original main TERSE byte-token program.
+; 8-bit token -> native target through TERSE_TOKEN_VECTORS.
+; Inline byte/word literals and absolute branch addresses follow their tokens.
+SPACE_ZAP_MAIN_THREAD:
+	 .DB $F1 ; $3CDC token $F1 -> XT $2F67
+	 .DB $F2 ; $3CDD token $F2 -> XT $1311
+	 .DB $F3 ; $3CDE token $F3 -> XT $1F92
+	 .DB $F4 ; $3CDF token $F4 -> XT $1F20
+	 .DB $1B ; $3CE0 token $1B -> TERSE_LIT16
+	 .DW $D024 ; inline word
+	 .DB $4A ; $3CE3 token $4A -> XT $1F08
+	 .DB $1B ; $3CE4 token $1B -> TERSE_LIT16
+	 .DW $D00E ; inline word
+	 .DB $25 ; $3CE7 token $25 -> TERSE_BYTE_FETCH
+	 .DB $03 ; $3CE8 token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D05 ; 0BRANCH target $3D05
+	 .DB $1B ; $3CEB token $1B -> TERSE_LIT16
+	 .DW $D00E ; inline word
+	 .DB $29 ; $3CEE token $29 -> XT $1F10
+	 .DB $1B ; $3CEF token $1B -> TERSE_LIT16
+	 .DW $D001 ; inline word
+	 .DB $4A ; $3CF2 token $4A -> XT $1F08
+	 .DB $1B ; $3CF3 token $1B -> TERSE_LIT16
+	 .DW $D006 ; inline word
+	 .DB $29 ; $3CF6 token $29 -> XT $1F10
+	 .DB $1B ; $3CF7 token $1B -> TERSE_LIT16
+	 .DW $D007 ; inline word
+	 .DB $25 ; $3CFA token $25 -> TERSE_BYTE_FETCH
+	 .DB $03 ; $3CFB token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D02 ; 0BRANCH target $3D02
+	 .DB $1B ; $3CFE token $1B -> TERSE_LIT16
+	 .DW $D007 ; inline word
+	 .DB $53 ; $3D01 token $53 -> XT $1F18
+SPACE_ZAP_THREAD_3D02:
+	 .DB $46 ; $3D02 token $46 -> TERSE_BRANCH_ABSOLUTE
+	 .DW SPACE_ZAP_THREAD_3D25 ; BRANCH target $3D25
+SPACE_ZAP_THREAD_3D05:
+	 .DB $1B ; $3D05 token $1B -> TERSE_LIT16
+	 .DW $D001 ; inline word
+	 .DB $25 ; $3D08 token $25 -> TERSE_BYTE_FETCH
+	 .DB $27 ; $3D09 token $27 -> XT $0139
+	 .DB $03 ; $3D0A token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D25 ; 0BRANCH target $3D25
+	 .DB $1B ; $3D0D token $1B -> TERSE_LIT16
+	 .DW $D012 ; inline word
+	 .DB $25 ; $3D10 token $25 -> TERSE_BYTE_FETCH
+	 .DB $0E ; $3D11 token $0E -> TERSE_LIT8
+	 .DB $0D ; inline byte
+	 .DB $02 ; $3D13 token $02 -> XT $010C
+	 .DB $03 ; $3D14 token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D25 ; 0BRANCH target $3D25
+	 .DB $1B ; $3D17 token $1B -> TERSE_LIT16
+	 .DW $D013 ; inline word
+	 .DB $25 ; $3D1A token $25 -> TERSE_BYTE_FETCH
+	 .DB $0E ; $3D1B token $0E -> TERSE_LIT8
+	 .DB $0D ; inline byte
+	 .DB $02 ; $3D1D token $02 -> XT $010C
+	 .DB $03 ; $3D1E token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D25 ; 0BRANCH target $3D25
+	 .DB $1B ; $3D21 token $1B -> TERSE_LIT16
+	 .DW $D024 ; inline word
+	 .DB $29 ; $3D24 token $29 -> XT $1F10
+SPACE_ZAP_THREAD_3D25:
+	 .DB $0E ; $3D25 token $0E -> TERSE_LIT8
+	 .DB $10 ; inline byte
+	 .DB $21 ; $3D27 token $21 -> TERSE_PORT_IN
+	 .DB $0E ; $3D28 token $0E -> TERSE_LIT8
+	 .DB $04 ; inline byte
+	 .DB $4C ; $3D2A token $4C -> TERSE_BITWISE_AND
+	 .DB $27 ; $3D2B token $27 -> XT $0139
+	 .DB $03 ; $3D2C token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D6B ; 0BRANCH target $3D6B
+	 .DB $0B ; $3D2F token $0B -> TERSE_ZERO
+	 .DB $0E ; $3D30 token $0E -> TERSE_LIT8
+	 .DB $09 ; inline byte
+	 .DB $09 ; $3D32 token $09 -> TERSE_ONE
+	 .DB $23 ; $3D33 token $23 -> XT $016D
+	 .DB $0B ; $3D34 token $0B -> TERSE_ZERO
+	 .DB $1B ; $3D35 token $1B -> TERSE_LIT16
+	 .DW $0800 ; inline word
+	 .DB $0B ; $3D38 token $0B -> TERSE_ZERO
+	 .DB $23 ; $3D39 token $23 -> XT $016D
+	 .DB $F5 ; $3D3A token $F5 -> XT $01BF
+	 .DB $24 ; $3D3B token $24 -> TERSE_LOOP_INDEX
+	 .DB $0F ; $3D3C token $0F -> TERSE_ADD
+	 .DB $25 ; $3D3D token $25 -> TERSE_BYTE_FETCH
+	 .DB $0F ; $3D3E token $0F -> TERSE_ADD
+	 .DB $0E ; $3D3F token $0E -> TERSE_LIT8
+	 .DB $10 ; inline byte
+	 .DB $21 ; $3D41 token $21 -> TERSE_PORT_IN
+	 .DB $05 ; $3D42 token $05 -> TERSE_DROP
+	 .DB $26 ; $3D43 token $26 -> XT $0188
+	 .DB $0E ; $3D44 token $0E -> TERSE_LIT8
+	 .DB $FF ; inline byte
+	 .DB $4C ; $3D46 token $4C -> TERSE_BITWISE_AND
+	 .DB $0E ; $3D47 token $0E -> TERSE_LIT8
+	 .DB $FF ; inline byte
+	 .DB $44 ; $3D49 token $44 -> XT $00EE
+	 .DB $27 ; $3D4A token $27 -> XT $0139
+	 .DB $03 ; $3D4B token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D62 ; 0BRANCH target $3D62
+	 .DB $1B ; $3D4E token $1B -> TERSE_LIT16
+	 .DW $D432 ; inline word
+	 .DB $1B ; $3D51 token $1B -> TERSE_LIT16
+	 .DW $D098 ; inline word
+	 .DB $10 ; $3D54 token $10 -> TERSE_STORE
+	 .DB $24 ; $3D55 token $24 -> TERSE_LOOP_INDEX
+	 .DB $0D ; $3D56 token $0D -> TERSE_DUP
+	 .DB $0F ; $3D57 token $0F -> TERSE_ADD
+	 .DB $0D ; $3D58 token $0D -> TERSE_DUP
+	 .DB $0F ; $3D59 token $0F -> TERSE_ADD
+	 .DB $0D ; $3D5A token $0D -> TERSE_DUP
+	 .DB $0F ; $3D5B token $0F -> TERSE_ADD
+	 .DB $0B ; $3D5C token $0B -> TERSE_ZERO
+	 .DB $0E ; $3D5D token $0E -> TERSE_LIT8
+	 .DB $0C ; inline byte
+	 .DB $09 ; $3D5F token $09 -> TERSE_ONE
+	 .DB $24 ; $3D60 token $24 -> TERSE_LOOP_INDEX
+	 .DB $BF ; $3D61 token $BF -> XT $31EC
+SPACE_ZAP_THREAD_3D62:
+	 .DB $1B ; $3D62 token $1B -> TERSE_LIT16
+	 .DW $0800 ; inline word
+	 .DB $0F ; $3D65 token $0F -> TERSE_ADD
+	 .DB $26 ; $3D66 token $26 -> XT $0188
+SPACE_ZAP_THREAD_3D67:
+	 .DB $0B ; $3D67 token $0B -> TERSE_ZERO
+	 .DB $03 ; $3D68 token $03 -> TERSE_ZERO_BRANCH
+	 .DW SPACE_ZAP_THREAD_3D67 ; 0BRANCH target $3D67
+SPACE_ZAP_THREAD_3D6B:
+	 .DB $D0 ; $3D6B token $D0 -> XT $3591
+	 .DB $F3 ; $3D6C token $F3 -> XT $1F92
+	 .DB $34 ; $3D6D token $34 -> XT $219C
+	 .DB $1B ; $3D6E token $1B -> TERSE_LIT16
+	 .DW $D189 ; inline word
+	 .DB $49 ; $3D71 token $49 -> XT $0262
+	 .DB $0E ; $3D72 token $0E -> TERSE_LIT8
+	 .DB $55 ; inline byte
+	 .DB $1B ; $3D74 token $1B -> TERSE_LIT16
+	 .DW $D18B ; inline word
+	 .DB $08 ; $3D77 token $08 -> TERSE_BYTE_STORE
+	 .DB $1B ; $3D78 token $1B -> TERSE_LIT16
+	 .DW $D001 ; inline word
+	 .DB $4A ; $3D7B token $4A -> XT $1F08
+	 .DB $1B ; $3D7C token $1B -> TERSE_LIT16
+	 .DW $D42C ; inline word
+	 .DB $1D ; $3D7F token $1D -> XT $0266
+	 .DB $1B ; $3D80 token $1B -> TERSE_LIT16
+	 .DW $D42D ; inline word
+	 .DB $1C ; $3D83 token $1C -> TERSE_ZERO_WORD_AT_ADDRESS
+	 .DB $1B ; $3D84 token $1B -> TERSE_LIT16
+	 .DW $D08A ; inline word
+	 .DB $1D ; $3D87 token $1D -> XT $0266
+	 .DB $1B ; $3D88 token $1B -> TERSE_LIT16
+	 .DW $D08B ; inline word
+	 .DB $1D ; $3D8B token $1D -> XT $0266
+	 .DB $1B ; $3D8C token $1B -> TERSE_LIT16
+	 .DW $D08C ; inline word
+	 .DB $1D ; $3D8F token $1D -> XT $0266
+	 .DB $1B ; $3D90 token $1B -> TERSE_LIT16
+	 .DW $D08D ; inline word
+	 .DB $1D ; $3D93 token $1D -> XT $0266
+	 .DB $1B ; $3D94 token $1B -> TERSE_LIT16
+	 .DW $D08E ; inline word
+	 .DB $1D ; $3D97 token $1D -> XT $0266
+	 .DB $0E ; $3D98 token $0E -> TERSE_LIT8
+	 .DB $3F ; inline byte
+	 .DB $1B ; $3D9A token $1B -> TERSE_LIT16
+	 .DW $D419 ; inline word
+	 .DB $08 ; $3D9D token $08 -> TERSE_BYTE_STORE
+	 .DB $0E ; $3D9E token $0E -> TERSE_LIT8
+	 .DB $0F ; inline byte
+	 .DB $1B ; $3DA0 token $1B -> TERSE_LIT16
+	 .DW $D41A ; inline word
+	 .DB $08 ; $3DA3 token $08 -> TERSE_BYTE_STORE
+	 .DB $1B ; $3DA4 token $1B -> TERSE_LIT16
+	 .DW $D087 ; inline word
+	 .DB $1D ; $3DA7 token $1D -> XT $0266
+	 .DB $1B ; $3DA8 token $1B -> TERSE_LIT16
+	 .DW $D4BA ; inline word
+	 .DB $D1 ; $3DAB token $D1 -> XT $34A2
+	 .DB $1B ; $3DAC token $1B -> TERSE_LIT16
+	 .DW $D4F3 ; inline word
+	 .DB $D1 ; $3DAF token $D1 -> XT $34A2
+	 .DB $1B ; $3DB0 token $1B -> TERSE_LIT16
+	 .DW $D498 ; inline word
+	 .DB $D1 ; $3DB3 token $D1 -> XT $34A2
+	 .DB $98 ; $3DB4 token $98 -> XT $26D2
+	 .DB $B1 ; $3DB5 token $B1 -> XT $2D7D
+	 .DB $9F ; $3DB6 token $9F -> XT $26DC
+	 .DB $B2 ; $3DB7 token $B2 -> XT $2CB2
+	 .DB $1B ; $3DB8 token $1B -> TERSE_LIT16
+	 .DW $D3C9 ; inline word
+	 .DB $F6 ; $3DBB token $F6 -> XT $2DE3
+	 .DB $9C ; $3DBC token $9C -> XT $26D7
+	 .DB $B4 ; $3DBD token $B4 -> XT $2C4E
+	 .DB $A2 ; $3DBE token $A2 -> XT $26E1
+	 .DB $B3 ; $3DBF token $B3 -> XT $2D19
+	 .DB $1B ; $3DC0 token $1B -> TERSE_LIT16
+	 .DW $D014 ; inline word
+	 .DB $4A ; $3DC3 token $4A -> XT $1F08
+	 .DB $1B ; $3DC4 token $1B -> TERSE_LIT16
+	 .DW $D24D ; inline word
+	 .DB $92 ; $3DC7 token $92 -> XT $275C
+	 .DB $1B ; $3DC8 token $1B -> TERSE_LIT16
+	 .DW $D432 ; inline word
+	 .DB $F7 ; $3DCB token $F7 -> XT $3BFC
+	 .DB $1B ; $3DCC token $1B -> TERSE_LIT16
+	 .DW $D201 ; inline word
+	 .DB $F8 ; $3DCF token $F8 -> XT $2ED6
+	 .DB $1B ; $3DD0 token $1B -> TERSE_LIT16
+	 .DW $D1B5 ; inline word
+	 .DB $B5 ; $3DD3 token $B5 -> XT $2BC0
+	 .DB $1B ; $3DD4 token $1B -> TERSE_LIT16
+	 .DW $D4DC ; inline word
+	 .DB $F9 ; $3DD7 token $F9 -> XT $3452
+	 .DB $1B ; $3DD8 token $1B -> TERSE_LIT16
+	 .DW $D3C9 ; inline word
+	 .DB $F6 ; $3DDB token $F6 -> XT $2DE3
+	 .DB $1B ; $3DDC token $1B -> TERSE_LIT16
+	 .DW $D476 ; inline word
+	 .DB $FA ; $3DDF token $FA -> XT $3C6B
+	 .DB $1B ; $3DE0 token $1B -> TERSE_LIT16
+	 .DW $39B7 ; inline word
+	 .DB $1B ; $3DE3 token $1B -> TERSE_LIT16
+	 .DW $D080 ; inline word
+	 .DB $10 ; $3DE6 token $10 -> TERSE_STORE
+	 .DB $FB ; $3DE7 token $FB -> XT $0394
+	 .DB $06 ; $3DE8 token $06 -> TERSE_EXIT
+SPACE_ZAP_MAIN_TRAILING_BYTE:
+	 .DB $F3 ; byte between EXIT and vector table
 ; $3DEA-$3FE9: 256 indexed TERSE native execution vectors.
 ; Each byte token from BC selects one little-endian DW.
 ; Derived from the official ROM. Undefined tokens remain $FFFF.
