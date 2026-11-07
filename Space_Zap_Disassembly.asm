@@ -7,10 +7,40 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0015
+; RE version: v20261107-0016
 ;*******************************************************************************
 
 	 ORG 0000H
+
+; Z80 I/O ports. Names describe confirmed Space Zap hardware registers.
+; Read/write functions may differ on the same port address.
+VIDEO_MODE_WRITE             EQU $08 ; Astrocade video mode output
+VIDEO_INTERCEPT_READ         EQU $08 ; intercept feedback on video register read
+VIDEO_PALETTE_0              EQU $00 ; first color-table register
+VIDEO_PALETTE_4              EQU $04 ; fifth color-table register
+VIDEO_FUNCTION_CONTROL       EQU $0C ; Magic function-generator control
+VIDEO_INTERRUPT_FEEDBACK     EQU $0D ; interrupt feedback/acknowledge
+VIDEO_INTERRUPT_ENABLE       EQU $0E ; interrupt enable and mode
+VIDEO_INTERRUPT_LINE         EQU $0F ; interrupt scanline
+VIDEO_EXPAND_COLORS          EQU $19 ; 2-color to 2bpp expansion colors
+PATTERN_SOURCE_LO            EQU $78 ; pattern source address low byte
+PATTERN_SOURCE_HI            EQU $79 ; pattern source address high byte
+PATTERN_MODE                 EQU $7A ; pattern mode/transfer control
+PATTERN_SKIP                 EQU $7B ; pattern skip value
+PATTERN_DEST_HI              EQU $7C ; pattern destination address high byte
+PATTERN_WIDTH                EQU $7D ; pattern copy width
+PATTERN_HEIGHT_START         EQU $7E ; pattern copy height and start
+SOUND_MASTER_FREQUENCY       EQU $10 ; sound register 0, master oscillator frequency
+SOUND_NOISE_VOLUME           EQU $17 ; sound register 7, noise volume
+IO_INPUT_0                   EQU $10 ; custom IO input latch 0 (read, not tone register)
+IO_INPUT_1                   EQU $11 ; custom IO input latch 1
+IO_INPUT_2                   EQU $12 ; custom IO input latch 2
+PROTECTED_RAM_UNLOCK         EQU $5B ; protected RAM enable, requires A high byte $A5 on OUT
+BOOT_PORT_F8                 EQU $F8 ; startup output observed; function not established
+BOOT_PORT_FA                 EQU $FA ; startup output observed; function not established
+BOOT_PORT_FB                 EQU $FB ; startup output observed; function not established
+BOOT_PORT_FF                 EQU $FF ; startup output observed; function not established
+
 
 ; Reset: disable maskable interrupts (DI), then enter TERSE_COLD_START.
 TERSE_RESET_VECTOR:
@@ -30,17 +60,17 @@ TERSE_COLON_ENTRY:
 	 pop  bc
 	 jp   (iy)
 
-; Initialize arcade I/O, TERSE stacks (IX/SP) and BC/IY thread execution.
+; Configure video/startup I/O; initialize TERSE IX/SP stacks and BC/IY.
 TERSE_COLD_START:
 	 ld   a,$01
-	 out  ($08),a
+	 out  (VIDEO_MODE_WRITE),a ; $01 selects the startup video mode
 	 ld   a,$F0
-	 out  ($F8),a
+	 out  (BOOT_PORT_F8),a ; $F0, startup-only port; function unresolved
 	 ld   a,$0F
-	 out  ($FA),a
-	 out  ($FB),a
+	 out  (BOOT_PORT_FA),a ; $0F, startup-only port; function unresolved
+	 out  (BOOT_PORT_FB),a ; $0F, startup-only port; function unresolved
 	 ld   a,$01
-	 out  ($FF),a
+	 out  (BOOT_PORT_FF),a ; $01, startup-only port; function unresolved
 	 ld   ix,$D800
 	 ld   sp,$D780
 	 ld   bc,$3CDC
@@ -734,7 +764,7 @@ NATIVE_ATOMIC_RECORD_CHECK:
 	 ret
 	 di
 	 add  a,$09
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $032E
 
 ;==============================================================================
@@ -791,7 +821,7 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 jp   NATIVE_EVENT_DISPATCH_ENTRY_034B
 	 push bc
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 ei
 	 ld   a,($D097)
 	 or   a
@@ -822,7 +852,7 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 dec  ix
 	 ld   (ix+$00),c
 	 ld   a,($D08D)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 bit  0,(iy+$04)
 	 jp   z,$03F5
 	 ld   c,(iy+$00)
@@ -927,11 +957,11 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 push iy
 	 push ix
 	 ld   a,($D086)
-	 out  ($0F),a
+	 out  (VIDEO_INTERRUPT_LINE),a
 	 ld   a,$D0
 	 ld   i,a
 	 ld   a,$80
-	 out  ($0D),a
+	 out  (VIDEO_INTERRUPT_FEEDBACK),a
 	 ld   hl,$D089
 	 inc  (hl)
 	 ld   a,($D091)
@@ -963,12 +993,12 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 ld   h,(iy+$09)
 	 ld   l,(iy+$08)
 	 ld   a,($D08A)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 di
 	 jp   (hl)
 	 ei
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $0509
 	 di
 	 ld   a,($D090)
@@ -1010,7 +1040,7 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 jp   $05C7
 	 ld   a,($D08C)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 ld   a,($D089)
 	 sub  (iy+$0b)
 	 jp   z,$05BE
@@ -1024,7 +1054,7 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 call NATIVE_EVENT_DISPATCH_RECORD_02
 	 ei
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $055A
 	 ld   a,$00
 	 ld   ($D090),a
@@ -1047,7 +1077,7 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 ret
 	 di
 	 ld   a,$08
-	 out  ($0E),a
+	 out  (VIDEO_INTERRUPT_ENABLE),a
 	 im   2
 	 call $04D8
 	 di
@@ -1065,11 +1095,11 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 push iy
 	 push ix
 	 ld   a,($D087)
-	 out  ($0F),a
+	 out  (VIDEO_INTERRUPT_LINE),a
 	 ld   a,$D0
 	 ld   i,a
 	 ld   a,$82
-	 out  ($0D),a
+	 out  (VIDEO_INTERRUPT_FEEDBACK),a
 	 ld   a,($D091)
 	 cp   $01
 	 jp   nz,$061A
@@ -1104,12 +1134,12 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 ld   h,(iy+$09)
 	 ld   l,(iy+$08)
 	 ld   a,($D08B)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 di
 	 jp   (hl)
 	 ei
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $062C
 	 di
 	 ld   a,$00
@@ -1117,11 +1147,11 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 jp   $05D5
 	 push af
 	 ld   a,($D088)
-	 out  ($0F),a
+	 out  (VIDEO_INTERRUPT_LINE),a
 	 ld   a,$D0
 	 ld   i,a
 	 ld   a,$84
-	 out  ($0D),a
+	 out  (VIDEO_INTERRUPT_FEEDBACK),a
 	 ld   a,($D092)
 	 cp   $01
 	 jp   nz,$068E
@@ -1154,10 +1184,10 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 ;*******************************************************************************
 MAGIC_DRAW_BITMAP:
 	 ld   a,b
-	 out  ($19),a
+	 out  (VIDEO_EXPAND_COLORS),a
 	 ld   a,c
 	 res  2,a
-	 out  ($0C),a
+	 out  (VIDEO_FUNCTION_CONTROL),a
 	 ld   a,$24
 	 bit  7,c
 	 jp   z,$06AF
@@ -1174,19 +1204,19 @@ MAGIC_DRAW_BITMAP:
 	 res  2,a
 	 set  3,a
 	 ld   b,a
-	 out  ($7A),a
+	 out  (PATTERN_MODE),a ; set flip/rotate/transfer flags
 	 push hl
 	 push ix
 	 pop  hl
 	 ld   a,l
-	 out  ($78),a
+	 out  (PATTERN_SOURCE_LO),a
 	 ld   a,h
-	 out  ($79),a
+	 out  (PATTERN_SOURCE_HI),a
 	 pop  hl
 	 ld   a,l
-	 out  ($7B),a
+	 out  (PATTERN_SKIP),a
 	 ld   a,h
-	 out  ($7C),a
+	 out  (PATTERN_DEST_HI),a
 	 ld   h,e
 	 bit  3,c
 	 jp   z,$06E3
@@ -1209,12 +1239,12 @@ MAGIC_DRAW_BITMAP:
 	 jp   $0708
 	 ld   a,$50
 	 sub  h
-	 out  ($7B),a
+	 out  (PATTERN_SKIP),a
 	 ld   a,h
-	 out  ($7D),a
+	 out  (PATTERN_WIDTH),a
 	 ld   a,d
 	 dec  a
-	 out  ($7E),a
+	 out  (PATTERN_HEIGHT_START),a ; initiates the pattern transfer
 	 ret
 
 ;*******************************************************************************
@@ -1313,11 +1343,11 @@ REDRAW_SAVED_OBJECT:
 	 res  3,(iy+$24)
 	 bit  1,(iy+$24)
 	 jp   nz,$07D5
-	 in   a,($08)
+	 in   a,(VIDEO_INTERCEPT_READ)
 	 call $0755
 	 bit  0,(iy+$0f)
 	 jp   z,$07D2
-	 in   a,($08)
+	 in   a,(VIDEO_INTERCEPT_READ)
 	 and  a
 	 jp   z,$07D2
 	 set  1,(iy+$11)
@@ -2082,9 +2112,9 @@ REDRAW_SAVED_OBJECT:
 	 ld   e,$01
 	 ret
 	 ld   a,c
-	 out  ($0C),a
+	 out  (VIDEO_FUNCTION_CONTROL),a
 	 ld   a,b
-	 out  ($19),a
+	 out  (VIDEO_EXPAND_COLORS),a
 	 push bc
 	 push ix
 	 pop  bc
@@ -4515,10 +4545,10 @@ NATIVE_WRITE_RECORD_WORD:
 	 xor  a
 	 ld   i,a
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),e
 	 inc  hl
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),d
 	 pop  af
 	 ld   i,a
@@ -4545,7 +4575,7 @@ NATIVE_WRITE_RECORD_BYTE:
 	 xor  a
 	 ld   i,a
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),e
 	 pop  af
 	 ld   i,a
@@ -4629,7 +4659,7 @@ NATIVE_WRITE_PAIRED_RECORD_BYTE:
 	 xor  a
 	 ld   i,a
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),$00
 	 inc  hl
 	 dec  c
@@ -4700,9 +4730,7 @@ AUDIO_STATE_INIT_1FC3:
 	 ADD HL,DE
 	 LD (HL),$01
 
-; AUDIO_CLEAR_SOUND_REGISTERS  $1FC9
-; Clear eight sound-chip registers ($10-$17).
-; B counts registers; C walks backward from $17 to $10.
+; Clear sound registers $17..$10 and sound-state bytes at DE+$1A.
 ;==============================================================================
 AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
@@ -4754,13 +4782,11 @@ AUDIO_CLEAR_SOUND_REGISTERS:
 	 jp   nz,$20A8
 
 ;==============================================================================
-; AUDIO_MASTER_OSCILLATOR_STEP  $2034
-; Advance oscillator state and write sound register $10.
-; IY points to the active sound-effect state record.
+; Advance the oscillator using IY sound state; write sound port $10.
 ;==============================================================================
 AUDIO_MASTER_OSCILLATOR_STEP:
 	 ld   l,(iy+$1f)
-	 ld   c,$10
+	 ld   c,SOUND_MASTER_FREQUENCY
 	 ld   a,(iy+$1a)
 	 add  a,l
 	 ld   (iy+$1a),a
@@ -4814,12 +4840,10 @@ AUDIO_MASTER_OSCILLATOR_STEP:
 	 jp   nz,$20CE
 
 ;==============================================================================
-; AUDIO_NOISE_VOLUME_STEP  $20B5
-; Advance noise-envelope state and write sound register $17.
-; Uses IY+$24 as increment and IY+$27 as accumulator.
+; Advance IY noise-envelope accumulator and write noise volume ($17).
 ;==============================================================================
 AUDIO_NOISE_VOLUME_STEP:
-	 ld   c,$17
+	 ld   c,SOUND_NOISE_VOLUME
 	 ld   a,(iy+$27)
 	 add  a,(iy+$24)
 	 ld   (iy+$27),a
@@ -4898,9 +4922,7 @@ AUDIO_NOISE_VOLUME_STEP:
 	 jp   (iy)
 
 ;==============================================================================
-; AUDIO_WRITE_REGISTER_INDEXED  $213E
-; Write data byte to a selected sound register.
-; Input B = reverse register index; C = data. Port = $18-B.
+; Write sound register ($18-B) using data C; preserves input index in B.
 ;==============================================================================
 AUDIO_WRITE_REGISTER_INDEXED:
 	 ld   a,$18
@@ -7882,7 +7904,7 @@ TERSE_THREAD_2F62:
 	 DB $03 ; $2F63 -> $01FC
 	 DW TERSE_THREAD_2EE0 ; 0BRANCH
 	 DB $06 ; $2F66 -> $0044
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 bit  2,a
 	 jp   nz,$300A
 	 ld   d,a
@@ -7897,7 +7919,7 @@ TERSE_THREAD_2F62:
 	 ld   bc,$3FFF
 	 ld   (hl),a
 	 ldir
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 exx
 	 cp   d
 	 exx
@@ -7912,8 +7934,8 @@ TERSE_THREAD_2F62:
 	 inc  hl
 	 exx
 	 inc  a
-	 out  ($00),a
-	 out  ($04),a
+	 out  (VIDEO_PALETTE_0),a
+	 out  (VIDEO_PALETTE_4),a
 	 dec  de
 	 ld   a,d
 	 or   e
@@ -7931,7 +7953,7 @@ TERSE_THREAD_2F62:
 	 di
 	 xor  a
 	 ld   i,a
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 ld   d,a
 	 ld   e,$FF
 	 ld   hl,$0002
@@ -7940,7 +7962,7 @@ TERSE_THREAD_2F62:
 	 ld   de,$D001
 	 ld   bc,$07FF
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 exx
 	 ld   a,e
 	 exx
@@ -7948,7 +7970,7 @@ TERSE_THREAD_2F62:
 	 ld   a,(hl)
 	 ex   af,af'
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ex   af,af'
 	 ld   (de),a
 	 inc  de
@@ -7957,7 +7979,7 @@ TERSE_THREAD_2F62:
 	 ld   a,b
 	 or   c
 	 jp   nz,$2FCE
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 exx
 	 cp   d
 	 exx
@@ -7972,8 +7994,8 @@ TERSE_THREAD_2F62:
 	 inc  hl
 	 exx
 	 inc  a
-	 out  ($00),a
-	 out  ($04),a
+	 out  (VIDEO_PALETTE_0),a
+	 out  (VIDEO_PALETTE_4),a
 	 dec  de
 	 ld   a,d
 	 or   e
@@ -7994,7 +8016,7 @@ TERSE_THREAD_2F62:
 	 exx
 	 push bc
 	 ld   a,$10
-	 out  ($0C),a
+	 out  (VIDEO_FUNCTION_CONTROL),a
 	 exx
 	 push hl
 	 call $1248
@@ -8043,7 +8065,7 @@ TERSE_THREAD_2F62:
 	 pop  bc
 	 jp   (iy)
 	 ld   hl,$0000
-	 in   a,($12)
+	 in   a,(IO_INPUT_2)
 	 bit  5,a
 	 jp   nz,$3074
 	 ld   a,($D011)
@@ -9427,7 +9449,7 @@ TEXT_SECOND_PLAYER:
 	 ret  c
 	 rst  $38
 	 dec  de
-	 out  ($FF),a
+	 out  (BOOT_PORT_FF),a
 	 ld   d,(hl)
 	 ld   c,$0C
 	 dec  de
@@ -9677,7 +9699,7 @@ TEXT_SECOND_PLAYER:
 	 push de
 	 push bc
 	 ld   a,($D42C)
-	 out  ($04),a
+	 out  (VIDEO_PALETTE_4),a
 	 ld   a,($D001)
 	 or   a
 	 jp   nz,$3A41
@@ -9688,9 +9710,9 @@ TEXT_SECOND_PLAYER:
 	 ld   hl,$D41A
 	 or   a
 	 jp   nz,$39E3
-	 in   a,($12)
+	 in   a,(IO_INPUT_2)
 	 jp   $39E5
-	 in   a,($11)
+	 in   a,(IO_INPUT_1)
 	 and  $0F
 	 ld   e,a
 	 xor  (hl)
@@ -9754,7 +9776,7 @@ TEXT_SECOND_PLAYER:
 	 ld   de,$D004
 	 ex   de,hl
 	 call NATIVE_WRITE_PAIRED_RECORD_WORD
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 bit  3,a
 	 jp   nz,$3A71
 	 ld   e,$01
@@ -9765,7 +9787,7 @@ TEXT_SECOND_PLAYER:
 	 jp   nz,$3A79
 	 jp   $39A0
 	 ld   b,a
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 cp   b
 	 jp   nz,$3A79
 	 ld   hl,$D00F
@@ -9907,9 +9929,9 @@ TEXT_SECOND_PLAYER:
 	 call $3062
 	 or   a
 	 jp   nz,$3B97
-	 in   a,($12)
+	 in   a,(IO_INPUT_2)
 	 jp   $3B99
-	 in   a,($11)
+	 in   a,(IO_INPUT_1)
 	 ld   hl,$D419
 	 xor  (hl)
 	 bit  4,a
@@ -9951,7 +9973,7 @@ TEXT_SECOND_PLAYER:
 	 ld   a,($D001)
 	 or   a
 	 jp   z,$3BFA
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 ld   hl,$D425
 	 bit  4,a
 	 jp   nz,$3BF3
