@@ -4452,49 +4452,55 @@ ATTACK_SATELLITE_SEQUENCE:
 	 call $1EDE
 	 exx
 	 jp   (iy)
-	 rst  $08
-	 ld   c,$10
-	 ld   hl,$0B05
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 dec  de
-	 or   (hl)
-	 inc  bc
-	 ld   ($1B0B),hl
-	 add  a,b
-	 ld   a,(hl)
-	 dec  de
-	 add  a,b
-	 ld   bc,$0B22
-	 dec  de
-	 dec  bc
-	 push de
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 inc  hl
-	 inc  h
-	 dec  h
-	 rrca
-	 ld   h,$1B
-	 nop
-	 add  a,b
-	 dec  de
-	 add  a,b
-	 ld   a,(hl)
-	 inc  hl
-	 inc  h
-	 dec  h
-	 rrca
-	 ld   h,$27
-	 inc  bc
-	 sub  a
-	 rra
-	 ld   b,$21
-	 ld   ($1900),a
-	 ld   (hl),$01
-;==============================================================================
+; $1F92–$1FC2: audio-related native/TERSE command sequence.
+TERSE_COLON_1F92:
+	 RST $08
+TERSE_THREAD_1F93:
+	 DB $0E ; $1F93 token $0E -> $0059
+	 DB $10 ; inline byte
+	 DB $21 ; $1F95 token $21 -> $01D9
+	 DB $05 ; $1F96 token $05 -> $0094
+TERSE_THREAD_1F97:
+	 DB $0B ; $1F97 token $0B -> $007B
+	 DB $1B ; $1F98 token $1B -> $0050
+	 DW $D155 ; inline word
+	 DB $1B ; $1F9B token $1B -> $0050
+	 DW $03B6 ; inline word
+	 DB $22 ; $1F9E token $22 -> $0D43
+	 DB $0B ; $1F9F token $0B -> $007B
+	 DB $1B ; $1FA0 token $1B -> $0050
+	 DW $7E80 ; inline word
+	 DB $1B ; $1FA3 token $1B -> $0050
+	 DW $0180 ; inline word
+	 DB $22 ; $1FA6 token $22 -> $0D43
+	 DB $0B ; $1FA7 token $0B -> $007B
+	 DB $1B ; $1FA8 token $1B -> $0050
+	 DW $D50B ; inline word
+	 DB $1B ; $1FAB token $1B -> $0050
+	 DW $D155 ; inline word
+	 DB $23 ; $1FAE token $23 -> $016D
+	 DB $24 ; $1FAF token $24 -> $01B6
+	 DB $25 ; $1FB0 token $25 -> $00A4
+	 DB $0F ; $1FB1 token $0F -> $00BF
+	 DB $26 ; $1FB2 token $26 -> $0188
+	 DB $1B ; $1FB3 token $1B -> $0050
+	 DW $8000 ; inline word
+	 DB $1B ; $1FB6 token $1B -> $0050
+	 DW $7E80 ; inline word
+	 DB $23 ; $1FB9 token $23 -> $016D
+	 DB $24 ; $1FBA token $24 -> $01B6
+	 DB $25 ; $1FBB token $25 -> $00A4
+	 DB $0F ; $1FBC token $0F -> $00BF
+	 DB $26 ; $1FBD token $26 -> $0188
+	 DB $27 ; $1FBE token $27 -> $0139
+	 DB $03 ; $1FBF token $03 -> $01FC
+	 DW TERSE_THREAD_1F97 ; 0BRANCH
+	 DB $06 ; $1FC2 token $06 -> $0044
+; $1FC3–$1FC8: native address/control state initialization.
+AUDIO_STATE_INIT_1FC3:
+	 LD HL,$0032
+	 ADD HL,DE
+	 LD (HL),$01
 ; AUDIO_CLEAR_SOUND_REGISTERS  $1FC9
 ; Clear eight sound-chip registers ($10-$17).
 ; B counts registers; C walks backward from $17 to $10.
