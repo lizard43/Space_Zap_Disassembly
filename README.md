@@ -21,8 +21,7 @@ Space Zap is a four-direction space-defense arcade game. It runs on the Midway A
 | **[Active RE sprint plan](docs/SPRINT-PLAN.md)** | Remaining P0 hard RE and later WB runtime integration |
 | **[Source](Space_Zap_Disassembly.asm)** | Z80 disassembly and recovered TERSE words |
 | **[Linux build](build.sh)** / **[Windows build](build.bat)** | Assemble, package and verify |
-| **[ROMs](roms/)** | MAME files and original archive |
-| **[TERSE findings](docs/TERSE-ARCHITECTURE.md)** | Interpreter ABI and architecture |
+| **[ROMs](roms/)** | Generated MAME files and separately retained original reference |
 | **[TERSE word dictionary](docs/TERSE-WORD-DICTIONARY.md)** | Word definitions, stack effects, examples and native Z80 code |
 | **[Token vectors](docs/TERSE-TOKEN-VECTORS.md)** | All 256 native-vector slots |
 | **[Runtime architecture and comparison](docs/TERSE-ARCHITECTURE.md)** | Space Zap vs. cartridge threading and exact native primitives |
@@ -68,6 +67,14 @@ The four 4 KB sockets form one contiguous Z80 ROM image at `$0000–$3FFF`.
 | `0665.xx` | `$3000–$3FFF` | `3784228d` |
 
 Official ROM SHA-1 values are embedded in both build scripts and checked for every build.
+
+### ROM ZIP ownership
+
+- `roms/original/spacezap.zip` is the checked-in original reference archive.
+- `roms/spacezap.zip` is the current tracked MAME output path and is **recreated by the build**. The two ZIPs currently share the same Git blob SHA; they are byte-identical as committed, not alternative game releases.
+- The four extracted `roms/0662.01`–`roms/0665.xx` are the program ROMs. After rebuilding, the per-ROM SHA-1 checks—not the ZIP container checksum—prove original ROM identity.
+- The ASM `vYYYYMMDD-NNNN` field is the evolving RE source revision, not a distinct Space Zap game version. ZIP container metadata may change independently of its ROM contents.
+
 
 ## Memory map
 
