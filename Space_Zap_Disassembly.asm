@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0005
+; RE version: v20261107-0006
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -90,6 +90,10 @@ TERSE_LIT8:
 	 ld   h,a
 	 push hl
 	 jp   $0050
+; TERSE_ADD_INLINE16 $006B, token $94: ( n -- n+offset ).
+; Fetch a little-endian signed/unsigned 16-bit inline displacement from BC,
+; add to the top stack cell modulo 65536, then continue through IY.
+TERSE_ADD_INLINE16:
 	 pop  hl
 	 ld   a,(bc)
 	 inc  bc
@@ -103,6 +107,8 @@ TERSE_LIT8:
 	 pop  hl
 	 add  hl,hl
 	 jp   $006C
+; The entry at $0076 doubles HL before entering the shared inline-add body.
+; No vector-table token currently points to this entry.
 ; Push 16-bit zero.
 TERSE_ZERO:
 	 ld   hl,$0000
@@ -6291,9 +6297,8 @@ TERSE_COLON_2AF6:
 	 DB $2C ; $2B02 -> $2126
 	 DB $2B ; $2B03 -> $21A3
 	 DB $0B ; $2B04 -> $007B
-	 DB $94 ; $2B05 -> $006B
-	 DB $A9 ; $2B06 -> $110E
-	 DB $D1 ; $2B07 -> $34A2
+	 DB $94 ; $2B05 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $95 ; $2B08 -> $1188
 	 DB $0E ; $2B09 -> $0059
 	 DB $18 ; LIT8
@@ -6317,9 +6322,8 @@ TERSE_COLON_2AF6:
 	 DB $52 ; $2B1D -> $0217
 	 DB $0E ; $2B1E -> $0059
 	 DB $03 ; LIT8
-	 DB $94 ; $2B20 -> $006B
-	 DB $A9 ; $2B21 -> $110E
-	 DB $D1 ; $2B22 -> $34A2
+	 DB $94 ; $2B20 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $08 ; $2B23 -> $00B2
 	 DB $46 ; $2B24 -> $01F4
 	 DW TERSE_THREAD_2B29 ; BRANCH
@@ -6335,9 +6339,8 @@ TERSE_THREAD_2B29:
 	 DB $5B ; $2B2F -> $0E11
 	 DB $2B ; $2B30 -> $21A3
 	 DB $0B ; $2B31 -> $007B
-	 DB $94 ; $2B32 -> $006B
-	 DB $A4 ; $2B33 -> $2AF6
-	 DB $D1 ; $2B34 -> $34A2
+	 DB $94 ; $2B32 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $95 ; $2B35 -> $1188
 	 DB $0B ; $2B36 -> $007B
 	 DB $18 ; $2B37 -> $10EC
@@ -6362,9 +6365,8 @@ TERSE_THREAD_2B29:
 	 DB $3A ; $2B4B -> $00DE
 	 DB $0E ; $2B4C -> $0059
 	 DB $02 ; LIT8
-	 DB $94 ; $2B4E -> $006B
-	 DB $A4 ; $2B4F -> $2AF6
-	 DB $D1 ; $2B50 -> $34A2
+	 DB $94 ; $2B4E -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $08 ; $2B51 -> $00B2
 	 DB $46 ; $2B52 -> $01F4
 	 DW TERSE_THREAD_2B58 ; BRANCH
@@ -6381,9 +6383,8 @@ TERSE_THREAD_2B58:
 	 DB $8B ; $2B5E -> $2855
 	 DB $2B ; $2B5F -> $21A3
 	 DB $0B ; $2B60 -> $007B
-	 DB $94 ; $2B61 -> $006B
-	 DB $A9 ; $2B62 -> $110E
-	 DB $D1 ; $2B63 -> $34A2
+	 DB $94 ; $2B61 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $95 ; $2B64 -> $1188
 	 DB $1B ; $2B65 -> $0050
 	 DW $FFE8 ; LIT16
@@ -6408,9 +6409,8 @@ TERSE_THREAD_2B58:
 	 DB $52 ; $2B7B -> $0217
 	 DB $0E ; $2B7C -> $0059
 	 DB $03 ; LIT8
-	 DB $94 ; $2B7E -> $006B
-	 DB $A9 ; $2B7F -> $110E
-	 DB $D1 ; $2B80 -> $34A2
+	 DB $94 ; $2B7E -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $08 ; $2B81 -> $00B2
 	 DB $46 ; $2B82 -> $01F4
 	 DW TERSE_THREAD_2B88 ; BRANCH
@@ -6427,9 +6427,8 @@ TERSE_THREAD_2B88:
 	 DB $BE ; $2B8E -> $1692
 	 DB $2B ; $2B8F -> $21A3
 	 DB $0B ; $2B90 -> $007B
-	 DB $94 ; $2B91 -> $006B
-	 DB $A4 ; $2B92 -> $2AF6
-	 DB $D1 ; $2B93 -> $34A2
+	 DB $94 ; $2B91 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $95 ; $2B94 -> $1188
 	 DB $0B ; $2B95 -> $007B
 	 DB $18 ; $2B96 -> $10EC
@@ -6457,9 +6456,8 @@ TERSE_THREAD_2B88:
 	 DB $3A ; $2BAE -> $00DE
 	 DB $0E ; $2BAF -> $0059
 	 DB $02 ; LIT8
-	 DB $94 ; $2BB1 -> $006B
-	 DB $A4 ; $2BB2 -> $2AF6
-	 DB $D1 ; $2BB3 -> $34A2
+	 DB $94 ; $2BB1 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $08 ; $2BB4 -> $00B2
 	 DB $46 ; $2BB5 -> $01F4
 	 DW TERSE_THREAD_2BBB ; BRANCH
@@ -6484,18 +6482,16 @@ TERSE_COLON_2BC0:
 	 DB $1B ; $2BC6 -> $0050
 	 DW $17D2 ; LIT16
 	 DB $0B ; $2BC9 -> $007B
-	 DB $94 ; $2BCA -> $006B
-	 DB $A4 ; $2BCB -> $2AF6
-	 DB $D1 ; $2BCC -> $34A2
+	 DB $94 ; $2BCA -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $0E ; $2BCD -> $0059
 	 DB $05 ; LIT8
 	 DB $16 ; $2BCF -> $015F
 	 DB $1B ; $2BD0 -> $0050
 	 DW $17D7 ; LIT16
 	 DB $0B ; $2BD3 -> $007B
-	 DB $94 ; $2BD4 -> $006B
-	 DB $A9 ; $2BD5 -> $110E
-	 DB $D1 ; $2BD6 -> $34A2
+	 DB $94 ; $2BD4 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $0E ; $2BD7 -> $0059
 	 DB $05 ; LIT8
 	 DB $16 ; $2BD9 -> $015F
@@ -6504,17 +6500,15 @@ TERSE_THREAD_2BDA:
 	 DB $38 ; LIT8
 	 DB $0E ; $2BDC -> $0059
 	 DB $03 ; LIT8
-	 DB $94 ; $2BDE -> $006B
-	 DB $A9 ; $2BDF -> $110E
-	 DB $D1 ; $2BE0 -> $34A2
+	 DB $94 ; $2BDE -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $08 ; $2BE1 -> $00B2
 	 DB $0E ; $2BE2 -> $0059
 	 DB $1D ; LIT8
 	 DB $0E ; $2BE4 -> $0059
 	 DB $02 ; LIT8
-	 DB $94 ; $2BE6 -> $006B
-	 DB $A4 ; $2BE7 -> $2AF6
-	 DB $D1 ; $2BE8 -> $34A2
+	 DB $94 ; $2BE6 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $08 ; $2BE9 -> $00B2
 	 DB $1B ; $2BEA -> $0050
 	 DW $D418 ; LIT16
