@@ -13,9 +13,9 @@ The first 16 KB of Space Zap is a Z80 game program with a full
 | Colon entry | `$0008` | Preserve previous BC on IX, POP BC from Z80 RST return address, resume IY |
 | Cold startup | `$0015` | Set arcade I/O, IX=`$D800`, SP=`$D780`, BC=`$3CDC`, IY=`$0035` |
 | Indexed NEXT | `$0035` | Consume **one byte**, double index, select a two-byte native handler address at `$3DEA` |
-| EXIT | `$0050` | Restore prior BC through IX, return to IY |
-| LIT16 | `$005F` | Fetch little-endian inline word, push HL |
-| LIT8 | `$006A` | Fetch zero-extended inline byte, push HL |
+| EXIT | `$0044` | Restore prior BC through IX, return to IY |
+| LIT16 | `$0050` | Fetch little-endian inline word, push HL |
+| LIT8 | `$0059` | Fetch zero-extended inline byte, push HL |
 | Token address table | `$3DEA` | 256 × 16-bit addresses, filling `$3DEA–$3FE9` |
 | Initial stream | `$3CDC` | Starting token stream pointer |
 
@@ -51,9 +51,9 @@ JP (HL)
 | Token dispatch | ROM table lookup `$3DEA + 2×token` | Native address already in thread |
 | NEXT | `$0035` | Cartridge `$2050` |
 | Colon entry | `$0008` | Cartridge `$2019` |
-| EXIT | `$0050` | Cartridge `$2057` |
-| LIT16 | `$005F` | Cartridge `$2063` |
-| LIT8 | `$006A` | Cartridge `$206C` |
+| EXIT | `$0044` | Cartridge `$2057` |
+| LIT16 | `$0050` | Cartridge `$2063` |
+| LIT8 | `$0059` | Cartridge `$206C` |
 | Thread IP | BC | BC |
 | Control stack | IX | IX |
 | Data/native stack | SP | SP |
