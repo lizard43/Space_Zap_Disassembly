@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0012
+; RE version: v20261107-0013
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -4496,11 +4496,15 @@ ATTACK_SATELLITE_SEQUENCE:
         DW      ATTACK_SATELLITE_2
         DB      $00
         DW      ATTACK_SATELLITE_SEQUENCE
+; $1EA1: HL += $24 while preserving DE.
+NATIVE_ADVANCE_RECORD_24:
         push de
 	 ld   de,$0024
 	 add  hl,de
 	 pop  de
 	 ret
+; $1EA8: write DE through $5B-mapped memory, preserve I.
+NATIVE_WRITE_RECORD_WORD:
 	 ld   a,i
 	 push af
 	 xor  a
@@ -4514,17 +4518,21 @@ ATTACK_SATELLITE_SEQUENCE:
 	 pop  af
 	 ld   i,a
 	 ret
+; $1EBB: write two word fields spaced $24 apart, preserving IFF.
+NATIVE_WRITE_PAIRED_RECORD_WORD:
 	 ld   a,i
 	 push af
 	 di
-	 call $1EA8
+	 call NATIVE_WRITE_RECORD_WORD
 	 dec  hl
-	 call $1EA1
-	 call $1EA8
+	 call NATIVE_ADVANCE_RECORD_24
+	 call NATIVE_WRITE_RECORD_WORD
 	 pop  af
 	 jp   po,$1ECE
 	 ei
 	 ret
+; $1ECF: write E through $5B-mapped memory, preserve I.
+NATIVE_WRITE_RECORD_BYTE:
 	 ld   a,i
 	 push af
 	 xor  a
@@ -4535,40 +4543,42 @@ ATTACK_SATELLITE_SEQUENCE:
 	 pop  af
 	 ld   i,a
 	 ret
+; $1EDE: write two byte fields spaced $24 apart, preserving IFF.
+NATIVE_WRITE_PAIRED_RECORD_BYTE:
 	 ld   a,i
 	 push af
 	 di
-	 call $1ECF
-	 call $1EA1
-	 call $1ECF
+	 call NATIVE_WRITE_RECORD_BYTE
+	 call NATIVE_ADVANCE_RECORD_24
+	 call NATIVE_WRITE_RECORD_BYTE
 	 pop  af
 	 jp   po,$1EF0
 	 ei
 	 ret
 	 pop  hl
 	 pop  de
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 jp   (iy)
 	 pop  hl
 	 ld   de,$0000
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 jp   (iy)
 	 pop  hl
 	 pop  de
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 pop  hl
 	 ld   e,$01
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 pop  hl
 	 ld   e,$00
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 pop  hl
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 exx
 	 ld   a,r
@@ -4623,11 +4633,11 @@ ATTACK_SATELLITE_SEQUENCE:
 	 ei
 	 ld   hl,$D001
 	 ld   e,$01
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D00F
 	 ld   c,$10
 	 in   e,(c)
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 exx
 	 jp   (iy)
 
@@ -5559,7 +5569,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 add  hl,de
 	 ld   de,$D017
 	 ex   de,hl
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 ld   a,($D011)
 	 or   a
 	 jp   z,$25AA
@@ -5570,14 +5580,14 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   hl,$D013
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,($D01B)
 	 ld   e,l
 	 ld   d,h
 	 add  hl,de
 	 ld   de,$D01B
 	 ex   de,hl
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 call $2546
 	 jp   $25CE
 	 ld   hl,($D015)
@@ -5587,14 +5597,14 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   hl,$D012
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,($D019)
 	 ld   e,l
 	 ld   d,h
 	 add  hl,de
 	 ld   de,$D019
 	 ex   de,hl
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 call $2546
 	 jp   (iy)
 	 rst  $08
@@ -9629,13 +9639,13 @@ TEXT_SECOND_PLAYER:
 	 add  hl,de
 	 ex   de,hl
 	 ld   hl,$D006
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 exx
 	 ret
 	 exx
 	 ld   hl,$D00D
 	 ld   e,$01
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 exx
 	 ret
 	 ld   de,$D155
@@ -9735,13 +9745,13 @@ TEXT_SECOND_PLAYER:
 	 jp   $0000
 	 ld   de,$D004
 	 ex   de,hl
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 in   a,($10)
 	 bit  3,a
 	 jp   nz,$3A71
 	 ld   e,$01
 	 ld   hl,$D00E
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   $39A0
 	 bit  2,a
 	 jp   nz,$3A79
@@ -9761,12 +9771,12 @@ TEXT_SECOND_PLAYER:
 	 jp   z,$3A9D
 	 res  0,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ex   af,af'
 	 jp   $3AB6
 	 set  0,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 call $3995
 	 exx
 	 ld   a,($D00C)
@@ -9786,12 +9796,12 @@ TEXT_SECOND_PLAYER:
 	 jp   z,$3ACC
 	 res  1,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ex   af,af'
 	 jp   $3AF4
 	 set  1,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 call $3995
 	 exx
 	 ld   a,($D00C)
@@ -9820,7 +9830,7 @@ TEXT_SECOND_PLAYER:
 	 ld   hl,$D009
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   a,b
 	 cp   $FF
 	 jp   z,$3B25
@@ -9830,12 +9840,12 @@ TEXT_SECOND_PLAYER:
 	 ld   hl,$D009
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   $3B25
 	 ld   hl,$D00B
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   c,$13
 	 xor  a
 	 ld   b,a
@@ -9844,7 +9854,7 @@ TEXT_SECOND_PLAYER:
 	 jp   z,$3B43
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D008
 	 ld   a,$0A
 	 cp   (hl)
@@ -9856,17 +9866,17 @@ TEXT_SECOND_PLAYER:
 	 jp   z,$3B55
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D008
 	 ld   e,$14
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 xor  a
 	 ld   hl,$D00A
 	 cp   (hl)
 	 jp   z,$3B70
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D00A
 	 ld   a,$0A
 	 cp   (hl)
@@ -9878,14 +9888,14 @@ TEXT_SECOND_PLAYER:
 	 jp   z,$3B82
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D00A
 	 ld   e,$14
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 in   a,(c)
 	 ld   e,b
 	 ld   hl,$D00C
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 call $3062
 	 or   a
 	 jp   nz,$3B97
