@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0023
+; RE version: v20261107-0024
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -1467,7 +1467,7 @@ OBJECT_ADVANCE_STATE:
 	 ld   (iy+$1d),d
 	 ld   (iy+$1c),e
 	 jp   z,$08F3
-	 call $07DA
+	 call OBJECT_COMPUTE_DRAW_POSITION
 	 call NATIVE_EVENT_RECORD_COUNT_LIMIT
 	 ld   a,(iy+$11)
 	 and  a
@@ -1975,14 +1975,14 @@ OBJECT_CHECK_BOUNDARIES:
 	 jp   z,$0CC9
 	 call $0C5A
 	 bit  3,a
-	 call nz,$0978
+	 call nz,OBJECT_CHECK_BOUNDARIES
 	 bit  2,a
 	 call nz,$0A4A
 	 bit  0,(iy+$25)
 	 call nz,$09F5
 	 bit  6,a
 	 call nz,$0951
-	 jp   $0852
+	 jp   OBJECT_ADVANCE_STATE
 	 push iy
 	 ld   iy,($D098)
 	 ld   hl,$0C93
@@ -2825,7 +2825,7 @@ OBJECT_CHECK_BOUNDARIES:
 	 ld   e,(iy+$1c)
 	 ld   h,(iy+$1f)
 	 ld   l,(iy+$1e)
-	 call $07DA
+	 call OBJECT_COMPUTE_DRAW_POSITION
 	 call $0755
 	 pop  af
 	 jp   po,$12FF
