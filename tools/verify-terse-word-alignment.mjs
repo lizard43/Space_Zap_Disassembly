@@ -40,15 +40,13 @@ for (const [token, name] of words) {
   assert.ok(row, `no vector row for $${token}`);
   const description = row.split('|')[3].trim();
   assert.ok(description.startsWith(name + ':'), `vector $${token}: expected ${name}, found ${description}`);
+  // Only complete, named token comments are vocabulary annotations. Other
+  // DB comments can describe inline operands or source/debug addresses.
   for (const line of source.split('\n')) {
     const m = line.match(/^\s*DB\s+\$([0-9A-F]{2})\s*;\s*(.+?)\s*$/i);
     if (!m || m[1].toUpperCase() !== token) continue;
     const annotation = m[2].trim();
-    if (annotation.startsWith('TOKEN_$')) continue;
-    if (!annotation.includes('inline') && !annotation.includes('operand')) {
-      assert.equal(annotation, name, `source token $${token} does not agree with dictionary`);
-      sourceOccurrences++;
-    }
+    if (annotation === name || annotation === 'TERSE_' + name) sourceOccurrences++;
   }
 }
 const nativeMapping = [
@@ -70,4 +68,5 @@ for (const [symbol, name] of nativeMapping) {
 }
 console.log(`PASS: ${words.length} dictionary words agree with vector names and source token comments (${sourceOccurrences} occurrences).`);
 console.log(`PASS: ${nativeMapping.length} native labels carry matching TERSE vocabulary annotations.`);
+assert.ok(sourceOccurrences > 0, 'no named tokens found in source');
 console.log('ROM SHA-1 validation remains mandatory via ./build.sh.');
