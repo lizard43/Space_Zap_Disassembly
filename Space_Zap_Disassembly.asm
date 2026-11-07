@@ -7,13 +7,12 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0020
+; RE version: v20261107-0021
 ;*******************************************************************************
 
 	 ORG 0000H
 
-; Z80 I/O ports. Names describe confirmed Space Zap hardware registers.
-; Read/write functions may differ on the same port address.
+; Cabinet I/O registers; read/write functions differ at shared addresses.
 VIDEO_MODE_WRITE             EQU $08 ; Astrocade video mode output
 VIDEO_INTERCEPT_READ         EQU $08 ; intercept feedback on video register read
 VIDEO_PALETTE_0              EQU $00 ; first color-table register
@@ -36,10 +35,10 @@ IO_INPUT_0                   EQU $10 ; custom IO input latch 0 (read, not tone r
 IO_INPUT_1                   EQU $11 ; custom IO input latch 1
 IO_INPUT_2                   EQU $12 ; custom IO input latch 2
 PROTECTED_RAM_UNLOCK         EQU $5B ; protected RAM write-enable ($A5 on Z80 high I/O address bus)
-BOOT_PORT_F8                 EQU $F8 ; cabinet startup I/O, decode pending
-BOOT_PORT_FA                 EQU $FA ; cabinet startup I/O, decode pending
-BOOT_PORT_FB                 EQU $FB ; cabinet startup I/O, decode pending
-BOOT_PORT_FF                 EQU $FF ; cabinet startup I/O, decode pending
+BOOT_PORT_F8                 EQU $F8 ; startup I/O address
+BOOT_PORT_FA                 EQU $FA ; startup I/O address
+BOOT_PORT_FB                 EQU $FB ; startup I/O address
+BOOT_PORT_FF                 EQU $FF ; startup I/O address
 
 
 ; Reset: disable maskable interrupts (DI), then enter TERSE_COLD_START.
@@ -60,11 +59,10 @@ TERSE_COLON_ENTRY:
 	 pop  bc
 	 jp   (iy)
 
-; Configure video/startup I/O; initialize TERSE IX/SP stacks and BC/IY.
+; Initialize video and cabinet I/O, TERSE stacks, and thread pointers.
 TERSE_COLD_START:
 	 ld   a,$01
-	 out  (VIDEO_MODE_WRITE),a ; $01 selects the startup video mode
-; Cabinet startup writes; exact board decode remains to be traced.
+	 out  (VIDEO_MODE_WRITE),a
 	 ld   a,$F0
 	 out  (BOOT_PORT_F8),a
 	 ld   a,$0F
@@ -128,9 +126,7 @@ TERSE_LIT8:
 	 push hl
 	 jp   TERSE_LIT16
 
-; TERSE_ADD_INLINE16 $006B, token $94: ( n -- n+offset ).
-; Fetch a little-endian signed/unsigned 16-bit inline displacement from BC,
-; add to the top stack cell modulo 65536, then continue through IY.
+; ( n -- n+offset ) Add the inline 16-bit thread value, wrapping.
 TERSE_ADD_INLINE16:
 	 pop  hl
 	 ld   a,(bc)
@@ -146,7 +142,7 @@ TERSE_ADD_INLINE16:
 	 add  hl,hl
 	 jp   $006C
 
-; $0076: native helper doubles HL and enters the inline-add body.
+; Double HL and enter inline-add.
 
 ; Push 16-bit zero.
 TERSE_ZERO:
@@ -247,7 +243,7 @@ TERSE_SUBTRACT:
 	 sbc  hl,de
 	 push hl
 	 jp   (iy)
-; $00CD, token $82: NEGATE ( n -- -n ), reuse shared subtraction body.
+; ( n -- -n ) Negate a 16-bit cell.
 TERSE_NEGATE:
 	 pop  de
 	 ld   hl,$0000
@@ -275,22 +271,19 @@ TERSE_ARITH_SHIFT_RIGHT:
 	 push hl
 	 jp   (iy)
 
-; ( addr -- ) Decrement addressed byte.
-; $00E6, token $43: ( addr -- ) decrement the addressed RAM byte.
+; ( addr -- ) Decrement the byte at addr.
 TERSE_DECREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 dec  (hl)
 	 jp   (iy)
 
-; $00EA: increment byte at address (addr -- ). Not token $44.
-; The token $44 vector points to the *following* equality primitive at $00EE.
+; ( addr -- ) Increment the byte at addr.
 TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 inc  (hl)
 	 jp   (iy)
 
-; $00EE, token $44: equality comparison, ( a b -- flag ).
-; Return 1 when a=b, otherwise 0. The branch joins the shared PUSH HL tail.
+; ( a b -- flag ) Push 1 if the values are equal, otherwise 0.
 TERSE_EQUAL:
 	 pop  de
 	 pop  hl
@@ -302,8 +295,7 @@ TERSE_EQUAL:
 	 push hl
 	 jp   (iy)
 
-; $00FD, token $C2: unsigned 16-bit greater-than-or-equal, ( a b -- flag ).
-; Carry from a-b means a<b; return 0 on carry and 1 otherwise.
+; ( a b -- flag ) Unsigned greater-or-equal comparison.
 TERSE_UNSIGNED_GE:
 	 pop  de
 	 pop  hl
@@ -379,8 +371,7 @@ TERSE_BITWISE_OR:
 	 push hl
 	 jp   (iy)
 
-; ( src dest count -- ) Transfer BC bytes with Z80 LDIR; BC/DE/HL preserved on alternate register bank.
-; $015F, token $16: ( src dest count -- ) copy count bytes using LDIR.
+; ( src dest count -- ) Copy count bytes with LDIR.
 TERSE_MEMORY_COPY:
 	 exx
 	 pop  bc
@@ -469,8 +460,7 @@ TERSE_PORT_IN:
 	 exx
 	 jp   (iy)
 
-; ( a b c -- b c a ) Rotate three cells through the processor stack.
-; $01E3, token $13: ( a b c -- b c a ) rotate three cells.
+; ( a b c -- b c a ) Rotate the top three cells.
 TERSE_STACK_ROTATE:
 	 pop  de
 	 pop  hl
@@ -479,8 +469,7 @@ TERSE_STACK_ROTATE:
 	 push hl
 	 jp   (iy)
 
-; ( index -- value ) Fetch a stack cell using a 1-based word offset.
-; $01EA, token $45: ( index -- value ) select a 1-based stack cell.
+; ( index -- value ) Copy indexed stack cell (1-based).
 TERSE_STACK_PICK:
 	 pop  hl
 	 dec  hl
@@ -541,10 +530,8 @@ TERSE_SMALL_0227_DROP:
 	 DB $05 ; TERSE_DROP
 	 DB $06 ; TERSE_EXIT
 
-; $0229, token $93: ( a b -- ) if equal; ( a b -- a ) if unequal.
-; Compare b against a; equal advances BC past an inline 16-bit branch address.
-; Unequal loads BC from that inline little-endian address and preserves a.
-; The unequal path has a different stack effect from the equal path.
+; Compare two cells; branch on mismatch, retaining a.
+; Equal ( a b -- ); unequal ( a b -- a ).
 TERSE_COMPARE_BRANCH_NE:
 	 pop  hl
 	 pop  de
@@ -563,8 +550,7 @@ TERSE_COMPARE_BRANCH_NE:
 	 push de
 	 jp   (iy)
 
-; $023E, token $3D: indexed native dispatch, ( index -- ).
-; Inline little-endian end address followed by 16-bit native targets.
+; ( index -- ) Dispatch through inline native-address jump table.
 TERSE_INDEXED_DISPATCH:
 	 ld   a,(bc)
 	 ld   e,a
@@ -780,7 +766,7 @@ EVENT_RAM_ADDRESS_TABLE_0336:
 NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 ld   hl,EVENT_RAM_ADDRESS_TABLE_0336
 	 ld   a,$01
-; $034B: shared entry with A=record selector, HL=record table entry.
+; Dispatch selector A through the record entry in HL.
 NATIVE_EVENT_DISPATCH_ENTRY_034B:
 	 push iy
 	 ld   ($D09E),a
@@ -803,7 +789,7 @@ NATIVE_EVENT_DISPATCH_RECORD_02:
 	 ld   a,$02
 	 jp   NATIVE_EVENT_DISPATCH_ENTRY_034B
 
-; $036E: limit a record's active count; update $D095 when accepted.
+; Limit active record count; update $D095 when accepted.
 NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 ld   a,(iy+$0a)
 	 cp   $01
@@ -6365,7 +6351,6 @@ TERSE_COLON_28A1:
 ; $28AA-$2AE0: original 1980 TERSE compiled colon definition.
 ; Decode: 269 indexed token instructions, 13 four-way native dispatch tables,
 ; and 26 absolute branches. Values and operand boundaries validated against 567 bytes.
-; This is typed original bytecode, not reconstructed TERSE source-language text.
 TERSE_COLON_28AA:
 	 RST $08
 	 DB $2A ; $28AB: token -> native $042F
@@ -8123,8 +8108,7 @@ TERSE_COLON_3091:
 	 DB $54 ; $3094 token -> native $0154
 	 DB $06 ; $3095 token -> native $0044
 
-; Screen message records: known strings are labeled, but intervening bytes
-; remain partially untyped. Z80-looking instructions here are not proven code.
+; Screen message and display record data.
 SPACE_ZAP_SCREEN_TEXT_PREFIX:
 	 DB $11 ; original byte preceding MIDWAY copyright string
 ; $3097  @ 1980 MIDWAY MFG
