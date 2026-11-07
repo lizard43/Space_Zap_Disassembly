@@ -2,7 +2,7 @@
 
 A programmer's dictionary of **recovered** TERSE execution words in the original 1980 Space Zap ROM. This is organized like a Forth dictionary: word name, purpose, stack effect, example, execution token and native implementation. Examples illustrate each word's stack operation.
 
-**Notation:** `( before -- after )` describes the data stack, bottom-to-top (topmost at right). `R:` denotes the IX control stack. Cells are 16-bit unless noted. Tokens are one byte; `LIT8`, `LIT16`, and branches consume extra inline data. Native routines resume through `JP (IY)` unless they transfer control elsewhere.
+**Notation:** `( before -- after )` describes the data stack, bottom-to-top (topmost at right). `R:` denotes the IX control stack. Cells are 16-bit unless noted. Tokens are one byte; `LIT8`, `LIT`, and branches consume extra inline data. Native routines resume through `JP (IY)` unless they transfer control elsewhere.
 
 See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector inventory](TERSE-TOKEN-VECTORS.md), and [compiled TERSE programs](TERSE-COMPILED-PROGRAMS.md).
 
@@ -292,7 +292,7 @@ Return from a colon definition, restoring the caller's threaded instruction poin
 
 Push the little-endian 16-bit word following this token.
 
-**Example:** `LIT16 $D180  ( -- $D180 )`
+**Example:** `LIT $D180  ( -- $D180 )`
 
 **Original native implementation** (`TERSE_LIT16`):
 
