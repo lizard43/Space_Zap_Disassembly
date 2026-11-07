@@ -86,7 +86,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$3A` | `$00DE` | Native target; semantics not yet individually recovered |
 | `$3B` | `$112D` | Native target; semantics not yet individually recovered |
 | `$3C` | `$20FE` | Native target; semantics not yet individually recovered |
-| `$3D` | `$023E` | Native target; semantics not yet individually recovered |
+| `$3D` | `$023E` | INDEXED_DISPATCH: inline end pointer and 16-bit native jump table |
 | `$3E` | `$2223` | Native target; semantics not yet individually recovered |
 | `$3F` | `$00C5` | Native target; semantics not yet individually recovered |
 | `$40` | `$2154` | Native target; semantics not yet individually recovered |
