@@ -5617,59 +5617,66 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  bc
 	 ret  nz
 	 ld   h,$06
-	 rst  $08
-	 dec  de
-	 sbc  a,c
-	 jp   nc,$CF06
-	 dec  de
-	 push hl
-	 jp   nc,$CF06
-	 dec  de
-	 ld   sp,$06D3
-	 rst  $08
-	 dec  de
-	 ld   a,l
-	 out  ($06),a
-	 rst  $08
-	 dec  de
-	 adc  a,l
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 adc  a,(hl)
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 adc  a,a
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 sub  b
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 and  c
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 and  d
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 sbc  a,a
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 and  b
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 scf
-	 ld   a,(de)
-	 ld   b,$CF
-	 dec  de
-	 ld   b,b
-	 ld   a,(de)
+; $26D2-$270C: twelve 16-bit literal-return TERSE colon definitions.
+TERSE_COLON_26D2:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D299 ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26D7:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D2E5 ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26DC:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D331 ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26E1:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D37D ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26E6:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D18D ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26EB:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D18E ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26F0:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D18F ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26F5:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D190 ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26FA:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D1A1 ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_26FF:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D1A2 ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_2704:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D19F ; address/value
+	 DB $06 ; TERSE_EXIT
+TERSE_COLON_2709:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D1A0 ; address/value
 	 ld   b,$CF
 	 ld   (hl),h
 	 dec  de
