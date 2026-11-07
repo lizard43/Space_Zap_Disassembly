@@ -32,6 +32,7 @@ and `DB`/`DW` inline operands in `Space_Zap_Disassembly.asm`.
 | `$0266` | 3 | Three-token helper |
 | `$1311` | 87 | TERSE initialization program |
 | `$1F92` | 29 | Sound/state control program |
+| `$26D2–$2709` | 12 × 2 | Twelve `LIT16` address-return words |
 | `$2AE2` | 9 | Game-control definition |
 | `$2AF6` | 153 | Game-control definition |
 | `$2BC0` | 67 | Game-control definition |
@@ -64,6 +65,24 @@ The first execution tokens of the main program are:
 Nine conditional/unconditional branch operands in the main thread
 resolve to named token boundaries:
 `$3D02`, `$3D05`, `$3D25`, `$3D62`, `$3D67`, and `$3D6B`.
+
+### Twelve memory-address words
+
+The $26D2–$270C region contains twelve compact colon words, each
+`RST $08; LIT16 address; EXIT`. The addresses are:
+
+| Entry | Literal | Entry | Literal |
+| --- | --- | --- | --- |
+| `$26D2` | `$D299` | `$26D7` | `$D2E5` |
+| `$26DC` | `$D331` | `$26E1` | `$D37D` |
+| `$26E6` | `$D18D` | `$26EB` | `$D18E` |
+| `$26F0` | `$D18F` | `$26F5` | `$D190` |
+| `$26FA` | `$D1A1` | `$26FF` | `$D1A2` |
+| `$2704` | `$D19F` | `$2709` | `$D1A0` |
+
+Their first 59 bytes are source-typed and checked against the original
+ROM. The final EXIT byte at `$270D` is retained with the following
+colon-entry boundary.
 
 ### Game-control programs
 
@@ -107,6 +126,7 @@ the original source ROM at the original CPU addresses:
 | --- | ---: | --- |
 | `$1311–$13C3` | 179 | Colon stream and ten-byte font padding |
 | `$1F92–$1FC8` | 55 | Sound-control stream and following native setup |
+| `$26D2–$270C` | 59 | Twelve compact address-literal definitions |
 | `$2AE1–$2D7B` | 667 | Seven colon programs, including interword byte |
 | `$2D7C–$2ED4` | 345 | Two more game-control colon programs |
 | `$2ED5–$2F66` | 146 | Final decoded game-control colon |
