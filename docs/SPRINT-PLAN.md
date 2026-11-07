@@ -1,39 +1,32 @@
 # Space Zap — active RE sprint plan
 
-This is a working plan, not a frozen revision or preservation checkpoint. Continue on the active Space Zap PR and update this plan as the work evolves. Use four original ROM SHA-1 comparisons as the normal build correctness check.
+Development continues on PR #1. A correct build must match all four original 4 KB ROM SHA-1 values.
 
-## P0 — Native Z80 and TERSE reverse engineering
+## P0 — Finish executable reconstruction
 
-- [x] Identify indexed NEXT, colon entry, EXIT, LIT8/LIT16 and 256 vector slots.
-- [x] Recover the major middle-ROM and startup compiled TERSE programs.
-- [x] Recover native token $94 inline 16-bit addition and correct 12 misdecoded inline operands.
-- [x] Convert confirmed numeric JP/CALL references to existing Z80 routine labels, including reset-to-TERSE_COLD_START; label reset vector without changing machine instructions.
-- [ ] Audit vector-referenced native routines; classify true entry points, shared internal branches, inline data, and code joins. Record meaningful, evidence-backed names.
-- [x] Identify the five `$1EA1–$1EDE` native byte/word access routines, original 36-byte record stride, port `$5B` side effects, and resolve 37 symbolic call sites.
-- [x] Resolve event record selector path `$034B/$0362`: shared dispatch entry plus record-2 counter increment `$D093`; replace six `$0362` call/jump sites and `$034B` references.
-- [x] Audit existing main block headers for meaningful operational effects; prioritize DI at reset and omit padding commentary. Identify native record-count entry at $036E and resolve its callers.
-- [ ] Whole-ROM hard RE: resolve remaining numeric JP/CALL/branch targets to existing descriptive labels where the address is proven; recover raw executable Z80 and TERSE code, preserve real DB/DW data, annotate register/stack contracts, and maintain blank-line section formatting. Do not assign semantic names solely from reference frequency.
-- [ ] Establish stack effects, inline operands, control stack, RAM and I/O side effects for every actually used token. Update ASM and Forth-style dictionary together.
-- [x] Decode the complete `$28AA–$2AE0` 567-byte colon program into 269 TERSE token instructions, including 13 four-target native dispatch tables, typed literal/branch operands, and validated internal branch targets.
-- [ ] Continue game-semantic classification of the recovered `$28AA` program and other `$21xx–$2Axx` code/data regions; identify called routines, RAM ownership and side effects from real execution.
-- [ ] Reconstruct game control: attract/start, credits, input, firing, object motion, collision, score, sound and interrupts.
-- [x] Use the original October 1980 cabinet service manual and Space Zap connector pinouts to identify the native screen-RAM/static-RAM diagnostics and their original tested ranges.
-- [ ] Trace the original CPU/game-board output decoder for startup writes $F8/$FA/$FB/$FF, including the Z80 high I/O address byte; do not substitute MAME port-map omissions for cabinet evidence.
-- [ ] Link P1/P2 service, door slam, coin and aim/fire signals to actual Z80 input bits from the original board logic, and follow the RAM/ROM test and input call chains.
-- [ ] Complete RAM address ownership and hardware port interaction map.
-- [x] Define confirmed video, Magic graphics, pattern-board, audio and interrupt I/O port symbols in ASM and annotate important writes; retain unresolved startup ports as explicitly unknown.
-- [x] Identify Magic pattern-mode option branches and the sound register/state clear loops, replacing local absolute branches with descriptive labels.
-- [ ] Classify mixed screen-record region `$3096–$327B` as true data/code before treating apparent I/O opcodes `$30/$55/$1B/$4B` as real hardware accesses.
-- [ ] Trace graphics and audio call chains into game-state logic, document register/RAM effects at routine boundaries, and eliminate false executable-code interpretations in graphics/sound data.
-- [ ] Assemble using original native Z80 sources and pass all four official MAME ROM SHA-1 checks.
+- [ ] Run zmac, verify the 16 KB output and all four ROM SHA-1 values; repair any source discrepancies.
+- [ ] Classify the mixed display/message region $3096–$327B and other code/data boundaries; preserve genuine strings, graphics and tables.
+- [ ] Resolve remaining native JP/CALL/branch targets using actual code entry boundaries; document stack/register contracts.
+- [ ] Trace game-state flow: reset/attract, service, RAM/ROM tests, coin/start, direction/fire, collision, score, graphics and sound.
+- [ ] Cross-check every used TERSE token against the actual vector/native entry and fix any incorrect semantic contract.
 
-- [x] Recover token $3D indexed native dispatch and seven original four-entry jump tables, including colon word at $2866.
+## P1 — Cabinet hardware and completeness
 
-- [x] Recover byte-decrement/increment, memory copy, 3-cell rotate, and stack pick native primitives; synchronize dictionary and token vectors.
-- [x] Consolidate redundant ROM/RE and primitive-comparison notes into reader-focused technical references; enforce ASM section spacing.
+- [ ] Trace original CPU/game-board I/O decoding for startup bus addresses $F0F8, $0FFA, $0FFB and $01FF. Establish select gates, aliases and functions from schematic nets.
+- [ ] Match game-board P1/P2 input connector signals to Z80 port bits; trace service, door slam, coin, fire and movement handling.
+- [ ] Finish original Magic/pattern bitmap transfers, graphics objects, sound register/envelope routines, scheduling and RAM/state ownership.
+- [ ] Complete RAM/I/O side-effect and interrupt-flow mapping.
 
-- [x] Audit low ROM native boundaries: correct token $44 (EQUAL at $00EE, **not** byte increment at $00EA); recover NEGATE token $82 and unsigned GE token $C2. Correct dictionary/vector bindings.
-- [ ] Cross-check **every** new token/name mapping against the original indexed vector target **and** the exact native entry address before marking semantics complete.
+## P2 — Readability and final checks
+
+- [x] Keep seven focused technical Markdown references and eliminate redundant working notes.
+- [x] Standardize concise ASM routine headers, removing duplicate token/address annotations and RE-history commentary.
+- [ ] Final whole-file meaningful-label and inline-comment sweep after code/data recovery.
+- [ ] Final zmac build, 16 KB image, four original ROM SHA-1 PASS.
+
+## Current recovered work
+
+Original indexed TERSE runtime and 256-slot vector table; major compiled colon definitions; indexed native dispatch; $28AA–$2AE0 bytecode; native screen/static RAM diagnostics; major graphics, pattern and sound hardware register families. Continued RE targets the executable program and cabinet.
 
 ## WB library follow-on — near-final Space Zap runtime and notes
 
