@@ -1,0 +1,127 @@
+# Compiled TERSE programs
+
+## Runtime format
+
+Space Zap uses **8-bit indexed TERSE tokens**. Each byte selects a native
+execution address from the 256-entry vector table at `$3DEA`.
+`RST $08` enters a colon definition; `TERSE_EXIT` restores the
+previous BC instruction pointer. Native primitives resume at `JP (IY)`.
+
+| Token | Native XT | Operand | Meaning |
+| --- | --- | --- | --- |
+| `$06` | `$0044` | None | EXIT |
+| `$0E` | `$0059` | 1 byte | LIT8 |
+| `$1B` | `$0050` | 2 bytes, little-endian | LIT16 |
+| `$03` | `$01FC` | 2-byte absolute thread address | Zero-conditional branch |
+| `$46` | `$01F4` | 2-byte absolute thread address | Unconditional branch |
+
+The `DW` directives for branches refer to **TERSE byte-stream labels**,
+not Z80 instruction targets.
+
+## Recovered source definitions
+
+The following regions have been decoded into typed `DB` token cells
+and `DB`/`DW` inline operands in `Space_Zap_Disassembly.asm`.
+
+| Colon entry | Token operations | Region |
+| --- | ---: | --- |
+| `$0216` | 6 | Small control primitive |
+| `$0220` | 6 | Small control primitive |
+| `$025E` | 3 | Three-token helper |
+| `$0262` | 3 | Three-token helper |
+| `$0266` | 3 | Three-token helper |
+| `$1311` | 87 | TERSE initialization program |
+| `$1F92` | 29 | Sound/state control program |
+| `$2AE2` | 9 | Game-control definition |
+| `$2AF6` | 153 | Game-control definition |
+| `$2BC0` | 67 | Game-control definition |
+| `$2C26` | 28 | Game-control definition |
+| `$2C4E` | 75 | Game-control definition |
+| `$2CB2` | 74 | Game-control definition |
+| `$2D19` | 73 | Game-control definition |
+| `$2D7D` | 75 | Game-control definition |
+| `$2DE3` | 171 | Game-control definition |
+| `$2ED6` | 92 | Game-control definition |
+| `$307C` | 16 | Screen/display helper |
+| `$3091` | 3 | Screen/display helper |
+| `$3CDB` | 156 | Main startup/control program |
+
+### Main entry program
+
+Cold start initializes BC to `$3CDC`, just beyond the
+`RST $08` colon-entry opcode at `$3CDB`.
+
+The first execution tokens of the main program are:
+
+| Thread address | Token | Target |
+| --- | --- | --- |
+| `$3CDC` | `$F1` | Native `$2F67` |
+| `$3CDD` | `$F2` | TERSE colon `$1311` |
+| `$3CDE` | `$F3` | TERSE colon `$1F92` |
+| `$3CDF` | `$F4` | Native `$1F20` |
+| `$3CE0` | `$1B` | LIT16 `$D024` |
+
+Nine conditional/unconditional branch operands in the main thread
+resolve to named token boundaries:
+`$3D02`, `$3D05`, `$3D25`, `$3D62`, `$3D67`, and `$3D6B`.
+
+### Game-control programs
+
+The contiguous high-level program group at
+`$2AE2–$2F66` contains ten decoded colon definitions.
+All of their byte-token cells, 16-bit literal operands, and
+branch destinations are represented by assembly directives.
+The source includes an original `$8A` byte at `$2C4D`
+between two definitions, preserved as
+`TERSE_INTERWORD_2C4D`.
+
+One example of the correct source representation:
+
+```asm
+TERSE_COLON_2D7D:
+    RST $08
+    DB $2A           ; native word selected by vector $2A
+    DB $0E           ; LIT8
+    DB $0C           ; inline byte operand
+    ...
+    DB $03           ; zero-conditional branch
+    DW TERSE_THREAD_2DDD
+```
+
+The original disassembly showed the branch operand bytes
+`$DD,$2D` as the Z80 instruction `DEC IXL`. They are
+**TERSE thread data**, not a Z80 IX-register operation.
+
+Likewise the original bytes `$28,$7F` at `$2921`
+were shown as `JR Z,$29A2`; the maintained source now preserves
+these two original bytes explicitly while their encompassing stream
+is being recovered.
+
+## Native-source byte checks
+
+These decoded regions were regenerated from the authoritative
+four-ROM arcade set. Their reconstructed bytes were compared with
+the original source ROM at the original CPU addresses:
+
+| Decoded span | Compared bytes | Details |
+| --- | ---: | --- |
+| `$1311–$13C3` | 179 | Colon stream and ten-byte font padding |
+| `$1F92–$1FC8` | 55 | Sound-control stream and following native setup |
+| `$2AE1–$2D7B` | 667 | Seven colon programs, including interword byte |
+| `$2D7C–$2ED4` | 345 | Two more game-control colon programs |
+| `$2ED5–$2F66` | 146 | Final decoded game-control colon |
+| `$307C–$3096` | 27 | Screen helpers and text-prefix byte |
+| `$3CDA–$3DE9` | 272 | Main game/control thread and boundary bytes |
+
+These are byte-range checks of the recovered ROM data.
+The full original-source assembly test uses zmac v1.3 and
+compares all four generated ROM SHA-1 values in `build.sh`
+and `build.bat`.
+
+## Remaining program recovery
+
+Decode further `RST $08` definitions in the middle ROM
+(`$21xx–$2Axx`), reconstruct their literal operands and
+branch targets, and attach descriptive names based on game-state
+and hardware effects. Resolve the native words that compiled
+threads call through the remaining vector slots.
