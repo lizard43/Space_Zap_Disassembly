@@ -161,3 +161,15 @@ Open for subsequent byte-exact RE passes:
 **Interpretation:** The evidence supports *TERSE-family, byte-token
 threaded Space Zap*, not a demonstration that its ROM contains the
 original host-side compiler or named developer dictionary.
+
+## ROM data and console adaptation notes
+
+The arcade disassembly includes inline 2bpp sprite rows and records for
+laser bases, alien ships, mines and attack satellites. The ROM tail stores
+`SPACE ZAP` and `DNA` text. The 256 native-address vector slots at
+`$3DEA` are represented as typed `DW` entries in the maintained assembly.
+
+**Space Fortress (1981)** is a separate 4 KB Bally Astrocade cartridge
+adaptation of Space Zap. Its released ROM lacks the arcade's recognizable
+`JP (IY)` continuation signature; the cartridge has not been identified
+as a TERSE program. It is not part of this arcade ROM reconstruction.
