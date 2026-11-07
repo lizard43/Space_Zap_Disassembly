@@ -7,13 +7,12 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0014
+; RE version: v20261107-0015
 ;*******************************************************************************
 
 	 ORG 0000H
 
-; $0000: CPU reset vector. Dispatch into TERSE_COLD_START ($0015).
-; The two trailing NOPs occupy the original bytes before RST $08 entry.
+; Reset: disable maskable interrupts (DI), then enter TERSE_COLD_START.
 TERSE_RESET_VECTOR:
 	 nop
 	 nop
@@ -22,8 +21,7 @@ TERSE_RESET_VECTOR:
 	 nop
 	 nop
 
-; TERSE_COLON_ENTRY $0008: RST08 pushes a new threaded IP onto SP.
-; Preserve caller BC on IX then POP BC to enter that inline thread.
+; RST $08: save caller BC on IX; POP BC enters the new TERSE thread.
 TERSE_COLON_ENTRY:
 	 dec  ix
 	 ld   (ix+$00),b
@@ -32,7 +30,7 @@ TERSE_COLON_ENTRY:
 	 pop  bc
 	 jp   (iy)
 
-; TERSE_COLD_START $0015: machine and thread stacks initialization.
+; Initialize arcade I/O, TERSE stacks (IX/SP) and BC/IY thread execution.
 TERSE_COLD_START:
 	 ld   a,$01
 	 out  ($08),a
@@ -48,8 +46,7 @@ TERSE_COLD_START:
 	 ld   bc,$3CDC
 	 ld   iy,TERSE_INDEXED_NEXT
 
-; TERSE_INDEXED_NEXT $0035: BC reads one-byte token, indexes 256
-; 16-bit handler addresses at $3DEA. This is not direct-address NEXT.
+; NEXT: fetch an 8-bit token from BC; jump via the vector table at $3DEA.
 TERSE_INDEXED_NEXT:
 	 ld   a,(bc)
 	 inc  bc
@@ -64,7 +61,7 @@ TERSE_INDEXED_NEXT:
 	 ex   de,hl
 	 jp   (hl)
 
-; TERSE_EXIT $0044: recover parent BC from the IX control stack.
+; EXIT: restore caller thread pointer BC from the IX return stack.
 TERSE_EXIT:
 	 ld   c,(ix+$00)
 	 inc  ix
@@ -72,7 +69,7 @@ TERSE_EXIT:
 	 inc  ix
 	 jp   (iy)
 
-; TERSE_LIT16 $0050: consume following little-endian 16-bit literal.
+; LIT16: push the next little-endian 16-bit value from the BC thread.
 TERSE_LIT16:
 	 ld   a,(bc)
 	 inc  bc
@@ -83,7 +80,7 @@ TERSE_LIT16:
 	 push hl
 	 jp   (iy)
 
-; TERSE_LIT8 $0059: consume following unsigned byte literal.
+; LIT8: push the next thread byte, zero-extended to 16 bits.
 TERSE_LIT8:
 	 ld   a,(bc)
 	 inc  bc
@@ -118,8 +115,7 @@ TERSE_ADD_INLINE16:
 	 add  hl,hl
 	 jp   $006C
 
-; The entry at $0076 doubles HL before entering the shared inline-add body.
-; No vector-table token currently points to this entry.
+; $0076: native helper doubles HL and enters the inline-add body.
 
 ; Push 16-bit zero.
 TERSE_ZERO:
@@ -749,7 +745,7 @@ EVENT_RAM_ADDRESS_TABLE_0336:
 	 DW $D0A1,$D0D7,$D0D9,$D10F
 	 DW $D111,$D12F,$D131,$D14F
 
-; Native event/state record dispatch.
+; Select a RAM record and dispatch through the saved handler pointer.
 NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 ld   hl,EVENT_RAM_ADDRESS_TABLE_0336
 	 ld   a,$01
@@ -768,13 +764,16 @@ NATIVE_EVENT_DISPATCH_ENTRY_034B:
 	 pop  iy
 	 ret
 
-; $0362: increment RAM $D093, select record table entry $033A with A=$02.
+; Increment record-2 counter $D093 and dispatch selector 2.
 NATIVE_EVENT_DISPATCH_RECORD_02:
 	 ld   hl,$D093
 	 inc  (hl)
 	 ld   hl,$033A
 	 ld   a,$02
 	 jp   NATIVE_EVENT_DISPATCH_ENTRY_034B
+
+; $036E: limit a record's active count; update $D095 when accepted.
+NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 ld   a,(iy+$0a)
 	 cp   $01
 	 ret  nc
@@ -1465,7 +1464,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   (iy+$1c),e
 	 jp   z,$08F3
 	 call $07DA
-	 call $036E
+	 call NATIVE_EVENT_RECORD_COUNT_LIMIT
 	 ld   a,(iy+$11)
 	 and  a
 	 jp   z,$0905
@@ -2796,7 +2795,7 @@ REDRAW_SAVED_OBJECT:
 	 push hl
 	 jp   (iy)
 	 call NATIVE_EVENT_RECORD_DISPATCH_0346
-	 jp   $036E
+	 jp   NATIVE_EVENT_RECORD_COUNT_LIMIT
 	 push iy
 	 push bc
 	 ld   iy,($D098)
@@ -2832,8 +2831,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   (hl),e
 	 jp   (iy)
 
-; $1311–$13B9: TERSE colon program and inline operands.
-; $13BA–$13C3: ten padding bytes before 8x10 character font.
+; Compiled TERSE program; branch and literal operands follow inline.
 TERSE_COLON_1311:
 	 RST $08
 TERSE_THREAD_1312:
@@ -4502,7 +4500,7 @@ ATTACK_SATELLITE_SEQUENCE:
         DB      $00
         DW      ATTACK_SATELLITE_SEQUENCE
 
-; $1EA1: HL += $24 while preserving DE.
+; Advance HL by one $24-byte record; preserve DE.
 NATIVE_ADVANCE_RECORD_24:
         push de
 	 ld   de,$0024
@@ -4510,7 +4508,7 @@ NATIVE_ADVANCE_RECORD_24:
 	 pop  de
 	 ret
 
-; $1EA8: write DE through $5B-mapped memory, preserve I.
+; Write DE at HL using port $5B control; preserve I.
 NATIVE_WRITE_RECORD_WORD:
 	 ld   a,i
 	 push af
@@ -4526,7 +4524,7 @@ NATIVE_WRITE_RECORD_WORD:
 	 ld   i,a
 	 ret
 
-; $1EBB: write two word fields spaced $24 apart, preserving IFF.
+; Write matching words $24 bytes apart; protect interrupt state.
 NATIVE_WRITE_PAIRED_RECORD_WORD:
 	 ld   a,i
 	 push af
@@ -4540,7 +4538,7 @@ NATIVE_WRITE_PAIRED_RECORD_WORD:
 	 ei
 	 ret
 
-; $1ECF: write E through $5B-mapped memory, preserve I.
+; Write E at HL using port $5B control; preserve I.
 NATIVE_WRITE_RECORD_BYTE:
 	 ld   a,i
 	 push af
@@ -4553,7 +4551,7 @@ NATIVE_WRITE_RECORD_BYTE:
 	 ld   i,a
 	 ret
 
-; $1EDE: write two byte fields spaced $24 apart, preserving IFF.
+; Write matching bytes $24 bytes apart; protect interrupt state.
 NATIVE_WRITE_PAIRED_RECORD_BYTE:
 	 ld   a,i
 	 push af
@@ -4651,7 +4649,7 @@ NATIVE_WRITE_PAIRED_RECORD_BYTE:
 	 exx
 	 jp   (iy)
 
-; $1F92–$1FC2: audio-related native/TERSE command sequence.
+; Compiled TERSE sound initialization/control thread.
 TERSE_COLON_1F92:
 	 RST $08
 TERSE_THREAD_1F93:
@@ -4696,7 +4694,7 @@ TERSE_THREAD_1F97:
 	 DW TERSE_THREAD_1F97 ; 0BRANCH
 	 DB $06 ; $1FC2 token $06 -> $0044
 
-; $1FC3–$1FC8: native address/control state initialization.
+; Set the active sound-state flag at DE+$32.
 AUDIO_STATE_INIT_1FC3:
 	 LD HL,$0032
 	 ADD HL,DE
@@ -5901,21 +5899,21 @@ TERSE_COLON_2709:
 ; Native indexed tokens and inline operands, represented as typed ROM data.
 	 DB $06 ; EXIT for the preceding LIT16 address word
 
-; Original TERSE colon word at $270E
+; TERSE colon definition at $270E; inline operands remain typed below.
 TERSE_COLON_270E:
 	 RST $08
 	 DB $1B ; $270F token -> native $0050
 	 DW $1A37 ; LIT16
 	 DB $06 ; $2712 token -> native $0044
 
-; Original TERSE colon word at $2713
+; TERSE colon definition at $2713; inline operands remain typed below.
 TERSE_COLON_2713:
 	 RST $08
 	 DB $1B ; $2714 token -> native $0050
 	 DW $1A40 ; LIT16
 	 DB $06 ; $2717 token -> native $0044
 
-; Original TERSE colon word at $2718
+; TERSE colon definition at $2718; inline operands remain typed below.
 TERSE_COLON_2718:
 	 RST $08
 	 DB $74 ; $2719 token -> native $254C
@@ -5939,7 +5937,7 @@ TERSE_THREAD_2726:
 	 DB $4F ; $272E token -> native $0EC7
 	 DB $06 ; $272F token -> native $0044
 
-; Original TERSE colon word at $2730
+; TERSE colon definition at $2730; inline operands remain typed below.
 TERSE_COLON_2730:
 	 RST $08
 	 DB $0B ; $2731 token -> native $007B
@@ -5951,7 +5949,7 @@ TERSE_COLON_2730:
 	 DW $1A2B ; LIT16
 	 DB $06 ; $273A token -> native $0044
 
-; Original TERSE colon word at $273B
+; TERSE colon definition at $273B; inline operands remain typed below.
 TERSE_COLON_273B:
 	 RST $08
 	 DB $0B ; $273C token -> native $007B
@@ -5964,7 +5962,7 @@ TERSE_COLON_273B:
 	 DB $76 ; $2744 token -> native $11D0
 	 DB $06 ; $2745 token -> native $0044
 
-; Original TERSE colon word at $2746
+; TERSE colon definition at $2746; inline operands remain typed below.
 TERSE_COLON_2746:
 	 RST $08
 	 DB $0E ; $2747 token -> native $0059
@@ -5976,7 +5974,7 @@ TERSE_COLON_2746:
 	 DW $1A31 ; LIT16
 	 DB $06 ; $274F token -> native $0044
 
-; Original TERSE colon word at $2750
+; TERSE colon definition at $2750; inline operands remain typed below.
 TERSE_COLON_2750:
 	 RST $08
 	 DB $1B ; $2751 token -> native $0050
@@ -5989,7 +5987,7 @@ TERSE_COLON_2750:
 	 DB $77 ; $275A token -> native $11DB
 	 DB $06 ; $275B token -> native $0044
 
-; Original TERSE colon word at $275C
+; TERSE colon definition at $275C; inline operands remain typed below.
 TERSE_COLON_275C:
 	 RST $08
 	 DB $2A ; $275D token -> native $042F
@@ -6136,82 +6134,82 @@ TERSE_THREAD_2809:
 	 DB $7C ; $280D token -> native $263E
 	 DB $06 ; $280E token -> native $0044
 
-; Original TERSE colon word at $280F
+; TERSE colon definition at $280F; inline operands remain typed below.
 TERSE_COLON_280F:
 	 RST $08
 	 DB $0E ; $2810 token -> native $0059
 	 DB $0A ; LIT8
 	 DB $06 ; $2812 token -> native $0044
 
-; Original TERSE colon word at $2813
+; TERSE colon definition at $2813; inline operands remain typed below.
 TERSE_COLON_2813:
 	 RST $08
 	 DB $1B ; $2814 token -> native $0050
 	 DW $FFF6 ; LIT16
 	 DB $06 ; $2817 token -> native $0044
 
-; Original TERSE colon word at $2818
+; TERSE colon definition at $2818; inline operands remain typed below.
 TERSE_COLON_2818:
 	 RST $08
 	 DB $0E ; $2819 token -> native $0059
 	 DB $0B ; LIT8
 	 DB $06 ; $281B token -> native $0044
 
-; Original TERSE colon word at $281C
+; TERSE colon definition at $281C; inline operands remain typed below.
 TERSE_COLON_281C:
 	 RST $08
 	 DB $1B ; $281D token -> native $0050
 	 DW $FFF5 ; LIT16
 	 DB $06 ; $2820 token -> native $0044
 
-; Original TERSE colon word at $2821
+; TERSE colon definition at $2821; inline operands remain typed below.
 TERSE_COLON_2821:
 	 RST $08
 	 DB $0B ; $2822 token -> native $007B
 	 DB $06 ; $2823 token -> native $0044
 
-; Original TERSE colon word at $2824
+; TERSE colon definition at $2824; inline operands remain typed below.
 TERSE_COLON_2824:
 	 RST $08
 	 DB $09 ; $2825 token -> native $0081
 	 DB $06 ; $2826 token -> native $0044
 
-; Original TERSE colon word at $2827
+; TERSE colon definition at $2827; inline operands remain typed below.
 TERSE_COLON_2827:
 	 RST $08
 	 DB $0E ; $2828 token -> native $0059
 	 DB $02 ; LIT8
 	 DB $06 ; $282A token -> native $0044
 
-; Original TERSE colon word at $282B
+; TERSE colon definition at $282B; inline operands remain typed below.
 TERSE_COLON_282B:
 	 RST $08
 	 DB $0E ; $282C token -> native $0059
 	 DB $03 ; LIT8
 	 DB $06 ; $282E token -> native $0044
 
-; Original TERSE colon word at $282F
+; TERSE colon definition at $282F; inline operands remain typed below.
 TERSE_COLON_282F:
 	 RST $08
 	 DB $0E ; $2830 token -> native $0059
 	 DB $C0 ; LIT8
 	 DB $06 ; $2832 token -> native $0044
 
-; Original TERSE colon word at $2833
+; TERSE colon definition at $2833; inline operands remain typed below.
 TERSE_COLON_2833:
 	 RST $08
 	 DB $0E ; $2834 token -> native $0059
 	 DB $80 ; LIT8
 	 DB $06 ; $2836 token -> native $0044
 
-; Original TERSE colon word at $2837
+; TERSE colon definition at $2837; inline operands remain typed below.
 TERSE_COLON_2837:
 	 RST $08
 	 DB $0E ; $2838 token -> native $0059
 	 DB $40 ; LIT8
 	 DB $06 ; $283A token -> native $0044
 
-; Original TERSE colon word at $283B
+; TERSE colon definition at $283B; inline operands remain typed below.
 TERSE_COLON_283B:
 	 RST $08
 	 DB $0E ; $283C token -> native $0059
@@ -6220,7 +6218,7 @@ TERSE_COLON_283B:
 	 DB $7E ; $283F token -> native $2833
 	 DB $06 ; $2840 token -> native $0044
 
-; Original TERSE colon word at $2841
+; TERSE colon definition at $2841; inline operands remain typed below.
 TERSE_COLON_2841:
 	 RST $08
 	 DB $1B ; $2842 token -> native $0050
@@ -6229,7 +6227,7 @@ TERSE_COLON_2841:
 	 DB $80 ; $2846 token -> native $282F
 	 DB $06 ; $2847 token -> native $0044
 
-; Original TERSE colon word at $2848
+; TERSE colon definition at $2848; inline operands remain typed below.
 TERSE_COLON_2848:
 	 RST $08
 	 DB $1B ; $2849 token -> native $0050
@@ -6238,7 +6236,7 @@ TERSE_COLON_2848:
 	 DB $0B ; $284D token -> native $007B
 	 DB $06 ; $284E token -> native $0044
 
-; Original TERSE colon word at $284F
+; TERSE colon definition at $284F; inline operands remain typed below.
 TERSE_COLON_284F:
 	 RST $08
 	 DB $0E ; $2850 token -> native $0059
@@ -6247,7 +6245,7 @@ TERSE_COLON_284F:
 	 DB $81 ; $2853 token -> native $2837
 	 DB $06 ; $2854 token -> native $0044
 
-; Original TERSE colon word at $2855
+; TERSE colon definition at $2855; inline operands remain typed below.
 TERSE_COLON_2855:
 	 RST $08
 	 DB $1B ; $2856 token -> native $0050
@@ -6261,7 +6259,7 @@ TERSE_COLON_2855:
 	 DW $26E6 ; native target 3
 DB $06 ; $2865 token -> native $0044
 
-; Mixed token/data record
+; Select one of four native targets using the byte at RAM $D198.
 TERSE_COLON_2866:
 	 RST $08
 	 DB $1B ; LIT16
@@ -6275,7 +6273,7 @@ TERSE_COLON_2866:
 	 DW $2704 ; native target 3
 	 DB $06 ; EXIT
 
-; Original TERSE colon word at $2877
+; TERSE colon definition at $2877; inline operands remain typed below.
 TERSE_COLON_2877:
 	 RST $08
 	 DB $1B ; $2878 token -> native $0050
@@ -6289,7 +6287,7 @@ TERSE_COLON_2877:
 	 DW $26D2 ; native target 3
 DB $06 ; $2887 token -> native $0044
 
-; Original TERSE colon word at $2888
+; TERSE colon definition at $2888; inline operands remain typed below.
 TERSE_COLON_2888:
 	 RST $08
 	 DB $0E ; $2889 token -> native $0059
@@ -6299,7 +6297,7 @@ TERSE_COLON_2888:
 	 DB $0B ; $288D token -> native $007B
 	 DB $06 ; $288E token -> native $0044
 
-; Original TERSE colon word at $288F
+; TERSE colon definition at $288F; inline operands remain typed below.
 TERSE_COLON_288F:
 	 RST $08
 	 DB $0E ; $2890 token -> native $0059
@@ -6310,7 +6308,7 @@ TERSE_COLON_288F:
 	 DB $09 ; $2895 token -> native $0081
 	 DB $06 ; $2896 token -> native $0044
 
-; Original TERSE colon word at $2897
+; TERSE colon definition at $2897; inline operands remain typed below.
 TERSE_COLON_2897:
 	 RST $08
 	 DB $0E ; $2898 token -> native $0059
@@ -6323,7 +6321,7 @@ TERSE_COLON_2897:
 	 DB $02 ; LIT8
 	 DB $06 ; $28A0 token -> native $0044
 
-; Original TERSE colon word at $28A1
+; TERSE colon definition at $28A1; inline operands remain typed below.
 TERSE_COLON_28A1:
 	 RST $08
 	 DB $0E ; $28A2 token -> native $0059
