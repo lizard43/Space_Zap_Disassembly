@@ -1,6 +1,6 @@
 # Space Zap TERSE word dictionary
 
-A programmer's dictionary of **recovered** TERSE execution words in the original 1980 Space Zap ROM. This is organized like a Forth dictionary: word name, purpose, stack effect, example, execution token and native implementation. The examples describe stack behavior; they are *not* a claim of recovered historical TERSE source spelling or a new compiler syntax.
+A programmer's dictionary of **recovered** TERSE execution words in the original 1980 Space Zap ROM. This is organized like a Forth dictionary: word name, purpose, stack effect, example, execution token and native implementation. Examples illustrate each word's stack operation.
 
 **Notation:** `( before -- after )` describes the data stack, bottom-to-top (topmost at right). `R:` denotes the IX control stack. Cells are 16-bit unless noted. Tokens are one byte; `LIT8`, `LIT16`, and branches consume extra inline data. Native routines resume through `JP (IY)` unless they transfer control elsewhere.
 
