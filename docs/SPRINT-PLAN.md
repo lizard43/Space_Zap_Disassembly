@@ -14,6 +14,8 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [ ] Complete RAM address ownership and hardware port interaction map.
 - [ ] Assemble using original native Z80 sources and pass all four official MAME ROM SHA-1 checks.
 
+- [x] Recover token $3D indexed native dispatch and seven original four-entry jump tables, including colon word at $2866.
+
 ## WB library follow-on — near-final Space Zap runtime and notes
 
 Destination: [DNA TERSE WB](https://github.com/lizard43/dnaTERSE-WB). Add Space Zap (1980) as a first-class library target when recovered P0 runtime semantics and dictionary contracts are sufficiently complete. This is a working software integration, **not a preservation milestone or frozen revision**.
