@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0016
+; RE version: v20261107-0017
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -1188,21 +1188,25 @@ MAGIC_DRAW_BITMAP:
 	 ld   a,c
 	 res  2,a
 	 out  (VIDEO_FUNCTION_CONTROL),a
-	 ld   a,$24
+	 ld   a,$24 ; base pattern-board transfer flags
 	 bit  7,c
-	 jp   z,$06AF
+	 jp   z,MAGIC_TEST_FLAG_6
 	 set  4,a
+MAGIC_TEST_FLAG_6:
 	 bit  6,c
-	 jp   z,$06B6
+	 jp   z,MAGIC_TEST_FLAG_3
 	 res  5,a
+MAGIC_TEST_FLAG_3:
 	 bit  3,c
-	 jp   z,$06BD
+	 jp   z,MAGIC_TEST_FLAG_2
 	 set  1,a
+MAGIC_TEST_FLAG_2:
 	 bit  2,c
-	 jp   z,$06C7
+	 jp   z,MAGIC_COMMIT_PATTERN_MODE
 	 inc  e
 	 res  2,a
 	 set  3,a
+MAGIC_COMMIT_PATTERN_MODE:
 	 ld   b,a
 	 out  (PATTERN_MODE),a ; set flip/rotate/transfer flags
 	 push hl
@@ -4734,18 +4738,20 @@ AUDIO_STATE_INIT_1FC3:
 ;==============================================================================
 AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
-	 ld   bc,$0818
+	 ld   bc,$0818 ; eight sound registers, starting after $17
+AUDIO_CLEAR_NEXT_REGISTER:
 	 dec  c
 	 out  (c),a
 	 dec  b
-	 jp   nz,$1FCD
+	 jp   nz,AUDIO_CLEAR_NEXT_REGISTER
 	 ld   hl,$001A
 	 add  hl,de
-	 ld   c,$18
+	 ld   c,$18 ; clear 24 bytes of the sound-state record
+AUDIO_CLEAR_NEXT_STATE_BYTE:
 	 ld   (hl),a
 	 inc  hl
 	 dec  c
-	 jp   nz,$1FDA
+	 jp   nz,AUDIO_CLEAR_NEXT_STATE_BYTE
 	 exx
 	 ret
 	 ld   a,(iy+$22)
