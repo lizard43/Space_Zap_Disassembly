@@ -10018,12 +10018,12 @@ TERSE_TOKEN_VECTORS:
 	 .DW $FFFF	; token $FF (unassigned)
 ; $3FEA-$3FEE: original ROM padding between table and title.
 	 .DB $FF,$FF,$FF,$FF,$FF
-; $3FEF-$3FFF: original ROM text and terminal metadata, not executable Z80.
-SPACE_ZAP_ROM_TITLE:
-	 .DB $53,$50,$41,$43,$45,$20,$5A,$41,$50,$00 ; "SPACE ZAP", NUL
-SPACE_ZAP_DNA_MARK:
-	 .DB $44,$4E,$41,$00 ; "DNA", NUL
-SPACE_ZAP_TRAILER:
-	 .DB $08,$19,$80 ; unidentified three-byte ROM trailer
+; $3FEF-$3FFF: original ROM identification and date.
+SPACE_ZAP_TITLE:
+	 .DB "SPACE ZAP",0
+SPACE_ZAP_DEVELOPER:
+	 .DB "DNA",0
+SPACE_ZAP_ROM_DATE:
+	 .DB $08,$19,$80 ; 08/19/80 (MM/DD/YY, packed decimal bytes)
 ;
 	 .END
