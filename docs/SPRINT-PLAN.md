@@ -17,6 +17,9 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [x] Decode the complete `$28AA–$2AE0` 567-byte colon program into 269 TERSE token instructions, including 13 four-target native dispatch tables, typed literal/branch operands, and validated internal branch targets.
 - [ ] Continue game-semantic classification of the recovered `$28AA` program and other `$21xx–$2Axx` code/data regions; identify called routines, RAM ownership and side effects from real execution.
 - [ ] Reconstruct game control: attract/start, credits, input, firing, object motion, collision, score, sound and interrupts.
+- [x] Use the original October 1980 cabinet service manual and Space Zap connector pinouts to identify the native screen-RAM/static-RAM diagnostics and their original tested ranges.
+- [ ] Trace the original CPU/game-board output decoder for startup writes $F8/$FA/$FB/$FF, including the Z80 high I/O address byte; do not substitute MAME port-map omissions for cabinet evidence.
+- [ ] Link P1/P2 service, door slam, coin and aim/fire signals to actual Z80 input bits from the original board logic, and follow the RAM/ROM test and input call chains.
 - [ ] Complete RAM address ownership and hardware port interaction map.
 - [x] Define confirmed video, Magic graphics, pattern-board, audio and interrupt I/O port symbols in ASM and annotate important writes; retain unresolved startup ports as explicitly unknown.
 - [x] Identify Magic pattern-mode option branches and the sound register/state clear loops, replacing local absolute branches with descriptive labels.
