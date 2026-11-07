@@ -7317,137 +7317,138 @@ TERSE_THREAD_2EC4:
 	 DB $0B ; $2ED1 => $007B
 	 DB $03 ; $2ED2 => $01FC
 	 DW TERSE_THREAD_2DE8 ; 0BRANCH
-	 ld   b,$CF
-	 ld   hl,($080E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   e,c
-	 ld   (hl),c
-	 ld   d,a
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 cp   $2E
-	 ld   h,d
-	 ld   d,a
-	 dec  de
-	 adc  a,e
-	 rla
-	 ld   l,e
-	 ld   c,$1E
-	 ld   c,a
-	 ld   l,h
-	 ld   l,d
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 jp   p,$462E
-	 ld   h,d
-	 cpl
-	 dec  de
-	 adc  a,d
-	 pop  de
-	 dec  h
-	 add  hl,bc
-	 sub  e
-	 inc  de
-	 cpl
-	 dec  bc
-	 rla
-	 ld   c,$10
-	 jr   $2F27
-; The threaded alien-render script selects ALIEN_SHIP_HORIZONTAL at $2F0C and
-; $2F31, and ALIEN_SHIP_VERTICAL at $2F1E and $2F40.
-	 cp   c
-	 rla
-	 ld   a,(de)
-	 add  hl,de
-	 ld   b,(hl)
-	 ld   b,h
-	 cpl
-	 ld   c,$02
-	 sub  e
-	 dec  h
-	 cpl
-	 ld   c,$10
-	 rla
-	 dec  bc
-	 jr   $2F39
-	 sbc  a,l
-	 rla
-	 ld   (hl),a
-	 add  hl,de
-	 ld   b,(hl)
-	 ld   b,h
-	 cpl
-	 ld   c,$03
-	 sub  e
-	 jr   c,$2F59
-	 dec  bc
-	 rla
-	 dec  de
-	 ret  p
-	 rst  $38
-	 jr   $2F4C
-	 cp   c
-	 rla
-	 ld   a,(de)
-	 halt
-	 ld   b,(hl)
-	 ld   b,h
-	 cpl
-	 dec  b
-	 dec  de
-	 ret  p
-	 rst  $38
-	 rla
-	 dec  bc
-	 jr   $2F5B
-	 sbc  a,l
-	 rla
-	 ld   a,(de)
-	 add  hl,de
-	 sub  l
-	 and  l
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 dec  h
-	 dec  de
-	 adc  a,d
-	 pop  de
-	 dec  h
-	 ld   b,h
-	 ld   c,h
-	 inc  bc
-	 ld   e,c
-	 cpl
-	 dec  (hl)
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 dec  h
-	 dec  de
-	 adc  a,d
-	 pop  de
-	 ex   af,af'
-	 ld   l,l
-	 dec  bc
-	 inc  bc
-	 ret  po
-	 ld   l,$06
+; $2ED5: EXIT of preceding game-control definition.
+	 DB $06 ; TERSE_EXIT
+; $2ED6-$2F66: TERSE game-control definition.
+TERSE_COLON_2ED6:
+	 RST $08
+	 DB $2A ; $2ED7 -> $042F
+	 DB $0E ; $2ED8 -> $0059
+	 DB $08 ; LIT8
+	 DB $65 ; $2EDA -> $1195
+	 DB $56 ; $2EDB -> $11C3
+	 DB $59 ; $2EDC -> $11A0
+	 DB $71 ; $2EDD -> $1166
+	 DB $57 ; $2EDE -> $121C
+	 DB $35 ; $2EDF -> $04A6
+TERSE_THREAD_2EE0:
+	 DB $1B ; $2EE0 -> $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2EE3 -> $00A4
+	 DB $03 ; $2EE4 -> $01FC
+	 DW TERSE_THREAD_2EFE ; 0BRANCH
+	 DB $62 ; $2EE7 -> $2393
+	 DB $57 ; $2EE8 -> $121C
+	 DB $1B ; $2EE9 -> $0050
+	 DW $178B ; LIT16
+	 DB $6B ; $2EEC -> $10B7
+	 DB $0E ; $2EED -> $0059
+	 DB $1E ; LIT8
+	 DB $4F ; $2EEF -> $0EC7
+	 DB $6C ; $2EF0 -> $0CE2
+	 DB $6A ; $2EF1 -> $10CD
+TERSE_THREAD_2EF2:
+	 DB $35 ; $2EF2 -> $04A6
+	 DB $1B ; $2EF3 -> $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2EF6 -> $00A4
+	 DB $27 ; $2EF7 -> $0139
+	 DB $03 ; $2EF8 -> $01FC
+	 DW TERSE_THREAD_2EF2 ; 0BRANCH
+	 DB $46 ; $2EFB -> $01F4
+	 DW TERSE_THREAD_2F62 ; BRANCH
+TERSE_THREAD_2EFE:
+	 DB $1B ; $2EFE -> $0050
+	 DW $D18A ; LIT16
+	 DB $25 ; $2F01 -> $00A4
+	 DB $09 ; $2F02 -> $0081
+	 DB $93 ; $2F03 -> $0229
+	 DB $13 ; $2F04 -> $01E3
+	 DB $2F ; $2F05 -> $2119
+	 DB $0B ; $2F06 -> $007B
+	 DB $17 ; $2F07 -> $10DA
+	 DB $0E ; $2F08 -> $0059
+	 DB $10 ; LIT8
+	 DB $18 ; $2F0A -> $10EC
+	 DB $1B ; $2F0B -> $0050
+	 DW $17B9 ; LIT16
+	 DB $1A ; $2F0E -> $1207
+	 DB $19 ; $2F0F -> $11FC
+	 DB $46 ; $2F10 -> $01F4
+	 DW TERSE_THREAD_2F44 ; BRANCH
+	 DB $0E ; $2F13 -> $0059
+	 DB $02 ; LIT8
+	 DB $93 ; $2F15 -> $0229
+	 DB $25 ; $2F16 -> $00A4
+	 DB $2F ; $2F17 -> $2119
+	 DB $0E ; $2F18 -> $0059
+	 DB $10 ; LIT8
+	 DB $17 ; $2F1A -> $10DA
+	 DB $0B ; $2F1B -> $007B
+	 DB $18 ; $2F1C -> $10EC
+	 DB $1B ; $2F1D -> $0050
+	 DW $179D ; LIT16
+	 DB $77 ; $2F20 -> $11DB
+	 DB $19 ; $2F21 -> $11FC
+	 DB $46 ; $2F22 -> $01F4
+	 DW TERSE_THREAD_2F44 ; BRANCH
+	 DB $0E ; $2F25 -> $0059
+	 DB $03 ; LIT8
+	 DB $93 ; $2F27 -> $0229
+	 DB $38 ; $2F28 -> $21D8
+	 DB $2F ; $2F29 -> $2119
+	 DB $0B ; $2F2A -> $007B
+	 DB $17 ; $2F2B -> $10DA
+	 DB $1B ; $2F2C -> $0050
+	 DW $FFF0 ; LIT16
+	 DB $18 ; $2F2F -> $10EC
+	 DB $1B ; $2F30 -> $0050
+	 DW $17B9 ; LIT16
+	 DB $1A ; $2F33 -> $1207
+	 DB $76 ; $2F34 -> $11D0
+	 DB $46 ; $2F35 -> $01F4
+	 DW TERSE_THREAD_2F44 ; BRANCH
+	 DB $05 ; $2F38 -> $0094
+	 DB $1B ; $2F39 -> $0050
+	 DW $FFF0 ; LIT16
+	 DB $17 ; $2F3C -> $10DA
+	 DB $0B ; $2F3D -> $007B
+	 DB $18 ; $2F3E -> $10EC
+	 DB $1B ; $2F3F -> $0050
+	 DW $179D ; LIT16
+	 DB $1A ; $2F42 -> $1207
+	 DB $19 ; $2F43 -> $11FC
+TERSE_THREAD_2F44:
+	 DB $95 ; $2F44 -> $1188
+	 DB $A5 ; $2F45 -> $12DB
+	 DB $1B ; $2F46 -> $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2F49 -> $00A4
+	 DB $27 ; $2F4A -> $0139
+	 DB $1B ; $2F4B -> $0050
+	 DW $D189 ; LIT16
+	 DB $25 ; $2F4E -> $00A4
+	 DB $1B ; $2F4F -> $0050
+	 DW $D18A ; LIT16
+	 DB $25 ; $2F52 -> $00A4
+	 DB $44 ; $2F53 -> $00EE
+	 DB $4C ; $2F54 -> $0149
+	 DB $03 ; $2F55 -> $01FC
+	 DW TERSE_THREAD_2F59 ; 0BRANCH
+	 DB $35 ; $2F58 -> $04A6
+TERSE_THREAD_2F59:
+	 DB $1B ; $2F59 -> $0050
+	 DW $D189 ; LIT16
+	 DB $25 ; $2F5C -> $00A4
+	 DB $1B ; $2F5D -> $0050
+	 DW $D18A ; LIT16
+	 DB $08 ; $2F60 -> $00B2
+	 DB $6D ; $2F61 -> $12C7
+TERSE_THREAD_2F62:
+	 DB $0B ; $2F62 -> $007B
+	 DB $03 ; $2F63 -> $01FC
+	 DW TERSE_THREAD_2EE0 ; 0BRANCH
+	 DB $06 ; $2F66 -> $0044
 	 in   a,($10)
 	 bit  2,a
 	 jp   nz,$300A
