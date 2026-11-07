@@ -2834,327 +2834,453 @@ REDRAW_SAVED_OBJECT:
 	 nop
 	 nop
 	 nop
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 jr   $1408
-	 jr   $13EA
-	 jr   $13EC
-	 jr   $13EE
-	 inc  a
-	 inc  a
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   b,$3E
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   b,$1C
-	 ld   e,$06
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   b,$06
-	 ld   b,$06
-	 ld   a,h
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   b,$66
-	 ld   a,(hl)
-	 inc  a
-	 inc  a
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   b,$0E
-	 inc  c
-	 inc  e
-	 jr   $144A
-	 jr   nc,$1444
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,$06
-	 ld   b,$3E
-	 inc  a
-	 inc  a
-	 ld   b,d
-	 sbc  a,c
-	 and  l
-	 and  c
-	 and  c
-	 and  l
-	 sbc  a,c
-	 ld   b,d
-	 inc  a
-	 jr   $1470
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   l,(hl)
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 inc  a
-	 jr   $149E
-	 jr   $14A0
-	 jr   $14A2
-	 inc  a
-	 inc  a
-	 ld   b,$06
-	 ld   b,$06
-	 ld   b,$06
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   l,(hl)
-	 ld   a,h
-	 ld   a,b
-	 ld   a,b
-	 ld   l,h
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 jp   $E7E7
-	 in   a,($DB)
-	 jp   $C3C3
-	 jp   $66C3
-	 ld   h,(hl)
-	 halt
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   l,(hl)
-	 ld   h,h
-	 ld   a,($7E7C)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,b
-	 ld   a,h
-	 ld   a,$06
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 jr   $150C
-	 jr   $150E
-	 jr   $1510
-	 jr   $1512
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 inc  a
-	 jr   $1526
-	 jp   $C3C3
-	 in   a,($DB)
-	 in   a,($FF)
-	 rst  $20
-	 jp   $66C3
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 jr   $1536
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 jr   $1540
-	 jr   $1542
-	 jr   $1544
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   b,$0E
-	 inc  e
-	 jr   c,$15A3
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
+; $13C4-$1535: 8x10 monochrome character bitmaps.
+; Each glyph consists of ten rows; bit 7 is the leftmost pixel.
+SCREEN_FONT_8X10:
+; $13C4  0  (8 x 10)
+FONT_DIGIT_0:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $13CE  1  (8 x 10)
+FONT_DIGIT_1:
+	 .DB $18 ; ...##...
+	 .DB $38 ; ..###...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $3C ; ..####..
+	 .DB $3C ; ..####..
+; $13D8  2  (8 x 10)
+FONT_DIGIT_2:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $06 ; .....##.
+	 .DB $3E ; ..#####.
+	 .DB $7C ; .#####..
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+; $13E2  3  (8 x 10)
+FONT_DIGIT_3:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $06 ; .....##.
+	 .DB $1C ; ...###..
+	 .DB $1E ; ...####.
+	 .DB $06 ; .....##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $13EC  4  (8 x 10)
+FONT_DIGIT_4:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+; $13F6  5  (8 x 10)
+FONT_DIGIT_5:
+	 .DB $7C ; .#####..
+	 .DB $7C ; .#####..
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $7C ; .#####..
+	 .DB $7E ; .######.
+	 .DB $06 ; .....##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $1400  6  (8 x 10)
+FONT_DIGIT_6:
+	 .DB $3C ; ..####..
+	 .DB $7C ; .#####..
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $7C ; .#####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $140A  7  (8 x 10)
+FONT_DIGIT_7:
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $06 ; .....##.
+	 .DB $0E ; ....###.
+	 .DB $0C ; ....##..
+	 .DB $1C ; ...###..
+	 .DB $18 ; ...##...
+	 .DB $38 ; ..###...
+	 .DB $30 ; ..##....
+	 .DB $30 ; ..##....
+; $1414  8  (8 x 10)
+FONT_DIGIT_8:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $141E  9  (8 x 10)
+FONT_DIGIT_9:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3E ; ..#####.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $3E ; ..#####.
+	 .DB $3C ; ..####..
+; $1428  @  (8 x 10)
+FONT_SYMBOL_AT:
+	 .DB $3C ; ..####..
+	 .DB $42 ; .#....#.
+	 .DB $99 ; #..##..#
+	 .DB $A5 ; #.#..#.#
+	 .DB $A1 ; #.#....#
+	 .DB $A1 ; #.#....#
+	 .DB $A5 ; #.#..#.#
+	 .DB $99 ; #..##..#
+	 .DB $42 ; .#....#.
+	 .DB $3C ; ..####..
+; $1432  A  (8 x 10)
+FONT_LETTER_A:
+	 .DB $18 ; ...##...
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+; $143C  B  (8 x 10)
+FONT_LETTER_B:
+	 .DB $7C ; .#####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7C ; .#####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $7C ; .#####..
+; $1446  C  (8 x 10)
+FONT_LETTER_C:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $1450  D  (8 x 10)
+FONT_LETTER_D:
+	 .DB $7C ; .#####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $7C ; .#####..
+; $145A  E  (8 x 10)
+FONT_LETTER_E:
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $7C ; .#####..
+	 .DB $7C ; .#####..
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+; $1464  F  (8 x 10)
+FONT_LETTER_F:
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $7C ; .#####..
+	 .DB $7C ; .#####..
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+; $146E  G  (8 x 10)
+FONT_LETTER_G:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $6E ; .##.###.
+	 .DB $6E ; .##.###.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $1478  H  (8 x 10)
+FONT_LETTER_H:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+; $1482  I  (8 x 10)
+FONT_LETTER_I:
+	 .DB $3C ; ..####..
+	 .DB $3C ; ..####..
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $3C ; ..####..
+	 .DB $3C ; ..####..
+; $148C  J  (8 x 10)
+FONT_LETTER_J:
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $06 ; .....##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $1496  K  (8 x 10)
+FONT_LETTER_K:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $6E ; .##.###.
+	 .DB $7C ; .#####..
+	 .DB $78 ; .####...
+	 .DB $78 ; .####...
+	 .DB $6C ; .##.##..
+	 .DB $6E ; .##.###.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+; $14A0  L  (8 x 10)
+FONT_LETTER_L:
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+; $14AA  M  (8 x 10)
+FONT_LETTER_M:
+	 .DB $C3 ; ##....##
+	 .DB $E7 ; ###..###
+	 .DB $E7 ; ###..###
+	 .DB $DB ; ##.##.##
+	 .DB $DB ; ##.##.##
+	 .DB $C3 ; ##....##
+	 .DB $C3 ; ##....##
+	 .DB $C3 ; ##....##
+	 .DB $C3 ; ##....##
+	 .DB $C3 ; ##....##
+; $14B4  N  (8 x 10)
+FONT_LETTER_N:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $76 ; .###.##.
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $6E ; .##.###.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+; $14BE  O  (8 x 10)
+FONT_LETTER_O:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $14C8  P  (8 x 10)
+FONT_LETTER_P:
+	 .DB $7C ; .#####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $7C ; .#####..
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+	 .DB $60 ; .##.....
+; $14D2  Q  (8 x 10)
+FONT_LETTER_Q:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $6E ; .##.###.
+	 .DB $64 ; .##..#..
+	 .DB $3A ; ..###.#.
+; $14DC  R  (8 x 10)
+FONT_LETTER_R:
+	 .DB $7C ; .#####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $7C ; .#####..
+	 .DB $6E ; .##.###.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+; $14E6  S  (8 x 10)
+FONT_LETTER_S:
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $60 ; .##.....
+	 .DB $7C ; .#####..
+	 .DB $3E ; ..#####.
+	 .DB $06 ; .....##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $14F0  T  (8 x 10)
+FONT_LETTER_T:
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+; $14FA  U  (8 x 10)
+FONT_LETTER_U:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+; $1504  V  (8 x 10)
+FONT_LETTER_V:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+	 .DB $3C ; ..####..
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+; $150E  W  (8 x 10)
+FONT_LETTER_W:
+	 .DB $C3 ; ##....##
+	 .DB $C3 ; ##....##
+	 .DB $C3 ; ##....##
+	 .DB $DB ; ##.##.##
+	 .DB $DB ; ##.##.##
+	 .DB $DB ; ##.##.##
+	 .DB $FF ; ########
+	 .DB $E7 ; ###..###
+	 .DB $C3 ; ##....##
+	 .DB $C3 ; ##....##
+; $1518  X  (8 x 10)
+FONT_LETTER_X:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $3C ; ..####..
+	 .DB $7E ; .######.
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+; $1522  Y  (8 x 10)
+FONT_LETTER_Y:
+	 .DB $66 ; .##..##.
+	 .DB $66 ; .##..##.
+	 .DB $7E ; .######.
+	 .DB $3C ; ..####..
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+	 .DB $18 ; ...##...
+; $152C  Z  (8 x 10)
+FONT_LETTER_Z:
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
+	 .DB $06 ; .....##.
+	 .DB $0E ; ....###.
+	 .DB $1C ; ...###..
+	 .DB $38 ; ..###...
+	 .DB $70 ; .###....
+	 .DB $60 ; .##.....
+	 .DB $7E ; .######.
+	 .DB $7E ; .######.
 	 sbc  a,(hl)
 	 push ix
 	 push iy
