@@ -434,18 +434,27 @@ TERSE_ZERO_BRANCH:
 	 ld   a,(ix+$01)
 	 ld   (ix+$03),a
 	 jp   (iy)
+; $0216-$0228: two adjacent TERSE colon definitions.
+TERSE_SMALL_COLON_0216:
 	 rst  $08
-	 ld   bc,$0302
-	 ld   e,$02
-	 inc  b
-	 dec  b
-	 ld   b,$CF
-	 ld   bc,$0307
-	 daa
-	 ld   (bc),a
-	 inc  b
-	 dec  b
-	 ld   b,$E1
+	 .DB $01 ; TERSE_2DUP
+	 .DB $02 ; native $010C
+	 .DB $03 ; TERSE_ZERO_BRANCH
+	 .DW TERSE_SMALL_021E_EXIT
+	 .DB $04 ; TERSE_SWAP
+	 .DB $05 ; TERSE_DROP
+TERSE_SMALL_021E_EXIT:
+	 .DB $06 ; TERSE_EXIT
+TERSE_SMALL_COLON_0220:
+	 rst  $08
+	 .DB $01 ; TERSE_2DUP
+	 .DB $07 ; native $0134
+	 .DB $03 ; TERSE_ZERO_BRANCH
+	 .DW TERSE_SMALL_0227_DROP
+	 .DB $04 ; TERSE_SWAP
+TERSE_SMALL_0227_DROP:
+	 .DB $05 ; TERSE_DROP
+	 .DB $06 ; TERSE_EXIT
 	 pop  de
 	 or   a
 	 sbc  hl,de
@@ -485,16 +494,22 @@ TERSE_ZERO_BRANCH:
 	 ld   h,a
 	 jp   (hl)
 	 jp   (iy)
+; $025E-$0269: three short threaded helper definitions.
+TERSE_SMALL_COLON_025E:
 	 rst  $08
-	 inc  b
-	 ex   af,af'
-	 ld   b,$CF
-	 add  hl,bc
-	 ld   a,(bc)
-	 ld   b,$CF
-	 dec  bc
-	 ld   a,(bc)
-	 ld   b,$F5
+	 .DB $04 ; TERSE_SWAP
+	 .DB $08 ; indexed native vector $08
+	 .DB $06 ; TERSE_EXIT
+TERSE_SMALL_COLON_0262:
+	 rst  $08
+	 .DB $09 ; native token $09
+	 .DB $0A ; native token $0A
+	 .DB $06 ; TERSE_EXIT
+TERSE_SMALL_COLON_0266:
+	 rst  $08
+	 .DB $0B ; TERSE_ZERO
+	 .DB $0A ; native token $0A
+	 .DB $06 ; TERSE_EXIT
 	 ld   a,h
 	 cpl
 	 ld   h,a
