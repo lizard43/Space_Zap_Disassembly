@@ -123,6 +123,10 @@ as proven decode.
 
 ## Native source recovery
 
+The original compiled byte-token programs are indexed in
+[Compiled TERSE programs](TERSE-COMPILED-PROGRAMS.md), with typed source
+labels, inline literal/branch encoding and verified original ROM spans.
+
 The maintained Z80 source now has named and documented TERSE primitives
 for literals, stacks, arithmetic, logic, memory, ports, branches and loop
 indexes. The indexed 256-entry native vector table is explicit `DW` data;
@@ -145,8 +149,8 @@ their hardware/parameter contracts are in [ROM assets and audio](ROM-ASSETS-AND-
 
 ### Remaining code recovery
 
-- Decode compiled byte-token programs, including branches, inline literals,
-  vocabulary references and nested execution.
+- Continue decoding the remaining colon programs in the middle ROM;
+  complete the game-semantic naming of reconstructed words and operands.
 - Split and label the remaining native game-state, interrupt, input, display,
   scoring and coin handling code into callable routines.
 - Replace the rest of the invalid instruction streams with typed tables,
