@@ -25,7 +25,7 @@ Space Zap is a four-direction space-defense arcade game. It runs on the Midway A
 | **[TERSE findings](docs/TERSE-ARCHITECTURE.md)** | Interpreter ABI and architecture |
 | **[TERSE word dictionary](docs/TERSE-WORD-DICTIONARY.md)** | Word definitions, stack effects, examples and native Z80 code |
 | **[Token vectors](docs/TERSE-TOKEN-VECTORS.md)** | All 256 native-vector slots |
-| **[Primitive comparison](docs/TERSE-PRIMITIVE-COMPARISON.md)** | Space Zap vs. cartridge TERSE |
+| **[Runtime architecture and comparison](docs/TERSE-ARCHITECTURE.md)** | Space Zap vs. cartridge threading and exact native primitives |
 | **[Manual](docs/Space_Zap_Parts_and_Operating_Manual_(Oct_1980).pdf)** | Original service documentation |
 | **[Images](images/)** | Cabinet, marquee and SVG diagrams |
 
@@ -94,7 +94,7 @@ Space Zap uses a **one-byte indexed-token TERSE** system. BC points to a byte st
 - [TERSE word dictionary](docs/TERSE-WORD-DICTIONARY.md) — recovered names, token addresses, stack effects, examples and native Z80 code.
 - [Complete token-vector inventory](docs/TERSE-TOKEN-VECTORS.md) — all 256 token slots.
 - [Compiled TERSE programs](docs/TERSE-COMPILED-PROGRAMS.md) — original compiled words and branch operands.
-- [TERSE primitive comparison](docs/TERSE-PRIMITIVE-COMPARISON.md) and [XC lineage](docs/TERSE-XC-LINEAGE.md) — recovered architecture comparisons.
+- [Native primitive comparison](docs/TERSE-ARCHITECTURE.md#exact-primitive-level-comparison-with-cartridge-terse) and [XC lineage](docs/TERSE-XC-LINEAGE.md) — exact routine comparisons and original compiler research.
 
 ## References
 
