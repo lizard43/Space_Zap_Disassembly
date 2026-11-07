@@ -6,13 +6,9 @@ A programmer's dictionary of **recovered** TERSE execution words in the original
 
 See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector inventory](TERSE-TOKEN-VECTORS.md), and [compiled TERSE programs](TERSE-COMPILED-PROGRAMS.md).
 
-## Historical DNA word names
+## DNA TERSE vocabulary
 
-The names in this dictionary use the original vocabulary of the DNA *TERSE Standard Glossary* (21 September 1981) **where the Space Zap native implementation and stack effects support the same operation**. These are verified *standard TERSE equivalents*. The actual spellings in lost August 1980 Space Zap source are not independently established by a compiled token stream. ROM token and native addresses are unchanged.
-
-Native Z80 labels such as `TERSE_FETCH` are assembler identifiers, **not competing names for TERSE words**. Unmatched words retain descriptive temporary labels until proven. Crucially, `0` pushes a zero; `ZERO` clears a 16-bit memory cell at a supplied address. `EXIT`, `LIT8`, `ADD_INLINE16`, `COMPARE_BRANCH_NE`, branch handlers and indexed dispatch retain provisional names because their precise historical source vocabulary is not demonstrated. The 16-bit inline literal is standard TERSE `LIT` semantics, while its native assembler label remains `TERSE_LIT16`.
-
-The `BMOVE` equivalence reflects native `LDIR` and the documented three-cell byte-copy contract. Overlap direction and zero-count edge behavior require direct comparison before asserting full behavior equivalence.
+Recovered words use the **original DNA TERSE names** when the native implementation matches the DNA Standard Glossary. `@`, `B@`, `!`, `B!`, `+`, `-`, `1+`, `1-`, `0`, `1`, `ZERO`, `AND`, `OR`, `I`, `INP`, `OUTP`, `ROT`, `PICK`, `MINUS`, and the other matched words below are their TERSE names. Keep Z80 assembly labels valid for zmac without substituting those labels for TERSE vocabulary. Names are unresolved **only when their implementation or word identity remains undetermined**. The `0` word pushes zero; `ZERO` clears a memory word.
 
 ## Quick reference
 
@@ -759,7 +755,7 @@ Jump to the inline absolute thread address if flag is zero; otherwise skip its t
 | `MINUS`, `1-B!` | `$82`, `$43` | `$00CD`, `$00E6` | Negation and byte decrement |
 | `BMOVE` | `$16` | `$015F` | Byte move, edge cases under review |
 
-**Naming not proven:** `EXIT` is a colon-return implementation; the DNA BNF's `CODE ... NEXT` and interpreter NEXT must not be assumed to denote its original source spelling. Neither `LIT8` nor the specialized inline branches have a verified source-level name. See [TERSE source grammar](TERSE-SOURCE-GRAMMAR.md).
+**Remaining analysis:** verify the colon-return word and specialized inline control/branch routines against their native implementations and DNA vocabulary. See the sprint plan for additional primitive recovery.
 
 ## Native-address tokens still being recovered
 
