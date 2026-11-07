@@ -4456,6 +4456,8 @@ ATTACK_SATELLITE_SEQUENCE:
 	 ld   b,$21
 	 ld   ($1900),a
 	 ld   (hl),$01
+; Clear Astrocade sound registers $17..$10. B counts eight writes; C is the register port.
+AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
 	 ld   bc,$0818
 	 dec  c
@@ -4503,6 +4505,8 @@ ATTACK_SATELLITE_SEQUENCE:
 	 jp   z,$20A8
 	 dec  (iy+$20)
 	 jp   nz,$20A8
+; Sound effect tick: accumulate the pitch step and write register $10 (master oscillator).
+AUDIO_MASTER_OSCILLATOR_STEP:
 	 ld   l,(iy+$1f)
 	 ld   c,$10
 	 ld   a,(iy+$1a)
@@ -4556,6 +4560,8 @@ ATTACK_SATELLITE_SEQUENCE:
 	 jp   z,$20CE
 	 dec  (iy+$25)
 	 jp   nz,$20CE
+; Sound effect tick: write register $17 (noise volume) from channel envelope state.
+AUDIO_NOISE_VOLUME_STEP:
 	 ld   c,$17
 	 ld   a,(iy+$27)
 	 add  a,(iy+$24)
@@ -4633,6 +4639,8 @@ ATTACK_SATELLITE_SEQUENCE:
 	 out  (c),e
 	 exx
 	 jp   (iy)
+; Write register $18-B using data in C. This addresses the sound chip's $10..$17 range.
+AUDIO_WRITE_REGISTER_INDEXED:
 	 ld   a,$18
 	 sub  b
 	 ld   e,c
