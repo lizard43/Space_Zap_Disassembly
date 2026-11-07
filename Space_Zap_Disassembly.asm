@@ -7586,10 +7586,10 @@ TEXT_MIDWAY_COPYRIGHT:
 ; $30A9  SPACE
 TEXT_SPACE_TITLE:
 	 .DB "SPACE"
-	 inc  bc
-	 ld   e,d
-	 ld   b,c
-	 ld   d,b
+; Title separator and remaining three letters.
+	 .DB $03
+TEXT_ZAP_TITLE:
+	 .DB "ZAP"
 	 rst  $08
 	 dec  de
 	 sub  b
