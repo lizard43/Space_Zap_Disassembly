@@ -18,6 +18,12 @@ previous BC instruction pointer. Native primitives resume at `JP (IY)`.
 The `DW` directives for branches refer to **TERSE byte-stream labels**,
 not Z80 instruction targets.
 
+## P0 correction: unequal compare with inline branch
+
+Token `$93` invokes the native compare/branch routine at `$0229`. Its inline operand is the following **16-bit little-endian absolute TERSE thread address**. The instruction compares two stack cells; equality skips the address and consumes both cells, whereas inequality branches and pushes the deeper cell back. This asymmetric stack contract is essential for correctly analyzing the loop/control-flow paths.
+
+Seven sites at `$2B01`, `$2B2E`, `$2B5D`, `$2B8D`, `$2F03`, `$2F15`, and `$2F27` now use `DW` inline branch targets instead of false token records. Source bytes remain unchanged. The original source-level word name has not been recovered.
+
 ## P0 correction: native inline-address arithmetic (2026-11-07)
 
 Token `$94` points to the native routine at `$006B`. This routine pops one data-stack cell, reads **two inline bytes from BC**, adds the resulting little-endian word to the popped value modulo 65536, and pushes the result. Its contract is `( n -- n+offset )` with an inline 16-bit displacement. This is not an ordinary zero-operand TERSE primitive.
