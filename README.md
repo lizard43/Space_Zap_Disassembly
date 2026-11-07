@@ -86,6 +86,14 @@ Space Zap uses a **one-byte indexed-token TERSE** system. BC points to a byte st
 
 ![Indexed Space Zap dispatch](images/spacezap-terse-execution.svg)
 
+### TERSE documentation
+
+- [TERSE interpreter architecture](docs/TERSE-ARCHITECTURE.md) — indexed NEXT, execution model, registers and control stacks.
+- [TERSE word dictionary](docs/TERSE-WORD-DICTIONARY.md) — recovered names, token addresses, stack effects, examples and native Z80 code.
+- [Complete token-vector inventory](docs/TERSE-TOKEN-VECTORS.md) — all 256 token slots.
+- [Compiled TERSE programs](docs/TERSE-COMPILED-PROGRAMS.md) — original compiled words and branch operands.
+- [TERSE primitive comparison](docs/TERSE-PRIMITIVE-COMPARISON.md) and [XC lineage](docs/TERSE-XC-LINEAGE.md) — recovered architecture comparisons.
+
 ## References
 
 - [Original Space Zap parts and operating manual](docs/Space_Zap_Parts_and_Operating_Manual_(Oct_1980).pdf)
