@@ -9,6 +9,7 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [x] Recover native token $94 inline 16-bit addition and correct 12 misdecoded inline operands.
 - [x] Convert confirmed numeric JP/CALL references to existing Z80 routine labels, including reset-to-TERSE_COLD_START; label reset vector without changing machine instructions.
 - [ ] Audit vector-referenced native routines; classify true entry points, shared internal branches, inline data, and code joins. Record meaningful, evidence-backed names.
+- [x] Identify the five `$1EA1–$1EDE` native byte/word access routines, original 36-byte record stride, port `$5B` side effects, and resolve 37 symbolic call sites.
 - [ ] Whole-ROM hard RE: resolve remaining numeric JP/CALL/branch targets to existing descriptive labels where the address is proven; recover raw executable Z80 and TERSE code, preserve real DB/DW data, annotate register/stack contracts, and maintain blank-line section formatting. Do not assign semantic names solely from reference frequency.
 - [ ] Establish stack effects, inline operands, control stack, RAM and I/O side effects for every actually used token. Update ASM and Forth-style dictionary together.
 - [x] Decode the complete `$28AA–$2AE0` 567-byte colon program into 269 TERSE token instructions, including 13 four-target native dispatch tables, typed literal/branch operands, and validated internal branch targets.
