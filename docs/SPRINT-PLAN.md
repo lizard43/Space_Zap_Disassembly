@@ -12,7 +12,7 @@ Development continues on PR #1. A correct build must match all four original 4 K
 
 ## P1 — Cabinet hardware and completeness
 
-- [ ] Trace original CPU/game-board I/O decoding for startup bus addresses $F0F8, $0FFA, $0FFB and $01FF. Establish select gates, aliases and functions from schematic nets.
+- [ ] Trace original CPU/game-board I/O decoding for startup bus addresses $F0F8, $0FFA, $0FFB and $01FF. Establish select gates, aliases and functions from schematic nets. **Schematic review:** original manual CPU board page 44 and game board page 38 show interface/address wiring; the provided sheets do not yet establish the internal custom-chip register alias truth table. Resolve by tracing chip-select/address nets through game-board circuitry and the Astrocade custom IC register decode, or confirming the four writes with a cabinet bus trace.
 - [ ] Match game-board P1/P2 input connector signals to Z80 port bits; trace service, door slam, coin, fire and movement handling.
 - [ ] Finish original Magic/pattern bitmap transfers, graphics objects, sound register/envelope routines, scheduling and RAM/state ownership.
 - [ ] Complete RAM/I/O side-effect and interrupt-flow mapping.
