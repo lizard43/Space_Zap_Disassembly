@@ -9,14 +9,14 @@ elif [[ -n "${ZMAC:-}" ]]; then ZMAC_BIN="$ZMAC"
 elif command -v zmac >/dev/null; then ZMAC_BIN="$(command -v zmac)"
 else echo "ERROR: zmac missing. Use ZMAC=/path/to/zmac or tools/zmac." >&2; exit 1
 fi
-mkdir -p zout roms
+mkdir -p roms
 echo "[1/4] Assemble the 16 KB program image"
-echo "+ $ZMAC_BIN --oo cim,lst Space_Zap_Disassembly.asm"
-"$ZMAC_BIN" --oo cim,lst Space_Zap_Disassembly.asm
-IMAGE=zout/Space_Zap_Disassembly.cim
-LISTING=zout/Space_Zap_Disassembly.lst
+echo "+ $ZMAC_BIN -o Space_Zap_Disassembly.bin Space_Zap_Disassembly.asm"
+"$ZMAC_BIN" -o Space_Zap_Disassembly.bin Space_Zap_Disassembly.asm
+IMAGE=Space_Zap_Disassembly.bin
+LISTING=Space_Zap_Disassembly.lst
 [[ -s "$IMAGE" && -s "$LISTING" ]] || { echo "ERROR: missing assembled image/listing" >&2; exit 1; }
-[[ "$(wc -c < "$IMAGE")" -ge 16384 ]] || { echo "ERROR: compiled image too small" >&2; exit 1; }
+[[ "$(wc -c < "$IMAGE")" -eq 16384 ]] || { echo "ERROR: compiled image too small" >&2; exit 1; }
 echo "Created: $IMAGE"
 echo "Created: $LISTING"
 echo
