@@ -18,6 +18,12 @@ previous BC instruction pointer. Native primitives resume at `JP (IY)`.
 The `DW` directives for branches refer to **TERSE byte-stream labels**,
 not Z80 instruction targets.
 
+## P0 indexed native dispatch: token $3D
+
+The native routine at `$023E` consumes an inline table-end/default continuation address and uses the popped 16-bit index to choose a native 16-bit execution address from the following table. Six previously misclassified `$27xx/$28xx` sequences now use explicit `DW` entries. A seventh record at `$2866` is reconstructed as a colon word with LIT16/BYTE_FETCH/INDEXED_DISPATCH/EXIT. Total updated range: **83 ROM bytes**, reconstructed byte for byte before commit.
+
+The seven jump tables each have four entries; `$2866` selects one of four RAM-address-return colon words. Native target addresses are not TERSE token indexes. Identifying the original source-level name and game meaning remains open.
+
 ## P0 correction: unequal compare with inline branch
 
 Token `$93` invokes the native compare/branch routine at `$0229`. Its inline operand is the following **16-bit little-endian absolute TERSE thread address**. The instruction compares two stack cells; equality skips the address and consumes both cells, whereas inequality branches and pushes the deeper cell back. This asymmetric stack contract is essential for correctly analyzing the loop/control-flow paths.
