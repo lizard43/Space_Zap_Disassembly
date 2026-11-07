@@ -4478,7 +4478,11 @@ ATTACK_SATELLITE_SEQUENCE:
 	 ld   b,$21
 	 ld   ($1900),a
 	 ld   (hl),$01
-; Clear Astrocade sound registers $17..$10. B counts eight writes; C is the register port.
+;==============================================================================
+; AUDIO_CLEAR_SOUND_REGISTERS  AUDIO_CLEAR_SOUND_REGISTERS:FC9
+; Clear eight sound-chip registers (AUDIO_CLEAR_SOUND_REGISTERS:0-AUDIO_CLEAR_SOUND_REGISTERS:7).
+; B counts registers; C walks backward from AUDIO_CLEAR_SOUND_REGISTERS:7 to AUDIO_CLEAR_SOUND_REGISTERS:0.
+;==============================================================================
 AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
 	 ld   bc,$0818
@@ -4527,7 +4531,11 @@ AUDIO_CLEAR_SOUND_REGISTERS:
 	 jp   z,$20A8
 	 dec  (iy+$20)
 	 jp   nz,$20A8
-; Sound effect tick: accumulate the pitch step and write register $10 (master oscillator).
+;==============================================================================
+; AUDIO_MASTER_OSCILLATOR_STEP  $2034
+; Advance oscillator state and write sound register AUDIO_MASTER_OSCILLATOR_STEP:0.
+; IY points to the active sound-effect state record.
+;==============================================================================
 AUDIO_MASTER_OSCILLATOR_STEP:
 	 ld   l,(iy+$1f)
 	 ld   c,$10
@@ -4582,7 +4590,11 @@ AUDIO_MASTER_OSCILLATOR_STEP:
 	 jp   z,$20CE
 	 dec  (iy+$25)
 	 jp   nz,$20CE
-; Sound effect tick: write register $17 (noise volume) from channel envelope state.
+;==============================================================================
+; AUDIO_NOISE_VOLUME_STEP  $20B5
+; Advance noise-envelope state and write sound register AUDIO_NOISE_VOLUME_STEP:7.
+; Uses IY+$24 as increment and IY+$27 as accumulator.
+;==============================================================================
 AUDIO_NOISE_VOLUME_STEP:
 	 ld   c,$17
 	 ld   a,(iy+$27)
@@ -4661,7 +4673,11 @@ AUDIO_NOISE_VOLUME_STEP:
 	 out  (c),e
 	 exx
 	 jp   (iy)
-; Write register $18-B using data in C. This addresses the sound chip's $10..$17 range.
+;==============================================================================
+; AUDIO_WRITE_REGISTER_INDEXED  $213E
+; Write data byte to a selected sound register.
+; Input B = reverse register index; C = data. Port = AUDIO_WRITE_REGISTER_INDEXED:8-B.
+;==============================================================================
 AUDIO_WRITE_REGISTER_INDEXED:
 	 ld   a,$18
 	 sub  b
@@ -4672,7 +4688,7 @@ AUDIO_WRITE_REGISTER_INDEXED:
 	 exx
 	 pop  bc
 	 ld   b,$08
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 ld   hl,$D16F
 	 ld   (hl),e
 	 exx
@@ -4680,7 +4696,7 @@ AUDIO_WRITE_REGISTER_INDEXED:
 	 exx
 	 pop  bc
 	 ld   b,$01
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 ld   hl,$D17C
 	 ld   (hl),e
 	 exx
@@ -4688,20 +4704,20 @@ AUDIO_WRITE_REGISTER_INDEXED:
 	 exx
 	 pop  bc
 	 ld   b,$02
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 exx
 	 jp   (iy)
 	 exx
 	 pop  bc
 	 ld   b,$03
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 exx
 	 jp   (iy)
 	 pop  hl
 	 exx
 	 pop  bc
 	 ld   b,$07
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 pop  de
 	 inc  c
 	 out  (c),e
