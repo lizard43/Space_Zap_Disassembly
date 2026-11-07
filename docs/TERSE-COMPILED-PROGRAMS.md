@@ -18,6 +18,39 @@ previous BC instruction pointer. Native primitives resume at `JP (IY)`.
 The `DW` directives for branches refer to **TERSE byte-stream labels**,
 not Z80 instruction targets.
 
+## Middle-ROM bytecode and native routines
+
+The original ROM region **`$270D–$2AE0` (980 bytes)** is now expressed as
+TERSE token words and original data rather than an anonymous Z80 disassembly.
+Its recovered content includes **29 confirmed colon definitions**, **255 token
+operations**, and **12 branch operands**. Where a word's original byte
+contract remains unresolved, the source retains `DB` values in address-labeled
+data records without assigning invented Z80 instructions.
+
+Confirmed roots: `$270E`, `$2713`, `$2718`, `$2730`, `$273B`,
+`$2746`, `$2750`, `$275C`, `$280F`, `$2813`, `$2818`,
+`$281C`, `$2821`, `$2824`, `$2827`, `$282B`, `$282F`,
+`$2833`, `$2837`, `$283B`, `$2841`, `$2848`, `$284F`,
+`$2855`, `$2877`, `$2888`, `$288F`, `$2897`, `$28A1`.
+
+The word at `$275C` includes an inline branch address `$3027`, beyond
+that word's local bounds; the original address remains encoded directly.
+The mixed `$2866` record and `$28AA` onward retain their exact ROM bytes
+until their inline operand formats are resolved. The complete replacement
+was round-tripped against all **980 original bytes** in that ROM span.
+
+At the low end of the interpreter, `TERSE_COLON_027E` now represents the
+original 13 byte-token cells at `$027E–$028B`, following two native
+two's-complement register operations. The subsequent native compare/update
+routines beginning at `$028C` and `$02DF` are individually labeled
+with function headers. They preserve CPU interrupt state while operating
+on two-word structures.
+
+The `JR Z` value errors at source lines 6121, 6158 and 6239 arose from
+interpreting **compiled data as relative Z80 branch instructions**. Replacing
+the enclosing compiled/data region removes that class of false instructions
+instead of editing isolated branches.
+
 ## Recovered source definitions
 
 The following regions have been decoded into typed `DB` token cells
@@ -127,6 +160,7 @@ the original source ROM at the original CPU addresses:
 | `$1311–$13C3` | 179 | Colon stream and ten-byte font padding |
 | `$1F92–$1FC8` | 55 | Sound-control stream and following native setup |
 | `$26D2–$270C` | 59 | Twelve compact address-literal definitions |
+| `$270D–$2AE0` | 980 | 29 colon words and original data spans |
 | `$2AE1–$2D7B` | 667 | Seven colon programs, including interword byte |
 | `$2D7C–$2ED4` | 345 | Two more game-control colon programs |
 | `$2ED5–$2F66` | 146 | Final decoded game-control colon |
