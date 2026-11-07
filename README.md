@@ -22,7 +22,8 @@ Space Zap is a four-direction space-defense arcade game. It runs on the Midway A
 | **[Linux build](build.sh)** / **[Windows build](build.bat)** | Assemble, package and verify |
 | **[ROMs](roms/)** | MAME files and original archive |
 | **[TERSE findings](docs/TERSE-ARCHITECTURE.md)** | Interpreter ABI and architecture |
-| **[Token dictionary](docs/TERSE-TOKEN-VECTORS.md)** | All 256 native-vector slots |
+| **[TERSE word dictionary](docs/TERSE-WORD-DICTIONARY.md)** | Word definitions, stack effects, examples and native Z80 code |
+| **[Token vectors](docs/TERSE-TOKEN-VECTORS.md)** | All 256 native-vector slots |
 | **[Primitive comparison](docs/TERSE-PRIMITIVE-COMPARISON.md)** | Space Zap vs. cartridge TERSE |
 | **[Manual](docs/Space_Zap_Parts_and_Operating_Manual_(Oct_1980).pdf)** | Original service documentation |
 | **[Images](images/)** | Cabinet, marquee and SVG diagrams |
