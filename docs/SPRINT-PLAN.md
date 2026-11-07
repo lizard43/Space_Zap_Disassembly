@@ -1,6 +1,6 @@
 # Space Zap — active RE sprint plan
 
-PR #1 established the recovered runtime and initial RE. This sprint is carried forward into draft PR #2, currently stacked on PR #1 until PR #1 passes its four-ROM verification gate and merges. Afterward, retarget PR #2 to `main`. A correct build must match all four original 4 KB ROM SHA-1 values.
+PR #1 established the recovered runtime and initial RE, and was merged into `main` at `0183fadf948425654e08d8f690bfb0a35f37c807` after the user reported a successful build with matching original ROM SHA-1 values. PR #2 now targets `main` and carries the remaining sprint work. Maintain the four-ROM SHA-1 verification gate for subsequent source changes.
 
 ## PR #2 — original DNA TERSE vocabulary and source-structure recovery
 
@@ -25,7 +25,8 @@ PR #1 established the recovered runtime and initial RE. This sprint is carried f
 
 ## P0 — Finish executable reconstruction
 
-- [ ] Run zmac, verify the 16 KB output and all four ROM SHA-1 values; repair any source discrepancies.
+- [x] PR #1 baseline: user reported a successful 16 KB build and all four matching original ROM SHA-1 values.
+- [ ] Re-run zmac and all four SHA-1 checks after any new source changes; repair any discrepancies.
 - [ ] Classify the mixed display/message region $3096–$327B and other code/data boundaries; preserve genuine strings, graphics and tables.
 - [ ] Resolve remaining native JP/CALL/branch targets using actual code entry boundaries; document stack/register contracts.
 - [ ] Trace game-state flow: reset/attract, service, RAM/ROM tests, coin/start, direction/fire, collision, score, graphics and sound.
