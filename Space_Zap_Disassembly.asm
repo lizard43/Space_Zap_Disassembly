@@ -23,12 +23,17 @@
 	 jp   $0015
 	 nop
 	 nop
+; TERSE_COLON_ENTRY $0008: RST08 pushes a new threaded IP onto SP.
+; Preserve caller BC on IX then POP BC to enter that inline thread.
+TERSE_COLON_ENTRY:
 	 dec  ix
 	 ld   (ix+$00),b
 	 dec  ix
 	 ld   (ix+$00),c
 	 pop  bc
 	 jp   (iy)
+; TERSE_COLD_START $0015: machine and thread stacks initialization.
+TERSE_COLD_START:
 	 ld   a,$01
 	 out  ($08),a
 	 ld   a,$F0
@@ -42,6 +47,9 @@
 	 ld   sp,$D780
 	 ld   bc,$3CDC
 	 ld   iy,$0035
+; TERSE_INDEXED_NEXT $0035: BC reads one-byte token, indexes 256
+; 16-bit handler addresses at $3DEA. This is not direct-address NEXT.
+TERSE_INDEXED_NEXT:
 	 ld   a,(bc)
 	 inc  bc
 	 ld   de,$3DEA
@@ -54,11 +62,15 @@
 	 ld   d,(hl)
 	 ex   de,hl
 	 jp   (hl)
+; TERSE_EXIT $0050: recover parent BC from the IX control stack.
+TERSE_EXIT:
 	 ld   c,(ix+$00)
 	 inc  ix
 	 ld   b,(ix+$00)
 	 inc  ix
 	 jp   (iy)
+; TERSE_LIT16 $005F: consume following little-endian 16-bit literal.
+TERSE_LIT16:
 	 ld   a,(bc)
 	 inc  bc
 	 ld   l,a
@@ -67,6 +79,8 @@
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+; TERSE_LIT8 $006A: consume following unsigned byte literal.
+TERSE_LIT8:
 	 ld   a,(bc)
 	 inc  bc
 	 ld   l,a
