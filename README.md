@@ -11,10 +11,8 @@ Space Zap is a four-direction space-defense arcade game. It runs on the Midway A
 | Area | Recovered work |
 | --- | --- |
 | [Build and ROM identity](#build) | Original 16 KB program, four MAME ROMs, SHA-1 verification |
-| [TERSE](#terse-execution-architecture) | Indexed NEXT, 256-word vector table, primitives and shared cartridge code |
-| [Graphics](#graphics-and-data) | Labeled sprites, 2bpp inline plots and animations |
+| [TERSE](#terse-execution-architecture) | Indexed NEXT, 256-word vector table and native Z80 words |
 | [Memory and I/O](#memory-map) | 64 KB reference map; verified ROM and TERSE addresses |
-| [RE progress](#reverse-engineering-status) | Original source recovery in progress |
 
 ## Project layout
 
@@ -49,8 +47,6 @@ Both scripts:
 2. Split the image into four original 4 KB ROM files.
 3. Create `roms/spacezap.zip` for MAME.
 4. Verify the generated ROMs against their original SHA-1 hashes.
-
-**Build verification:** The current PR has not yet been run through native zmac and a complete SHA-1 comparison.
 
 ## Run in MAME
 
@@ -89,24 +85,6 @@ Space Zap uses a **one-byte indexed-token TERSE** system. BC points to a byte st
 | IY | NEXT continuation, `$0035` |
 
 ![Indexed Space Zap dispatch](images/spacezap-terse-execution.svg)
-
-### Indexed versus direct threading
-
-![Indexed-token and direct-threaded TERSE](images/spacezap-threading-comparison.svg)
-
-Coloring Book and Cosmic Raiders use **16-bit direct-threaded** execution addresses instead of Space Zap's byte tokens. Their dispatch format differs, but **nine corresponding native primitives contain 70 matching machine-code bytes**. See the [primitive-level comparison](docs/TERSE-PRIMITIVE-COMPARISON.md) and [full XC analysis](docs/TERSE-XC-LINEAGE.md).
-
-The two 688-byte reference windows are **not identical kernels**. Their similarly sized windows include different NEXT mechanisms; shared primitive code establishes the functional relationship.
-
-## Graphics and data
-
-The disassembly includes inline 2bpp sprite plots and named records for laser bases, alien ships, mines and attack satellites. ROM-tail `SPACE ZAP` and `DNA` signatures are typed data. All 256 TERSE token vectors have been converted from false instructions to `DW` entries.
-
-## Reverse-engineering status
-
-The core TERSE entry, literals, EXIT and indexed dispatcher are labeled. The full token vocabulary, threaded operands, reachable native routines, RAM and I/O behavior still require hard RE. **The modified ASM has not yet passed a native byte-exact build.**
-
-The arcade game's 4 KB Astrocade-console adaptation, **Space Fortress** (1981), is a separate program; its TERSE status is not established.
 
 ## References
 
