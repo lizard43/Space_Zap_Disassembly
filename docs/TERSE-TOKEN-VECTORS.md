@@ -3,6 +3,12 @@
 **Verified ROM:** `roms/0665.xx`, SHA-1 `5aabd720a106158a892368c4920d9cd0f5235e34`.  
 **Location:** CPU `$3DEA–$3FE9`, 512 bytes, exactly 256 little-endian vector cells.
 
+## RE status and sprint coverage
+
+**This inventory is not 256 unresolved items.** All 256 original token-vector cells have been extracted from the ROM. Of these, 251 contain in-ROM addresses and five are unused/sentinel cells. The detailed [TERSE word dictionary](TERSE-WORD-DICTIONARY.md) currently documents 29 indexed words, including inline-operand routines and their stack behavior. Rows below are synchronized with these recovered contracts. Remaining `semantics not yet individually recovered` rows describe outstanding semantic RE, not missing ROM bytes.
+
+The [active Space Zap P0 sprint](SPRINT-PLAN.md) explicitly covers auditing every used vector target, its native or colon definition, stack/inline-operand behavior, and updating this inventory and the programmer's dictionary. Near-final runtime integration into DNA TERSE WB follows that work.
+
 ## Counts and caveats
 
 - **256** token IDs (`$00–$FF`), each occupying one byte in compiled threads.
@@ -26,43 +32,43 @@ limited to primitives confirmed by direct disassembly and control flow.
 | Token | Native address | RE classification |
 | --- | --- | --- |
 | `$00` | `$0000` | Zero vector (not demonstrated executable) |
-| `$01` | `$008C` | Native target; semantics not yet individually recovered |
+| `$01` | `$008C` | 2DUP: recovered contract in word dictionary |
 | `$02` | `$010C` | Native target; semantics not yet individually recovered |
-| `$03` | `$01FC` | Native target; semantics not yet individually recovered |
-| `$04` | `$0097` | Native target; semantics not yet individually recovered |
-| `$05` | `$0094` | Native target; semantics not yet individually recovered |
+| `$03` | `$01FC` | ZERO_BRANCH: recovered contract in word dictionary |
+| `$04` | `$0097` | SWAP: recovered contract in word dictionary |
+| `$05` | `$0094` | DROP: recovered contract in word dictionary |
 | `$06` | `$0044` | TERSE EXIT |
 | `$07` | `$0134` | Native target; semantics not yet individually recovered |
-| `$08` | `$00B2` | Native target; semantics not yet individually recovered |
-| `$09` | `$0081` | Native target; semantics not yet individually recovered |
+| `$08` | `$00B2` | BYTE_STORE: recovered contract in word dictionary |
+| `$09` | `$0081` | ONE: recovered contract in word dictionary |
 | `$0A` | `$025E` | Native target; semantics not yet individually recovered |
-| `$0B` | `$007B` | Native target; semantics not yet individually recovered |
-| `$0C` | `$009D` | Native target; semantics not yet individually recovered |
-| `$0D` | `$0087` | Native target; semantics not yet individually recovered |
+| `$0B` | `$007B` | ZERO: recovered contract in word dictionary |
+| `$0C` | `$009D` | FETCH: recovered contract in word dictionary |
+| `$0D` | `$0087` | DUP: recovered contract in word dictionary |
 | `$0E` | `$0059` | TERSE LIT8 |
-| `$0F` | `$00BF` | Native target; semantics not yet individually recovered |
-| `$10` | `$00AB` | Native target; semantics not yet individually recovered |
+| `$0F` | `$00BF` | ADD: recovered contract in word dictionary |
+| `$10` | `$00AB` | STORE: recovered contract in word dictionary |
 | `$11` | `$FFFF` | Unused/sentinel |
 | `$12` | `$040B` | Native target; semantics not yet individually recovered |
 | `$13` | `$01E3` | Native target; semantics not yet individually recovered |
-| `$14` | `$00D9` | Native target; semantics not yet individually recovered |
-| `$15` | `$00D4` | Native target; semantics not yet individually recovered |
+| `$14` | `$00D9` | INCREMENT: recovered contract in word dictionary |
+| `$15` | `$00D4` | DECREMENT: recovered contract in word dictionary |
 | `$16` | `$015F` | Native target; semantics not yet individually recovered |
 | `$17` | `$10DA` | Native target; semantics not yet individually recovered |
 | `$18` | `$10EC` | Native target; semantics not yet individually recovered |
 | `$19` | `$11FC` | Native target; semantics not yet individually recovered |
 | `$1A` | `$1207` | Native target; semantics not yet individually recovered |
 | `$1B` | `$0050` | TERSE LIT16 |
-| `$1C` | `$00B7` | Native target; semantics not yet individually recovered |
+| `$1C` | `$00B7` | ZERO_WORD_AT_ADDRESS: recovered contract in word dictionary |
 | `$1D` | `$0266` | Native target; semantics not yet individually recovered |
 | `$1E` | `$027E` | Native target; semantics not yet individually recovered |
-| `$1F` | `$01D1` | Native target; semantics not yet individually recovered |
+| `$1F` | `$01D1` | PORT_OUT: recovered contract in word dictionary |
 | `$20` | `$05E5` | Native target; semantics not yet individually recovered |
-| `$21` | `$01D9` | Native target; semantics not yet individually recovered |
+| `$21` | `$01D9` | PORT_IN: recovered contract in word dictionary |
 | `$22` | `$0D43` | Native target; semantics not yet individually recovered |
 | `$23` | `$016D` | Native target; semantics not yet individually recovered |
-| `$24` | `$01B6` | Native target; semantics not yet individually recovered |
-| `$25` | `$00A4` | Native target; semantics not yet individually recovered |
+| `$24` | `$01B6` | LOOP_INDEX: recovered contract in word dictionary |
+| `$25` | `$00A4` | BYTE_FETCH: recovered contract in word dictionary |
 | `$26` | `$0188` | Native target; semantics not yet individually recovered |
 | `$27` | `$0139` | Native target; semantics not yet individually recovered |
 | `$28` | `$2193` | Native target; semantics not yet individually recovered |
@@ -83,25 +89,25 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$37` | `$21AA` | Native target; semantics not yet individually recovered |
 | `$38` | `$21D8` | Native target; semantics not yet individually recovered |
 | `$39` | `$111E` | Native target; semantics not yet individually recovered |
-| `$3A` | `$00DE` | Native target; semantics not yet individually recovered |
+| `$3A` | `$00DE` | ARITH_SHIFT_RIGHT: recovered contract in word dictionary |
 | `$3B` | `$112D` | Native target; semantics not yet individually recovered |
 | `$3C` | `$20FE` | Native target; semantics not yet individually recovered |
 | `$3D` | `$023E` | INDEXED_DISPATCH: inline end pointer and 16-bit native jump table |
 | `$3E` | `$2223` | Native target; semantics not yet individually recovered |
-| `$3F` | `$00C5` | Native target; semantics not yet individually recovered |
+| `$3F` | `$00C5` | SUBTRACT: recovered contract in word dictionary |
 | `$40` | `$2154` | Native target; semantics not yet individually recovered |
 | `$41` | `$12B1` | Native target; semantics not yet individually recovered |
 | `$42` | `$218D` | Native target; semantics not yet individually recovered |
 | `$43` | `$00E6` | Native target; semantics not yet individually recovered |
 | `$44` | `$00EE` | Native target; semantics not yet individually recovered |
 | `$45` | `$01EA` | Native target; semantics not yet individually recovered |
-| `$46` | `$01F4` | Native target; semantics not yet individually recovered |
+| `$46` | `$01F4` | BRANCH_ABSOLUTE: recovered contract in word dictionary |
 | `$47` | `$1F01` | Native target; semantics not yet individually recovered |
 | `$48` | `$2350` | Native target; semantics not yet individually recovered |
 | `$49` | `$0262` | Native target; semantics not yet individually recovered |
 | `$4A` | `$1F08` | Native target; semantics not yet individually recovered |
 | `$4B` | `$1237` | Native target; semantics not yet individually recovered |
-| `$4C` | `$0149` | Native target; semantics not yet individually recovered |
+| `$4C` | `$0149` | BITWISE_AND: recovered contract in word dictionary |
 | `$4D` | `$1EF8` | Native target; semantics not yet individually recovered |
 | `$4E` | `$013F` | Native target; semantics not yet individually recovered |
 | `$4F` | `$0EC7` | Native target; semantics not yet individually recovered |
@@ -109,7 +115,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$51` | `$12B7` | Native target; semantics not yet individually recovered |
 | `$52` | `$0217` | Native target; semantics not yet individually recovered |
 | `$53` | `$1F18` | Native target; semantics not yet individually recovered |
-| `$54` | `$0154` | Native target; semantics not yet individually recovered |
+| `$54` | `$0154` | BITWISE_OR: recovered contract in word dictionary |
 | `$55` | `$04BB` | Native target; semantics not yet individually recovered |
 | `$56` | `$11C3` | Native target; semantics not yet individually recovered |
 | `$57` | `$121C` | Native target; semantics not yet individually recovered |
