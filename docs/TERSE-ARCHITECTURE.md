@@ -1,6 +1,4 @@
 # Space Zap: TERSE runtime and source archaeology
-Research checkpoint • 2026-11-07
-
 ![Space Zap TERSE execution](../images/spacezap-terse-execution.svg)
 
 ## Confirmed execution model
@@ -71,6 +69,50 @@ The byte-token representation may be smaller for large programs but
 adds one native address-table lookup per executed token. No performance
 measurements are asserted here.
 
+## Exact primitive-level comparison with cartridge TERSE
+
+Nine bounded original machine-code fragments share 70 exact bytes with the Coloring Book/Cosmic Raiders native primitive family. The source ROM is `0662.01` (SHA-1 `784ac67c75c7c101f97ebfd39b2b3f7bf7fa470a`); the comparison implementation is `lizard43/colbook/src/colbook-terse-runtime.asm`. This is bounded routine identity, not identity of the entire interpreter.
+
+## Word-by-word common code
+
+| Word / runtime operation | Space Zap arcade | Cartridge | Bytes | Arcade machine code | Stack / control behavior |
+| --- | --- | --- | ---: | --- | --- |
+| COLON ENTRY | `$0008` | `$2019` | 13 | `DD 2B DD 70 00 DD 2B DD 71 00 C1 FD E9` | Save caller BC to IX; take RST return address as child thread |
+| EXIT | `$0044` | `$2057` | 12 | `DD 4E 00 DD 23 DD 46 00 DD 23 FD E9` | Restore parent BC from IX; return via IY |
+| LIT16 | `$0050` | `$2063` | 9 | `0A 03 6F 0A 03 67 E5 FD E9` | Fetch 16-bit inline little-endian literal |
+| LIT8 | `$0059` | `$206C` | 8 | `0A 03 6F 26 00 E5 FD E9` | Fetch 8-bit inline literal, zero extend |
+| ZERO | `$007B` | `$2084` | 6 | `21 00 00 E5 FD E9` | Push $0000 |
+| ONE | `$0081` | `$208A` | 6 | `21 01 00 E5 FD E9` | Push $0001 |
+| DUP | `$0087` | `$2090` | 5 | `E1 E5 E5 FD E9` | Duplicate top stack cell |
+| 2DUP | `$008C` | `$2095` | 8 | `E1 D1 D5 E5 D5 E5 FD E9` | Duplicate top two cells |
+| DROP | `$0094` | `$209D` | 3 | `E1 FD E9` | Discard top stack cell |
+
+**Total: 70 matching instruction bytes across 9 fragments**. The entries
+are not claimed to be one uninterrupted 70-byte match.
+Each is a bounded primitive/entry. Some location-dependent words elsewhere
+may require relocation normalization; these nine are short routines whose
+listed opcodes do not embed machine addresses.
+
+The Space Zap and cartridge addresses differ, while these byte bodies
+do not. This provides stronger evidence for common runtime code than
+shared use of `JP (IY)` alone.
+
+The original byte-token XC build used for Space Zap remains unidentified. Common native primitives do not imply identical compilation formats. The Space Zap NEXT resolves a one-byte index through the 256-entry address vector, whereas the cartridges read a two-byte execution address directly. See [historical XC lineage](TERSE-XC-LINEAGE.md).
+
+## Native support routines and RAM structures
+
+| ROM address | Original function | Recovered behavior |
+| --- | --- | --- |
+| `$026A` | `NATIVE_NEGATE_HL` | Two's-complement HL, preserving AF |
+| `$0273` | `NATIVE_NEGATE_DE` | Two's-complement DE, preserving AF |
+| `$027E` | `TERSE_COLON_027E` | Compiled thirteen-token helper; complete semantics under analysis |
+| `$028C` | `NATIVE_ATOMIC_COMPARE_UPDATE` | Interrupt-masked record comparison/update, HL status |
+| `$02DF` | `NATIVE_ATOMIC_RECORD_CHECK` | Interrupt-masked two-word record check/update |
+| `$0336–$0345` | Eight RAM word addresses | `$D0A1,$D0D7,$D0D9,$D10F,$D111,$D12F,$D131,$D14F` |
+| `$0346` | `NATIVE_EVENT_RECORD_DISPATCH_0346` | Native record dispatch using RAM address table |
+
+RAM ownership and I/O side-effect analysis is ongoing; source labels identify confirmed entry boundaries, not necessarily complete application-level semantics.
+
 ## The two 688-byte comparisons
 
 The TERSE repository's `spacezap_terse_signature_688.bin` and
@@ -91,17 +133,13 @@ prototypes**, not between them and Space Zap.
 
 Shared functionality is supported at the level of colon entry,
 NEXT/EXIT, 16- and 8-bit literals, data/return stack organization,
-and native continuations. Byte identity, complete word-for-word
+and native continuations. Whole-runtime byte identity, complete word-for-word
 identity and original source ancestry **have not been demonstrated**
 for Space Zap versus the cartridges. A future comparison should
 normalize relocated native address references, classify the opcode
 and control-flow behavior of each primitive, and hash
 matched routines, not arbitrary equal-size windows.
 
-## TERSE reference documents
+## Technical references
 
-- [Recovered word dictionary](TERSE-WORD-DICTIONARY.md) — word names, byte tokens, stack effects, examples and original native code.
-- [Full token-vector inventory](TERSE-TOKEN-VECTORS.md) — all 256 token cells and ROM targets.
-- [Compiled TERSE programs](TERSE-COMPILED-PROGRAMS.md) — decoded original colon definitions, branches and literal operands.
-- [Native primitive comparison](TERSE-PRIMITIVE-COMPARISON.md) — comparisons with cartridge TERSE.
-- [ROM map and RE notes](ROM-AND-RE-NOTES.md) — hardware regions, graphics, audio, other native-code recovery.
+See the [word dictionary](TERSE-WORD-DICTIONARY.md), [original vector table](TERSE-TOKEN-VECTORS.md), [compiled application programs](TERSE-COMPILED-PROGRAMS.md), [ROM assets and hardware](ROM-ASSETS-AND-AUDIO.md), and [XC lineage](TERSE-XC-LINEAGE.md).

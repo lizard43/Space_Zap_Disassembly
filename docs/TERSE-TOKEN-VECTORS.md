@@ -5,7 +5,7 @@
 
 ## RE status and sprint coverage
 
-**This inventory is not 256 unresolved items.** All 256 original token-vector cells have been extracted from the ROM. Of these, 251 contain in-ROM addresses and five are unused/sentinel cells. The detailed [TERSE word dictionary](TERSE-WORD-DICTIONARY.md) currently documents 29 indexed words, including inline-operand routines and their stack behavior. Rows below are synchronized with these recovered contracts. Remaining `semantics not yet individually recovered` rows describe outstanding semantic RE, not missing ROM bytes.
+**This inventory is not 256 unresolved items.** All 256 original token-vector cells have been extracted from the ROM. Of these, 251 contain in-ROM addresses and five are unused/sentinel cells. The detailed [TERSE word dictionary](TERSE-WORD-DICTIONARY.md) currently documents 34 indexed words, including inline-operand routines and their stack behavior. Rows below are synchronized with these recovered contracts. Remaining `semantics not yet individually recovered` rows describe outstanding semantic RE, not missing ROM bytes.
 
 The [active Space Zap P0 sprint](SPRINT-PLAN.md) explicitly covers auditing every used vector target, its native or colon definition, stack/inline-operand behavior, and updating this inventory and the programmer's dictionary. Near-final runtime integration into DNA TERSE WB follows that work.
 
@@ -50,10 +50,10 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$10` | `$00AB` | STORE: recovered contract in word dictionary |
 | `$11` | `$FFFF` | Unused/sentinel |
 | `$12` | `$040B` | Native target; semantics not yet individually recovered |
-| `$13` | `$01E3` | Native target; semantics not yet individually recovered |
+| `$13` | `$01E3` | STACK_ROTATE: recovered native stack contract |
 | `$14` | `$00D9` | INCREMENT: recovered contract in word dictionary |
 | `$15` | `$00D4` | DECREMENT: recovered contract in word dictionary |
-| `$16` | `$015F` | Native target; semantics not yet individually recovered |
+| `$16` | `$015F` | MEMORY_COPY: recovered native stack contract |
 | `$17` | `$10DA` | Native target; semantics not yet individually recovered |
 | `$18` | `$10EC` | Native target; semantics not yet individually recovered |
 | `$19` | `$11FC` | Native target; semantics not yet individually recovered |
@@ -98,9 +98,9 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$40` | `$2154` | Native target; semantics not yet individually recovered |
 | `$41` | `$12B1` | Native target; semantics not yet individually recovered |
 | `$42` | `$218D` | Native target; semantics not yet individually recovered |
-| `$43` | `$00E6` | Native target; semantics not yet individually recovered |
-| `$44` | `$00EE` | Native target; semantics not yet individually recovered |
-| `$45` | `$01EA` | Native target; semantics not yet individually recovered |
+| `$43` | `$00E6` | DECREMENT_BYTE_AT_ADDRESS: recovered native stack contract |
+| `$44` | `$00EE` | INCREMENT_BYTE_AT_ADDRESS: recovered native stack contract |
+| `$45` | `$01EA` | STACK_PICK: recovered native stack contract |
 | `$46` | `$01F4` | BRANCH_ABSOLUTE: recovered contract in word dictionary |
 | `$47` | `$1F01` | Native target; semantics not yet individually recovered |
 | `$48` | `$2350` | Native target; semantics not yet individually recovered |
@@ -288,12 +288,3 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$FE` | `$FFFF` | Unused/sentinel |
 | `$FF` | `$FFFF` | Unused/sentinel |
 
-## Next hard-RE pass
-
-Trace all *actually used* token IDs beginning with the initial BC at
-`$3CDC`, decode each inline operand using the target word's contract,
-and construct a typed thread representation. Tie each native target
-to a unique labeled disassembly entry and record direct call sites.
-Only after source assembly is byte-exact should the table in
-`Space_Zap_Disassembly.asm` be converted into labeled `DW`
-directives. This document is the current unambiguous vector baseline.

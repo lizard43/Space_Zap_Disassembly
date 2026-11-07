@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0008
+; RE version: v20261107-0009
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -18,6 +18,7 @@
 	 jp   $0015
 	 nop
 	 nop
+
 ; TERSE_COLON_ENTRY $0008: RST08 pushes a new threaded IP onto SP.
 ; Preserve caller BC on IX then POP BC to enter that inline thread.
 TERSE_COLON_ENTRY:
@@ -27,6 +28,7 @@ TERSE_COLON_ENTRY:
 	 ld   (ix+$00),c
 	 pop  bc
 	 jp   (iy)
+
 ; TERSE_COLD_START $0015: machine and thread stacks initialization.
 TERSE_COLD_START:
 	 ld   a,$01
@@ -42,6 +44,7 @@ TERSE_COLD_START:
 	 ld   sp,$D780
 	 ld   bc,$3CDC
 	 ld   iy,$0035
+
 ; TERSE_INDEXED_NEXT $0035: BC reads one-byte token, indexes 256
 ; 16-bit handler addresses at $3DEA. This is not direct-address NEXT.
 TERSE_INDEXED_NEXT:
@@ -57,6 +60,7 @@ TERSE_INDEXED_NEXT:
 	 ld   d,(hl)
 	 ex   de,hl
 	 jp   (hl)
+
 ; TERSE_EXIT $0044: recover parent BC from the IX control stack.
 TERSE_EXIT:
 	 ld   c,(ix+$00)
@@ -64,6 +68,7 @@ TERSE_EXIT:
 	 ld   b,(ix+$00)
 	 inc  ix
 	 jp   (iy)
+
 ; TERSE_LIT16 $0050: consume following little-endian 16-bit literal.
 TERSE_LIT16:
 	 ld   a,(bc)
@@ -74,6 +79,7 @@ TERSE_LIT16:
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+
 ; TERSE_LIT8 $0059: consume following unsigned byte literal.
 TERSE_LIT8:
 	 ld   a,(bc)
@@ -90,6 +96,7 @@ TERSE_LIT8:
 	 ld   h,a
 	 push hl
 	 jp   $0050
+
 ; TERSE_ADD_INLINE16 $006B, token $94: ( n -- n+offset ).
 ; Fetch a little-endian signed/unsigned 16-bit inline displacement from BC,
 ; add to the top stack cell modulo 65536, then continue through IY.
@@ -107,6 +114,7 @@ TERSE_ADD_INLINE16:
 	 pop  hl
 	 add  hl,hl
 	 jp   $006C
+
 ; The entry at $0076 doubles HL before entering the shared inline-add body.
 ; No vector-table token currently points to this entry.
 ; Push 16-bit zero.
@@ -114,17 +122,20 @@ TERSE_ZERO:
 	 ld   hl,$0000
 	 push hl
 	 jp   (iy)
+
 ; Push 16-bit one.
 TERSE_ONE:
 	 ld   hl,$0001
 	 push hl
 	 jp   (iy)
+
 ; ( n -- n n ) Duplicate top data-stack cell.
 TERSE_DUP:
 	 pop  hl
 	 push hl
 	 push hl
 	 jp   (iy)
+
 ; ( a b -- a b a b ) Duplicate two data-stack cells.
 TERSE_2DUP:
 	 pop  hl
@@ -134,10 +145,12 @@ TERSE_2DUP:
 	 push de
 	 push hl
 	 jp   (iy)
+
 ; ( n -- ) Discard top data-stack cell.
 TERSE_DROP:
 	 pop  hl
 	 jp   (iy)
+
 ; ( a b -- b a ) Exchange top two cells.
 TERSE_SWAP:
 	 pop  hl
@@ -145,6 +158,7 @@ TERSE_SWAP:
 	 push hl
 	 push de
 	 jp   (iy)
+
 ; ( addr -- value ) Load little-endian 16-bit word.
 TERSE_FETCH:
 	 pop  hl
@@ -153,6 +167,7 @@ TERSE_FETCH:
 	 ld   d,(hl)
 	 push de
 	 jp   (iy)
+
 ; ( addr -- byte ) Load zero-extended byte.
 TERSE_BYTE_FETCH:
 	 pop  hl
@@ -160,6 +175,7 @@ TERSE_BYTE_FETCH:
 	 ld   d,$00
 	 push de
 	 jp   (iy)
+
 ; ( value addr -- ) Store little-endian 16-bit word.
 TERSE_STORE:
 	 pop  hl
@@ -168,12 +184,14 @@ TERSE_STORE:
 	 inc  hl
 	 ld   (hl),d
 	 jp   (iy)
+
 ; ( value addr -- ) Store low byte.
 TERSE_BYTE_STORE:
 	 pop  hl
 	 pop  de
 	 ld   (hl),e
 	 jp   (iy)
+
 ; ( addr -- ) Clear the addressed 16-bit word.
 TERSE_ZERO_WORD_AT_ADDRESS:
 	 pop  hl
@@ -181,6 +199,7 @@ TERSE_ZERO_WORD_AT_ADDRESS:
 	 inc  hl
 	 ld   (hl),$00
 	 jp   (iy)
+
 ; ( a b -- a+b ) Unsigned 16-bit addition, wrapping.
 TERSE_ADD:
 	 pop  de
@@ -188,6 +207,7 @@ TERSE_ADD:
 	 add  hl,de
 	 push hl
 	 jp   (iy)
+
 ; ( a b -- a-b ) 16-bit subtraction, wrapping.
 TERSE_SUBTRACT:
 	 pop  de
@@ -199,18 +219,21 @@ TERSE_SUBTRACT:
 	 pop  de
 	 ld   hl,$0000
 	 jp   $00C7
+
 ; ( n -- n-1 ) Decrement word.
 TERSE_DECREMENT:
 	 pop  hl
 	 dec  hl
 	 push hl
 	 jp   (iy)
+
 ; ( n -- n+1 ) Increment word.
 TERSE_INCREMENT:
 	 pop  hl
 	 inc  hl
 	 push hl
 	 jp   (iy)
+
 ; ( signed-n -- signed-n/2 ) Arithmetic signed 16-bit shift right.
 TERSE_ARITH_SHIFT_RIGHT:
 	 pop  hl
@@ -218,12 +241,16 @@ TERSE_ARITH_SHIFT_RIGHT:
 	 rr   l
 	 push hl
 	 jp   (iy)
+
 ; ( addr -- ) Decrement addressed byte.
+; $00E6, token $43: ( addr -- ) decrement the addressed RAM byte.
 TERSE_DECREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 dec  (hl)
 	 jp   (iy)
+
 ; ( addr -- ) Increment addressed byte.
+; $00EE, token $44: ( addr -- ) increment the addressed RAM byte.
 TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 inc  (hl)
@@ -284,6 +311,7 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 push hl
 	 push hl
 	 jp   (iy)
+
 ; ( a b -- a AND b ) 16-bit bitwise AND.
 TERSE_BITWISE_AND:
 	 pop  de
@@ -296,6 +324,7 @@ TERSE_BITWISE_AND:
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+
 ; ( a b -- a OR b ) 16-bit bitwise OR.
 TERSE_BITWISE_OR:
 	 pop  de
@@ -308,7 +337,9 @@ TERSE_BITWISE_OR:
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+
 ; ( src dest count -- ) Transfer BC bytes with Z80 LDIR; BC/DE/HL preserved on alternate register bank.
+; $015F, token $16: ( src dest count -- ) copy count bytes using LDIR.
 TERSE_MEMORY_COPY:
 	 exx
 	 pop  bc
@@ -351,6 +382,7 @@ TERSE_MEMORY_COPY:
 	 ld   c,(ix+$04)
 	 ld   b,(ix+$05)
 	 jp   (iy)
+
 ; ( -- index ) Push active counted-loop index from the IX frame.
 TERSE_LOOP_INDEX:
 	 ld   l,(ix+$00)
@@ -363,6 +395,7 @@ TERSE_LOOP_INDEX:
 	 push hl
 	 push de
 	 jp   (iy)
+
 ; ( value addr -- ) Add a 16-bit quantity into the addressed little-endian word.
 TERSE_ADD_TO_MEMORY_WORD:
 	 pop  hl
@@ -375,6 +408,7 @@ TERSE_ADD_TO_MEMORY_WORD:
 	 adc  a,d
 	 ld   (hl),a
 	 jp   (iy)
+
 ; ( value port -- ) Write the low data byte through the variable I/O port in C.
 TERSE_PORT_OUT:
 	 exx
@@ -383,6 +417,7 @@ TERSE_PORT_OUT:
 	 out  (c),l
 	 exx
 	 jp   (iy)
+
 ; ( port -- byte ) Read variable I/O port through C, returning zero-extended result.
 TERSE_PORT_IN:
 	 exx
@@ -392,7 +427,9 @@ TERSE_PORT_IN:
 	 push hl
 	 exx
 	 jp   (iy)
+
 ; ( a b c -- b c a ) Rotate three cells through the processor stack.
+; $01E3, token $13: ( a b c -- b c a ) rotate three cells.
 TERSE_STACK_ROTATE:
 	 pop  de
 	 pop  hl
@@ -400,7 +437,9 @@ TERSE_STACK_ROTATE:
 	 push de
 	 push hl
 	 jp   (iy)
+
 ; ( index -- value ) Fetch a stack cell using a 1-based word offset.
+; $01EA, token $45: ( index -- value ) select a 1-based stack cell.
 TERSE_STACK_PICK:
 	 pop  hl
 	 dec  hl
@@ -411,6 +450,7 @@ TERSE_STACK_PICK:
 	 ld   d,(hl)
 	 push de
 	 jp   (iy)
+
 ; Read a little-endian 16-bit inline branch target and replace the BC instruction pointer.
 TERSE_BRANCH_ABSOLUTE:
 	 ld   a,(bc)
@@ -420,6 +460,7 @@ TERSE_BRANCH_ABSOLUTE:
 	 ld   b,a
 	 ld   c,e
 	 jp   (iy)
+
 ; ( flag -- ) Test zero and select inline branch target or skip its two-byte operand.
 TERSE_ZERO_BRANCH:
 	 pop  hl
@@ -435,6 +476,7 @@ TERSE_ZERO_BRANCH:
 	 ld   a,(ix+$01)
 	 ld   (ix+$03),a
 	 jp   (iy)
+
 ; $0217-$021F: first compact TERSE colon word.
 TERSE_SMALL_COLON_0217:
 	 rst  $08
@@ -479,6 +521,7 @@ TERSE_COMPARE_BRANCH_NE:
 	 ld   c,l
 	 push de
 	 jp   (iy)
+
 ; $023E, token $3D: indexed native dispatch, ( index -- ).
 ; Inline little-endian end address followed by 16-bit native targets.
 TERSE_INDEXED_DISPATCH:
@@ -506,6 +549,7 @@ TERSE_INDEXED_DISPATCH:
 	 ld   h,a
 	 jp   (hl)
 	 jp   (iy)
+
 ; $025E-$0269: three short threaded helper definitions.
 TERSE_SMALL_COLON_025E:
 	 rst  $08
@@ -524,6 +568,7 @@ TERSE_SMALL_COLON_0266:
 	 DB $0B ; TERSE_ZERO
 	 DB $0A ; native token $0A
 	 DB $06 ; TERSE_EXIT
+
 ;==============================================================================
 ; NATIVE_NEGATE_HL ($026A)
 ; Two's-complement HL; restore AF before returning to native caller.
@@ -555,6 +600,7 @@ NATIVE_NEGATE_DE:
 	 inc  de
 	 pop  af
 	 ret
+
 ;==============================================================================
 ; TERSE_COLON_027E: original thirteen-byte TERSE threaded word.
 ; Indexed token cells and one literal byte; no Z80 instruction stream.
@@ -680,6 +726,7 @@ NATIVE_ATOMIC_RECORD_CHECK:
 	 add  a,$09
 	 out  ($00),a
 	 jp   $032E
+
 ;==============================================================================
 ; EVENT_RAM_ADDRESS_TABLE_0336 ($0336-$0345)
 ; Eight little-endian RAM addresses passed to the native record handlers.
@@ -1070,6 +1117,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 pop  af
 	 ei
 	 ret
+
 ;*******************************************************************************
 ; MAGIC_DRAW_BITMAP
 ;
@@ -1150,6 +1198,7 @@ MAGIC_DRAW_BITMAP:
 	 dec  a
 	 out  ($7E),a
 	 ret
+
 ;*******************************************************************************
 ; DRAW_SPRITE_FROM_HEADER
 ;
@@ -1201,6 +1250,7 @@ DRAW_SPRITE_FROM_HEADER:
 	 or   e
 	 ld   c,a
 	 ret
+
 ; Draw the object referenced by the active actor state and preserve its render
 ; parameters for the corresponding erase/redraw operation.
 DRAW_ACTIVE_OBJECT:
@@ -2762,6 +2812,7 @@ REDRAW_SAVED_OBJECT:
 	 pop  de
 	 ld   (hl),e
 	 jp   (iy)
+
 ; $1311–$13B9: TERSE colon program and inline operands.
 ; $13BA–$13C3: ten padding bytes before 8x10 character font.
 TERSE_COLON_1311:
@@ -2905,8 +2956,10 @@ TERSE_THREAD_1312:
 	 DB $1F ; $13B7 token $1F => native $01D1
 	 DB $20 ; $13B8 token $20 => native $05E5
 	 DB $06 ; $13B9 token $06 => native $0044
+
 TERSE_FONT_PADDING:
 	 DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+
 ; $13C4-$1535: 8x10 monochrome character bitmaps.
 ; Each glyph consists of ten rows; bit 7 is the leftmost pixel.
 SCREEN_FONT_8X10:
@@ -3567,6 +3620,7 @@ FONT_LETTER_Z:
 	 xor  a
 	 jp   nz,$1695
 	 jp   (iy)
+
 ;*******************************************************************************
 ; SPRITE OBJECT RECORDS - PACKED 2BPP
 ;*******************************************************************************
@@ -3604,6 +3658,7 @@ ALIEN_SHIP_DESTROY_1_HEADER:
         DB      $00,$46,$18,$00,$00 ; . . . . 1 . 1 2 . 1 2 . . . . . . . . .
         DB      $00,$08,$00,$00,$00 ; . . . . . . 2 . . . . . . . . . . . . .
         DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+
 ;*******************************************************************************
 ; ALIEN_SHIP_DESTROY_2
 ;
@@ -3627,6 +3682,7 @@ ALIEN_SHIP_DESTROY_2_HEADER:
         DB      $0C,$43,$1C,$F0,$00 ; . . 3 . 1 . . 3 . 1 3 . 3 3 . . . . . .
         DB      $30,$82,$0E,$30,$00 ; . 3 . . 2 . . 2 . . 3 2 . 3 . . . . . .
         DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+
 ;*******************************************************************************
 ; ALIEN_SHIP_DESTROY_3
 ;
@@ -3674,6 +3730,7 @@ ALIEN_SHIP_DESTROY_4_HEADER:
         DB      $00,$00,$40,$01,$00 ; . . . . . . . . 1 . . . . . . 1 . . . .
         DB      $00,$10,$00,$00,$00 ; . . . . . 1 . . . . . . . . . . . . . .
         DB      $80,$00,$00,$80,$00 ; 2 . . . . . . . . . . . 2 . . . . . . .
+
 ;*******************************************************************************
 ; BLANK
 ;
@@ -3684,9 +3741,11 @@ ALIEN_SHIP_DESTROY_4_HEADER:
 ;*******************************************************************************
 BLANK:
         DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+
 BLANK_HEADER:
         DB      $01,$01 ; Bitmap size: 1 byte/row, 1 row
         DB      $00 ; . . . .
+
 ; Alien ship destruction-frame sequence. Each entry is a control byte
 ; followed by a pointer to a complete sprite object record.
 ALIEN_SHIP_DESTROY_SEQUENCE:
@@ -3702,6 +3761,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE:
         DW      BLANK
         DB      $00
         DW      ALIEN_SHIP_DESTROY_SEQUENCE
+
 ;*******************************************************************************
 ; ALIEN_SHIP_VERTICAL
 ;
@@ -3727,6 +3787,7 @@ ALIEN_SHIP_VERTICAL_HEADER:
         DB      $1A,$00 ; . 1 2 2 . . . .
         DB      $30,$00 ; . 3 . . . . . .
         DB      $40,$00 ; 1 . . . . . . .
+
 ;*******************************************************************************
 ; ALIEN_SHIP_HORIZONTAL
 ;
@@ -3752,6 +3813,7 @@ ALIEN_SHIP_HORIZONTAL_HEADER:
 	 rst  $38
 	 ld   bc,$0100
 	 jr   c,$17CC
+
 ;*******************************************************************************
 ; LASER_BASE_BODY
 ;
@@ -3786,6 +3848,7 @@ LASER_BASE_BODY_HEADER:
         DB      $00,$00,$16,$AA,$AA,$40 ; . . . . . . . . . 1 1 2 2 2 2 2 2 2 2 2 1 . . .
         DB      $00,$00,$05,$AA,$AA,$40 ; . . . . . . . . . . 1 1 2 2 2 2 2 2 2 2 1 . . .
         DB      $00,$00,$01,$55,$55,$40 ; . . . . . . . . . . . 1 1 1 1 1 1 1 1 1 1 . . .
+
 ;*******************************************************************************
 ; LASER_BASE_BODY_DESTROY
 ;
@@ -3820,6 +3883,7 @@ LASER_BASE_BODY_DESTROY_HEADER:
         DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
         DB      $00,$40,$00,$00,$00,$00 ; . . . . 1 . . . . . . . . . . . . . . . . . . .
         DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+
 ;*******************************************************************************
 ; LASER_TURRET_VERTICAL
 ;
@@ -3852,6 +3916,7 @@ LASER_TURRET_VERTICAL_HEADER:
         DB      $81,$55,$54,$20,$00 ; 2 . . 1 1 1 1 1 1 1 1 . . 2 . . . . . .
         DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
         DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
+
 ;*******************************************************************************
 ; LASER_TURRET_VERTICAL_FIRE
 ;
@@ -3881,6 +3946,7 @@ LASER_TURRET_VERTICAL_FIRE_HEADER:
         DB      $81,$55,$54,$20,$00 ; 2 . . 1 1 1 1 1 1 1 1 . . 2 . . . . . .
         DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
         DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
+
 ;*******************************************************************************
 ; LASER_TURRET_HORIZONTAL
 ;
@@ -3908,6 +3974,7 @@ LASER_TURRET_HORIZONTAL_HEADER:
         DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
         DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
         DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
+
 ;*******************************************************************************
 ; LASER_TURRET_HORIZONTAL_FIRE
 ;
@@ -3935,6 +4002,7 @@ LASER_TURRET_HORIZONTAL_FIRE_HEADER:
         DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
         DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
         DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
+
 ; Laser-turret frame sequences. Control bytes precede object-record pointers;
 ; $00 terminates each list by pointing back to its first entry.
 LASER_TURRET_VERTICAL_IDLE_SEQUENCE:
@@ -3964,6 +4032,7 @@ LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE:
         DW      LASER_TURRET_HORIZONTAL
         DB      $00
         DW      LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE
+
 ;*******************************************************************************
 ; SPACE_MINE_1
 ;
@@ -3981,6 +4050,7 @@ SPACE_MINE_1_HEADER:
         DB      $DD,$00 ; 3 1 3 1 . . . .
         DB      $77,$00 ; 1 3 1 3 . . . .
         DB      $1C,$00 ; . 1 3 . . . . .
+
 ;*******************************************************************************
 ; SPACE_MINE_2
 ;
@@ -4000,6 +4070,7 @@ SPACE_MINE_2_HEADER:
         DB      $77,$D0,$00 ; 1 3 1 3 3 1 . . . . . .
         DB      $3D,$40,$00 ; . 3 3 1 1 . . . . . . .
         DB      $0D,$00,$00 ; . . 3 1 . . . . . . . .
+
 ;*******************************************************************************
 ; SPACE_MINE_3
 ;
@@ -4021,6 +4092,7 @@ SPACE_MINE_3_HEADER:
         DB      $17,$D4,$00 ; . 1 1 3 3 1 1 . . . . .
         DB      $0D,$50,$00 ; . . 3 1 1 1 . . . . . .
         DB      $01,$40,$00 ; . . . 1 1 . . . . . . .
+
 ;*******************************************************************************
 ; SPACE_MINE_4
 ;
@@ -4043,6 +4115,7 @@ SPACE_MINE_4_HEADER:
         DB      $35,$7D,$00,$00 ; . 3 1 1 1 3 3 1 . . . . . . . .
         DB      $07,$74,$00,$00 ; . . 1 3 1 3 1 . . . . . . . . .
         DB      $03,$D0,$00,$00 ; . . . 3 3 1 . . . . . . . . . .
+
 ;*******************************************************************************
 ; SPACE_MINE_5
 ;
@@ -4067,6 +4140,7 @@ SPACE_MINE_5_HEADER:
         DB      $3F,$57,$F0,$00 ; . 3 3 3 1 1 1 3 3 3 . . . . . .
         DB      $05,$5F,$40,$00 ; . . 1 1 1 1 3 3 1 . . . . . . .
         DB      $00,$5C,$00,$00 ; . . . . 1 1 3 . . . . . . . . .
+
 ; Space-mine growth sequences. Control bytes precede object-record pointers.
 SPACE_MINE_GROW_SEQUENCE:
         DB      $1C
@@ -4095,6 +4169,7 @@ SPACE_MINE_FAST_GROW_SEQUENCE:
         DW      SPACE_MINE_5
         DB      $00
         DW      SPACE_MINE_GROW_SEQUENCE
+
 ;*******************************************************************************
 ; LASER_BASE_DESTROY_1
 ;
@@ -4120,6 +4195,7 @@ LASER_BASE_DESTROY_1_HEADER:
         DB      $4C,$0F,$C1,$00 ; 1 . 3 . . . 3 3 3 . . 1 . . . .
         DB      $00,$0F,$C0,$00 ; . . . . . . 3 3 3 . . . . . . .
         DB      $00,$03,$00,$00 ; . . . . . . . 3 . . . . . . . .
+
 ;*******************************************************************************
 ; LASER_BASE_DESTROY_2
 ;
@@ -4150,6 +4226,7 @@ LASER_BASE_DESTROY_2_HEADER:
         DB      $05,$14,$14,$45,$40 ; . . 1 1 . 1 1 . . 1 1 . 1 . 1 1 1 . . .
         DB      $04,$00,$00,$40,$40 ; . . 1 . . . . . . . . . 1 . . . 1 . . .
         DB      $50,$00,$00,$40,$00 ; 1 1 . . . . . . . . . . 1 . . . . . . .
+
 ;*******************************************************************************
 ; LASER_BASE_DESTROY_3
 ;
@@ -4187,6 +4264,7 @@ LASER_BASE_DESTROY_3_HEADER:
         DB      $00,$09,$80,$96,$00,$00 ; . . . . . . 2 1 2 . . . 2 1 1 2 . . . . . . . .
         DB      $00,$02,$00,$28,$00,$00 ; . . . . . . . 2 . . . . . 2 2 . . . . . . . . .
 	 ld   h,(hl)
+
 ;*******************************************************************************
 ; LASER_BASE_DESTROY_4
 ;
@@ -4223,6 +4301,7 @@ LASER_BASE_DESTROY_4_HEADER:
         DB      $00,$00,$20,$00,$08,$00 ; . . . . . . . . . 2 . . . . . . . . 2 . . . . .
         DB      $00,$00,$80,$00,$02,$00 ; . . . . . . . . 2 . . . . . . . . . . 2 . . . .
         DB      $00,$00,$00,$00,$00,$80 ; . . . . . . . . . . . . . . . . . . . . 2 . . .
+
 ;*******************************************************************************
 ; LASER_BASE_DESTROY_5
 ;
@@ -4259,6 +4338,7 @@ LASER_BASE_DESTROY_5_HEADER:
         DB      $00,$00,$08,$00,$00,$00 ; . . . . . . . . . . 2 . . . . . . . . . . . . .
         DB      $00,$04,$00,$10,$C0,$00 ; . . . . . . 1 . . . . . . 1 . . 3 . . . . . . .
         DB      $00,$00,$12,$0C,$00,$00 ; . . . . . . . . . 1 . 2 . . 3 . . . . . . . . .
+
 ;*******************************************************************************
 ; LASER_BASE_DESTROY_6
 ;
@@ -4295,6 +4375,7 @@ LASER_BASE_DESTROY_6_HEADER:
         DB      $00,$00,$00,$03,$00,$00 ; . . . . . . . . . . . . . . . 3 . . . . . . . .
         DB      $00,$00,$04,$00,$00,$00 ; . . . . . . . . . . 1 . . . . . . . . . . . . .
         DB      $00,$01,$00,$40,$00,$00 ; . . . . . . . 1 . . . . 1 . . . . . . . . . . .
+
 ; Laser-base destruction sequence.
 LASER_BASE_DESTROY_SEQUENCE:
         DB      $06
@@ -4313,6 +4394,7 @@ LASER_BASE_DESTROY_SEQUENCE:
         DW      BLANK
         DB      $00
         DW      LASER_BASE_DESTROY_SEQUENCE
+
 ;*******************************************************************************
 ; ATTACK_SATELLITE_1
 ;
@@ -4337,6 +4419,7 @@ ATTACK_SATELLITE_1_HEADER:
         DB      $C0,$16,$50,$0C,$00 ; 3 . . . . 1 1 2 1 1 . . . . 3 . . . . .
         DB      $C0,$05,$40,$0C,$00 ; 3 . . . . . 1 1 1 . . . . . 3 . . . . .
         DB      $00,$01,$00,$00,$00 ; . . . . . . . 1 . . . . . . . . . . . .
+
 ;*******************************************************************************
 ; ATTACK_SATELLITE_2
 ;
@@ -4361,6 +4444,7 @@ ATTACK_SATELLITE_2_HEADER:
         DB      $C0,$2B,$A0,$0C,$00 ; 3 . . . . 2 2 3 2 2 . . . . 3 . . . . .
         DB      $00,$0A,$80,$00,$00 ; . . . . . . 2 2 2 . . . . . . . . . . .
         DB      $00,$02,$00,$00,$00 ; . . . . . . . 2 . . . . . . . . . . . .
+
 ;*******************************************************************************
 ; ATTACK_SATELLITE_3
 ;
@@ -4385,6 +4469,7 @@ ATTACK_SATELLITE_3_HEADER:
         DB      $00,$3D,$F0,$00,$00 ; . . . . . 3 3 1 3 3 . . . . . . . . . .
         DB      $00,$0F,$C0,$00,$00 ; . . . . . . 3 3 3 . . . . . . . . . . .
         DB      $00,$03,$00,$00,$00 ; . . . . . . . 3 . . . . . . . . . . . .
+
 ; Attack-satellite animation sequence.
 ATTACK_SATELLITE_SEQUENCE:
         DB      $04
@@ -4531,6 +4616,7 @@ ATTACK_SATELLITE_SEQUENCE:
 	 call $1EDE
 	 exx
 	 jp   (iy)
+
 ; $1F92–$1FC2: audio-related native/TERSE command sequence.
 TERSE_COLON_1F92:
 	 RST $08
@@ -4575,11 +4661,13 @@ TERSE_THREAD_1F97:
 	 DB $03 ; $1FBF token $03 -> $01FC
 	 DW TERSE_THREAD_1F97 ; 0BRANCH
 	 DB $06 ; $1FC2 token $06 -> $0044
+
 ; $1FC3–$1FC8: native address/control state initialization.
 AUDIO_STATE_INIT_1FC3:
 	 LD HL,$0032
 	 ADD HL,DE
 	 LD (HL),$01
+
 ; AUDIO_CLEAR_SOUND_REGISTERS  $1FC9
 ; Clear eight sound-chip registers ($10-$17).
 ; B counts registers; C walks backward from $17 to $10.
@@ -4632,6 +4720,7 @@ AUDIO_CLEAR_SOUND_REGISTERS:
 	 jp   z,$20A8
 	 dec  (iy+$20)
 	 jp   nz,$20A8
+
 ;==============================================================================
 ; AUDIO_MASTER_OSCILLATOR_STEP  $2034
 ; Advance oscillator state and write sound register $10.
@@ -4691,6 +4780,7 @@ AUDIO_MASTER_OSCILLATOR_STEP:
 	 jp   z,$20CE
 	 dec  (iy+$25)
 	 jp   nz,$20CE
+
 ;==============================================================================
 ; AUDIO_NOISE_VOLUME_STEP  $20B5
 ; Advance noise-envelope state and write sound register $17.
@@ -4774,6 +4864,7 @@ AUDIO_NOISE_VOLUME_STEP:
 	 out  (c),e
 	 exx
 	 jp   (iy)
+
 ;==============================================================================
 ; AUDIO_WRITE_REGISTER_INDEXED  $213E
 ; Write data byte to a selected sound register.
@@ -5399,6 +5490,7 @@ AUDIO_WRITE_REGISTER_INDEXED:
 	 ld   b,$FD
 	 sla  h
 	 sbc  a,$C9
+
 ; Alternate alien-ship destruction sequence used by the gameplay script.
 ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
         DB      $02
@@ -5696,6 +5788,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  bc
 	 ret  nz
 	 ld   h,$06
+
 ; $26D2-$270C: twelve 16-bit literal-return TERSE colon definitions.
 TERSE_COLON_26D2:
 	 RST $08
@@ -6249,6 +6342,7 @@ TERSE_DATA_28AA:
 
 ; $2AE1: EXIT of preceding TERSE definition.
 	 DB $06 ; TERSE_EXIT
+
 ; $2AE2: original compiled TERSE game-control word.
 TERSE_COLON_2AE2:
 	 RST $08
@@ -6268,6 +6362,7 @@ TERSE_THREAD_2AF1:
 TERSE_THREAD_2AF4:
 	 DB $49 ; $2AF4 -> $0262
 	 DB $06 ; $2AF5 -> $0044
+
 ; $2AF6: original compiled TERSE game-control word.
 TERSE_COLON_2AF6:
 	 RST $08
@@ -6453,6 +6548,7 @@ TERSE_THREAD_2BBB:
 	 DB $05 ; $2BBE -> $0094
 TERSE_THREAD_2BBF:
 	 DB $06 ; $2BBF -> $0044
+
 ; $2BC0: original compiled TERSE game-control word.
 TERSE_COLON_2BC0:
 	 RST $08
@@ -6544,6 +6640,7 @@ TERSE_THREAD_2C20:
 	 DB $36 ; $2C23 -> $1216
 	 DB $91 ; $2C24 -> $26B6
 	 DB $06 ; $2C25 -> $0044
+
 ; $2C26: original compiled TERSE game-control word.
 TERSE_COLON_2C26:
 	 RST $08
@@ -6582,8 +6679,10 @@ TERSE_COLON_2C26:
 	 DB $1E ; LIT8
 	 DB $4F ; $2C4B -> $0EC7
 	 DB $06 ; $2C4C -> $0044
+
 TERSE_INTERWORD_2C4D:
 	 DB $8A ; original byte between colon definitions
+
 ; $2C4E: original compiled TERSE game-control word.
 TERSE_COLON_2C4E:
 	 RST $08
@@ -6681,6 +6780,7 @@ TERSE_THREAD_2CAC:
 	 DB $36 ; $2CAF -> $1216
 	 DB $7C ; $2CB0 -> $263E
 	 DB $06 ; $2CB1 -> $0044
+
 ; $2CB2: original compiled TERSE game-control word.
 TERSE_COLON_2CB2:
 	 RST $08
@@ -6778,6 +6878,7 @@ TERSE_THREAD_2D13:
 	 DB $36 ; $2D16 -> $1216
 	 DB $7C ; $2D17 -> $263E
 	 DB $06 ; $2D18 -> $0044
+
 ; $2D19: original compiled TERSE game-control word.
 TERSE_COLON_2D19:
 	 RST $08
@@ -6874,6 +6975,7 @@ TERSE_THREAD_2D77:
 	 DB $7C ; $2D7B -> $263E
 ; $2D7C: EXIT of preceding colon program.
 	 DB $06 ; TERSE_EXIT
+
 ; $2D7D compiled TERSE byte-token definition.
 TERSE_COLON_2D7D:
 	 RST $08
@@ -6972,6 +7074,7 @@ TERSE_THREAD_2DDD:
 	 DB $36 ; $2DE0 => $1216
 	 DB $7C ; $2DE1 => $263E
 	 DB $06 ; $2DE2 => $0044
+
 ; $2DE3 compiled TERSE byte-token definition.
 TERSE_COLON_2DE3:
 	 RST $08
@@ -7196,6 +7299,7 @@ TERSE_THREAD_2EC4:
 	 DW TERSE_THREAD_2DE8 ; 0BRANCH
 ; $2ED5: EXIT of preceding game-control definition.
 	 DB $06 ; TERSE_EXIT
+
 ; $2ED6-$2F66: TERSE game-control definition.
 TERSE_COLON_2ED6:
 	 RST $08
@@ -7496,6 +7600,7 @@ TERSE_THREAD_2F62:
 	 call $3062
 	 push hl
 	 jp   (iy)
+
 ; $307C-$3095: two original compiled TERSE display helpers.
 TERSE_COLON_307C:
 	 RST $08

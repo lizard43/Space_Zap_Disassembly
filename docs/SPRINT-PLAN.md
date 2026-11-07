@@ -16,6 +16,9 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 
 - [x] Recover token $3D indexed native dispatch and seven original four-entry jump tables, including colon word at $2866.
 
+- [x] Recover byte-decrement/increment, memory copy, 3-cell rotate, and stack pick native primitives; synchronize dictionary and token vectors.
+- [x] Consolidate redundant ROM/RE and primitive-comparison notes into reader-focused technical references; enforce ASM section spacing.
+
 ## WB library follow-on — near-final Space Zap runtime and notes
 
 Destination: [DNA TERSE WB](https://github.com/lizard43/dnaTERSE-WB). Add Space Zap (1980) as a first-class library target when recovered P0 runtime semantics and dictionary contracts are sufficiently complete. This is a working software integration, **not a preservation milestone or frozen revision**.

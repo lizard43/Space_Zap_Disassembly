@@ -14,16 +14,16 @@ Every original font byte is now an explicit `.DB` with its **8-pixel inline grap
 
 ```asm
 FONT_DIGIT_0:
-    .DB $3C ; ..####..
-    .DB $7E ; .######.
-    .DB $66 ; .##..##.
-    .DB $66 ; .##..##.
-    .DB $66 ; .##..##.
-    .DB $66 ; .##..##.
-    .DB $66 ; .##..##.
-    .DB $66 ; .##..##.
-    .DB $7E ; .######.
-    .DB $3C ; ..####..
+    DB $3C ; ..####..
+    DB $7E ; .######.
+    DB $66 ; .##..##.
+    DB $66 ; .##..##.
+    DB $66 ; .##..##.
+    DB $66 ; .##..##.
+    DB $66 ; .##..##.
+    DB $66 ; .##..##.
+    DB $7E ; .######.
+    DB $3C ; ..####..
 ```
 
 ## On-screen strings
@@ -102,9 +102,15 @@ The final ROM tail at `$3FEF–$3FFF` is represented by `SPACE_ZAP_TITLE`, `SPAC
 
 ```asm
 SPACE_ZAP_TITLE:
-    .DB "SPACE ZAP",0
+    DB "SPACE ZAP",0
 SPACE_ZAP_DEVELOPER:
-    .DB "DNA",0
+    DB "DNA",0
 SPACE_ZAP_ROM_DATE:
-    .DB $08,$19,$80 ; August 19, 1980
+    DB $08,$19,$80 ; August 19, 1980
 ```
+
+## Other original ROM structures
+
+The ROM also contains a typed eight-address RAM dispatch table at `$0336–$0345`; its native dispatcher begins at `$0346`. See the [architecture](TERSE-ARCHITECTURE.md) for the routine inventory and [compiled programs](TERSE-COMPILED-PROGRAMS.md) for the bytecode callers.
+
+**Space Fortress (1981)** is a distinct 4 KB Astrocade cartridge adaptation. The released cartridge has not been established as TERSE; it is not part of this 16 KB Space Zap arcade ROM reconstruction.

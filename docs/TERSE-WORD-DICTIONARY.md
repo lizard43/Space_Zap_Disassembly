@@ -34,6 +34,11 @@ See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector invent
 | [`LOOP_INDEX`](#loop-index) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
 | [`PORT_OUT`](#port-out) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
 | [`PORT_IN`](#port-in) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
+| [`DECREMENT_BYTE_AT_ADDRESS`](#decrement-byte-at-address) | `$43` | `$00E6` | `( addr -- )` | Decrement the byte stored at addr, wrapping modulo 256. |
+| [`INCREMENT_BYTE_AT_ADDRESS`](#increment-byte-at-address) | `$44` | `$00EE` | `( addr -- )` | Increment the byte stored at addr, wrapping modulo 256. |
+| [`MEMORY_COPY`](#memory-copy) | `$16` | `$015F` | `( src dest count -- )` | Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy. |
+| [`STACK_ROTATE`](#stack-rotate) | `$13` | `$01E3` | `( a b c -- b c a )` | Rotate the three top stack cells with the deepest moved to the top. |
+| [`STACK_PICK`](#stack-pick) | `$45` | `$01EA` | `( index -- value )` | Fetch a 1-based indexed cell from the remaining data stack, leaving the indexed value on top. |
 | [`INDEXED_DISPATCH`](#indexed-dispatch) | `$3D` | `$023E` | `( index -- )` | Indexed native target table, inline end address. |
 | [`COMPARE_BRANCH_NE`](#compare-branch-ne) | `$93` | `$0229` | `( a b -- )` equal; `( a b -- a )` unequal | Compare two cells; on inequality branch to inline 16-bit thread address, retaining a. |
 | [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
@@ -41,6 +46,93 @@ See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector invent
 | [`ZERO_BRANCH`](#zero-branch) | `$03` | `$01FC` | `( flag -- )` | Jump to the inline absolute thread address if flag is zero; otherwise skip its two-byte operand. |
 
 ## Recovered words
+
+### DECREMENT_BYTE_AT_ADDRESS
+
+**Token:** `$43` · **Native:** `$00E6` · **Stack:** `( addr -- )`
+
+Decrement the byte stored at addr, wrapping modulo 256.
+
+**Native Z80:**
+
+```z80
+    POP HL
+    DEC (HL)
+    JP (IY)
+```
+
+### INCREMENT_BYTE_AT_ADDRESS
+
+**Token:** `$44` · **Native:** `$00EE` · **Stack:** `( addr -- )`
+
+Increment the byte stored at addr, wrapping modulo 256.
+
+**Native Z80:**
+
+```z80
+    POP HL
+    INC (HL)
+    JP (IY)
+```
+
+### MEMORY_COPY
+
+**Token:** `$16` · **Native:** `$015F` · **Stack:** `( src dest count -- )`
+
+Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy.
+
+**Native Z80:**
+
+```z80
+    EXX
+    POP BC
+    POP DE
+    POP HL
+    LD A,B
+    OR C
+    JP Z,$016A
+    LDIR
+    EXX
+    JP (IY)
+```
+
+### STACK_ROTATE
+
+**Token:** `$13` · **Native:** `$01E3` · **Stack:** `( a b c -- b c a )`
+
+Rotate the three top stack cells with the deepest moved to the top.
+
+**Native Z80:**
+
+```z80
+    POP DE
+    POP HL
+    EX (SP),HL
+    PUSH DE
+    PUSH HL
+    JP (IY)
+```
+
+### STACK_PICK
+
+**Token:** `$45` · **Native:** `$01EA` · **Stack:** `( index -- value )`
+
+Fetch a 1-based indexed cell from the remaining data stack, leaving the indexed value on top.
+
+**Native Z80:**
+
+```z80
+    POP HL
+    DEC HL
+    ADD HL,HL
+    ADD HL,SP
+    LD E,(HL)
+    INC HL
+    LD D,(HL)
+    PUSH DE
+    JP (IY)
+```
+
 
 ### INDEXED_DISPATCH
 

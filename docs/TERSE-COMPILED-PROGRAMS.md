@@ -18,19 +18,19 @@ previous BC instruction pointer. Native primitives resume at `JP (IY)`.
 The `DW` directives for branches refer to **TERSE byte-stream labels**,
 not Z80 instruction targets.
 
-## P0 indexed native dispatch: token $3D
+## Indexed native dispatch: token `$3D`
 
 The native routine at `$023E` consumes an inline table-end/default continuation address and uses the popped 16-bit index to choose a native 16-bit execution address from the following table. Six previously misclassified `$27xx/$28xx` sequences now use explicit `DW` entries. A seventh record at `$2866` is reconstructed as a colon word with LIT16/BYTE_FETCH/INDEXED_DISPATCH/EXIT. Total updated range: **83 ROM bytes**, reconstructed byte for byte before commit.
 
 The seven jump tables each have four entries; `$2866` selects one of four RAM-address-return colon words. Native target addresses are not TERSE token indexes. Identifying the original source-level name and game meaning remains open.
 
-## P0 correction: unequal compare with inline branch
+## Inline compare and branch: token `$93`
 
 Token `$93` invokes the native compare/branch routine at `$0229`. Its inline operand is the following **16-bit little-endian absolute TERSE thread address**. The instruction compares two stack cells; equality skips the address and consumes both cells, whereas inequality branches and pushes the deeper cell back. This asymmetric stack contract is essential for correctly analyzing the loop/control-flow paths.
 
 Seven sites at `$2B01`, `$2B2E`, `$2B5D`, `$2B8D`, `$2F03`, `$2F15`, and `$2F27` now use `DW` inline branch targets instead of false token records. Source bytes remain unchanged. The original source-level word name has not been recovered.
 
-## P0 correction: native inline-address arithmetic (2026-11-07)
+## Inline arithmetic: token `$94`
 
 Token `$94` points to the native routine at `$006B`. This routine pops one data-stack cell, reads **two inline bytes from BC**, adds the resulting little-endian word to the popped value modulo 65536, and pushes the result. Its contract is `( n -- n+offset )` with an inline 16-bit displacement. This is not an ordinary zero-operand TERSE primitive.
 
@@ -192,10 +192,6 @@ The full original-source assembly test uses zmac v1.3 and
 compares all four generated ROM SHA-1 values in `build.sh`
 and `build.bat`.
 
-## Remaining program recovery
+## Work still to classify
 
-Decode further `RST $08` definitions in the middle ROM
-(`$21xx–$2Axx`), reconstruct their literal operands and
-branch targets, and attach descriptive names based on game-state
-and hardware effects. Resolve the native words that compiled
-threads call through the remaining vector slots.
+Remaining source-level semantics and control-flow ownership for the mixed `$28AA` onward region are tracked in [the active sprint plan](SPRINT-PLAN.md). This technical reference records recovered program boundaries and operands, not the chronological editing history.

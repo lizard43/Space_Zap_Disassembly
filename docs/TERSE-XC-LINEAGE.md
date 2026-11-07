@@ -89,7 +89,7 @@ One byte in the program stream chooses a two-byte target from the vector table. 
 
 Extra Bases is an independent game-level byte-token example, whereas Coloring Book and Cosmic Raiders illustrate **16-bit native-address direct threading** in their released prototype ROMs. These are historical runtime observations. They are **not evidence of any modern XC's historical use**.
 
-Nine bounded Space Zap/cartridge primitive routines contain **70 matching machine-code bytes**, as documented in [the primitive comparison](TERSE-PRIMITIVE-COMPARISON.md). This strengthens the case for a common native **runtime library** despite differing dispatch encodings. It does not prove the same historical XC compiled both games.
+Nine bounded Space Zap/cartridge primitive routines contain **70 matching machine-code bytes**, as documented in [the architecture comparison](TERSE-ARCHITECTURE.md). This strengthens the case for a common native **runtime library** despite differing dispatch encodings. It does not prove the same historical XC compiled both games.
 
 ## The two 688-byte windows
 

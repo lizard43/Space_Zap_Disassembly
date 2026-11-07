@@ -71,7 +71,7 @@ Official ROM SHA-1 values are embedded in both build scripts and checked for eve
 
 ## Memory map
 
-![Space Zap Z80 memory map](images/spacezap-memory-map-v20261107-0002.svg)
+![Space Zap Z80 memory map](images/spacezap-memory-map.svg)
 
 Four ROM sockets, the TERSE interpreter, its token table, and initial stack locations.
 
