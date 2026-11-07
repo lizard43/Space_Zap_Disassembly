@@ -2,11 +2,12 @@
 
 This is the active, actionable technical-debt register for the follow-on RE sprint (PR #2). The previous PR #1 research and source edits are retained in ordinary Git history; no duplicate preservation branch or historical snapshot is required.
 
-## Release gate — PR #1
+## Baseline — PR #1 merged
 
-- **BLOCKER: full ROM build not proven.** PR #1 documents a previously observed image size of 16,381 bytes versus 16,384 expected, and a mismatch in the token-vector pointer at $0038 ($3DE7 generated versus original $3DEA). The PR subsequently recovered additional bytecode regions, but its own latest description still does not report a passing complete build.
-- The build must produce 16,384 bytes and four 4096-byte ROMs whose SHA-1 hashes match the official values embedded in `build.sh`. Do not fix layout by blindly padding trailing bytes, replacing original TERSE with fabricated Z80, or generating a JavaScript facsimile.
-- If PR #1 is merged before this proof, record it explicitly as a research checkpoint **not** as a verified original-ROM reconstruction. Preferred sequence: verify and repair on PR #1, merge it, then retarget PR #2 to `main`.
+- **Verified baseline:** user reports successful assembly of the complete 16,384-byte image and matching SHA-1 values for all four original 4 KB ROMs. PR #1 was merged to `main` at `0183fadf948425654e08d8f690bfb0a35f37c807`. PR #2 is based on updated `main`.
+- Previous source-layout and token-vector-pointer size discrepancies are historical resolved build blockers, not active defects. Preserve their diagnosis in Git history.
+- Every subsequent ROM-affecting change must rebuild the complete image and reproduce all four original SHA-1 values. No padding, synthetic code, or JavaScript token-rewriting substitution.
+- Remaining debt concerns original terminology, grammar, unidentified word contracts, hardware meaning, and deeper source recovery, not a known failing PR #1 baseline.
 
 ## Historical TERSE naming and grammar
 
