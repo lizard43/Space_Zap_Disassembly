@@ -18,6 +18,8 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [ ] Continue game-semantic classification of the recovered `$28AA` program and other `$21xx–$2Axx` code/data regions; identify called routines, RAM ownership and side effects from real execution.
 - [ ] Reconstruct game control: attract/start, credits, input, firing, object motion, collision, score, sound and interrupts.
 - [ ] Complete RAM address ownership and hardware port interaction map.
+- [x] Define confirmed video, Magic graphics, pattern-board, audio and interrupt I/O port symbols in ASM and annotate important writes; retain unresolved startup ports as explicitly unknown.
+- [ ] Trace graphics and audio call chains into game-state logic, document register/RAM effects at routine boundaries, and eliminate false executable-code interpretations in graphics/sound data.
 - [ ] Assemble using original native Z80 sources and pass all four official MAME ROM SHA-1 checks.
 
 - [x] Recover token $3D indexed native dispatch and seven original four-entry jump tables, including colon word at $2866.
