@@ -66,4 +66,6 @@ Destination: [DNA TERSE WB](https://github.com/lizard43/dnaTERSE-WB). Add Space 
 
 **Original DNA TERSE vocabulary is authoritative. Match by implementation and stack behavior, use the correct name, and move on.**
 
+**Mandatory bidirectional source/dictionary round trip:** Every recovered word-name or execution-contract change must be propagated consistently among `Space_Zap_Disassembly.asm`, `docs/TERSE-WORD-DICTIONARY.md`, `docs/TERSE-TOKEN-VECTORS.md`, and decoded-program references. The same requirement applies in reverse: source changes must update the dictionary and vector records. Run `node tools/verify-terse-word-alignment.mjs` after nomenclature changes; for every ROM-affecting change, also require `./build.sh` and all four official ROM SHA-1 matches. A documentation-only change is not complete while the source still uses contradictory TERSE word names.
+
 Original DNA software and languages first. Discuss deviations before changing architecture or adding substitute tooling. Ordinary Git history provides revision tracking; do not create preservation branches, snapshots or duplicate versioned artifacts. Increment the ASM revision for source changes; only report a verified build after four-ROM SHA-1 PASS.
