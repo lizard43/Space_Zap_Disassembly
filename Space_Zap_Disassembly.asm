@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0001
+; RE version: v20261107-0002
 ;*******************************************************************************
 
 	 ORG 0000H
