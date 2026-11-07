@@ -10081,21 +10081,12 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 rst  $38
 	 rst  $38
 	 rst  $38
-	 ld   d,e
-	 ld   d,b
-	 ld   b,c
-	 ld   b,e
-	 ld   b,l
-	 jr   nz,$4050
-	 ld   b,c
-	 ld   d,b
-	 nop
-	 ld   b,h
-	 ld   c,(hl)
-	 ld   b,c
-	 nop
-	 ex   af,af'
-	 add  hl,de
-	 add  a,b
+; $3FEF-$3FFF: original ROM text and terminal metadata, not executable Z80.
+SPACE_ZAP_ROM_TITLE:
+	 .DB $53,$50,$41,$43,$45,$20,$5A,$41,$50,$00 ; "SPACE ZAP", NUL
+SPACE_ZAP_DNA_MARK:
+	 .DB $44,$4E,$41,$00 ; "DNA", NUL
+SPACE_ZAP_TRAILER:
+	 .DB $08,$19,$80 ; unidentified three-byte ROM trailer
 ;
 	 .END
