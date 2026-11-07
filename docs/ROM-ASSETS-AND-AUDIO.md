@@ -66,6 +66,25 @@ The maintained source already has packed **2bpp** object records: hotspot offset
 
 The sprite decoder reads the record header and passes packed pixels to `MAGIC_DRAW_BITMAP`. Sprite-row comments in the assembly show 2bpp color indexes `0–3`. The 8×10 font above is a separate **1bpp** representation.
 
+
+## Recovered Space Zap I/O operations
+
+The ASM defines hardware port constants near the top of the source and uses them at direct `IN`/`OUT` call sites. The same numerical port can have different meanings when read versus written (for example, `$08` selects video mode on write but returns video intercept feedback on read; `$10–$12` are custom I/O input ports on read and sound registers on write).
+
+| Port(s) | Operation |
+| --- | --- |
+| `$00–$07` | Video color-table outputs (named at directly observed `$00` and `$04` write sites) |
+| `$08` | Write video mode; read intercept feedback |
+| `$0C` | Magic function-generator controls (shift, expand, XOR/OR etc.) |
+| `$0D–$0F` | Interrupt feedback, enable/mode, scanline |
+| `$10–$17` | Sound frequency, vibrato and volume registers on write |
+| `$19` | Pixel expansion colors |
+| `$5B` with high I/O address byte `$A5` | Enable protected RAM writes; `OUT ($5B),A` is not sufficient evidence without inspecting the I/O address high byte |
+| `$78–$7E` | Pattern-board source, mode, skip, destination, width, height/start |
+| `$F8,$FA,$FB,$FF` | Written during cold start; hardware function not established from the Space Zap machine's currently mapped MAME I/O handlers |
+
+The native source distinguishes **confirmed register semantics** from port-number observations for unresolved cold-start outputs. Hardware map cross-check: MAME `src/mame/bally/astrocde.cpp` and `src/mame/bally/astrocde_v.cpp`. Startup writes to `$F8/$FA/$FB/$FF` are not represented by a named Space Zap-specific handler in the MAME I/O map inspected here, so no stronger behavior is claimed.
+
 ## Astrocade sound hardware and native routines
 
 Space Zap uses the Astrocade custom I/O sound chip at I/O ports `$10–$17`. Its eight registers are:
