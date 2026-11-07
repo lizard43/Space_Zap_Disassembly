@@ -145,7 +145,7 @@ Open for subsequent byte-exact RE passes:
   repeated targets, sentinel values and data-dependent behavior.
 - Trace all reachable native handlers, naming by proven function and
   stack/port side effects, not guessed historical source spelling.
-- Identify mixed source regions still shown as ordinary Z80 mnemonics
+- **DONE:** recover original `SPACE ZAP` / `DNA` signature and trailer as\n  typed ROM bytes rather than false executable instructions.\n- Identify mixed source regions still shown as ordinary Z80 mnemonics
   even when they are actually threaded tokens, pointers, sprite
   records or tables; convert each *bounded* region to typed
   `DB`/`DW` with labels, preserving byte identity.
