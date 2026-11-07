@@ -173,7 +173,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$91` | `$26B6` | Native target; semantics not yet individually recovered |
 | `$92` | `$275C` | Native target; semantics not yet individually recovered |
 | `$93` | `$0229` | Native target; semantics not yet individually recovered |
-| `$94` | `$006B` | Native target; semantics not yet individually recovered |
+| `$94` | `$006B` | ADD_INLINE16: `( n -- n+offset )`, consumes following 16-bit little-endian thread operand |
 | `$95` | `$1188` | Native target; semantics not yet individually recovered |
 | `$96` | `$26E6` | Native target; semantics not yet individually recovered |
 | `$97` | `$2704` | Native target; semantics not yet individually recovered |
