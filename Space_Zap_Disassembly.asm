@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0002
+; RE version: v20261107-0003
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -429,16 +429,16 @@ TERSE_ZERO_BRANCH:
 	 ld   a,(ix+$01)
 	 ld   (ix+$03),a
 	 jp   (iy)
-; $0216-$0228: two adjacent TERSE colon definitions.
-TERSE_SMALL_COLON_0216:
+; $0217-$021F: first compact TERSE colon word.
+TERSE_SMALL_COLON_0217:
 	 rst  $08
 	 DB $01 ; TERSE_2DUP
 	 DB $02 ; native $010C
 	 DB $03 ; TERSE_ZERO_BRANCH
-	 DW TERSE_SMALL_021E_EXIT
+	 DW TERSE_SMALL_021E_DROP
 	 DB $04 ; TERSE_SWAP
+TERSE_SMALL_021E_DROP:
 	 DB $05 ; TERSE_DROP
-TERSE_SMALL_021E_EXIT:
 	 DB $06 ; TERSE_EXIT
 
 TERSE_SMALL_COLON_0220:
@@ -451,6 +451,10 @@ TERSE_SMALL_COLON_0220:
 TERSE_SMALL_0227_DROP:
 	 DB $05 ; TERSE_DROP
 	 DB $06 ; TERSE_EXIT
+
+; $0229: native two-cell comparison and branch helper.
+NATIVE_COMPARE_TWO_CELLS_0229:
+	 pop  hl
 	 pop  de
 	 or   a
 	 sbc  hl,de
