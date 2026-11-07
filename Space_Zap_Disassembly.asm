@@ -7596,27 +7596,37 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 call $3062
 	 push hl
 	 jp   (iy)
-	 rst  $08
-	 sub  l
-	 ld   h,l
-	 or   a
-	 inc  bc
-	 adc  a,h
-	 jr   nc,$3006
-	 inc  b
-	 add  a,d
-	 inc  b
-	 halt
-	 ld   (hl),a
-	 ld   b,(hl)
-	 adc  a,l
-	 jr   nc,$30E5
-	 jr   $30A6
-	 cp   b
-	 ld   b,$CF
-	 ld   c,$40
-	 ld   d,h
-	 ld   b,$11
+; $307C-$3095: two original compiled TERSE display helpers.
+TERSE_COLON_307C:
+	 RST $08
+	 DB $95 ; $307D token -> native $1188
+	 DB $65 ; $307E token -> native $1195
+	 DB $B7 ; $307F token -> native $3076
+	 DB $03 ; $3080 token -> native $01FC
+	 DW TERSE_THREAD_308C ; 0BRANCH
+	 DB $82 ; $3083 token -> native $00CD
+	 DB $04 ; $3084 token -> native $0097
+	 DB $82 ; $3085 token -> native $00CD
+	 DB $04 ; $3086 token -> native $0097
+	 DB $76 ; $3087 token -> native $11D0
+	 DB $77 ; $3088 token -> native $11DB
+	 DB $46 ; $3089 token -> native $01F4
+	 DW TERSE_THREAD_308D ; BRANCH
+TERSE_THREAD_308C:
+	 DB $58 ; $308C token -> native $1212
+TERSE_THREAD_308D:
+	 DB $18 ; $308D token -> native $10EC
+	 DB $17 ; $308E token -> native $10DA
+	 DB $B8 ; $308F token -> native $1537
+	 DB $06 ; $3090 token -> native $0044
+TERSE_COLON_3091:
+	 RST $08
+	 DB $0E ; $3092 token -> native $0059
+	 DB $40 ; LIT8
+	 DB $54 ; $3094 token -> native $0154
+	 DB $06 ; $3095 token -> native $0044
+SPACE_ZAP_SCREEN_TEXT_PREFIX:
+	 DB $11 ; original byte preceding MIDWAY copyright string
 ; $3097  @ 1980 MIDWAY MFG
 TEXT_MIDWAY_COPYRIGHT:
 	 DB "@ 1980 MIDWAY MFG"
