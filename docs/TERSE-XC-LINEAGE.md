@@ -1,122 +1,112 @@
-# Space Zap and the recovered DNA XC families
+# Space Zap and the original DNA cross-compiler lineage
 
-**Research checkpoint — 2026-11-07.** Sources examined in
-[lizard43/dnaTERSE-WB](https://github.com/lizard43/dnaTERSE-WB).
-This analysis compares preserved XC source and documented native behavior;
-it does not claim recovery of Space Zap's original XC disk.
+**Research revision: 2026-11-07.** This comparison uses **original DNA XC code and surviving archival fragments**. The `astrocade-console` compiler created during our current WB project is **not historical DNA software** and is **excluded** from the historical analysis.
 
 ## Conclusion
 
-**Best supported hypothesis:** Space Zap was compiled by a
-**byte-token TERSE XC target configuration** closely related in mechanism
-to Extra Bases, with a shared TERSE primitive library. The original XC
-tools found in the WB demonstrate both indexed-byte and direct-address
-target emission. Therefore a separate new high-level programming language
-is not required to explain the ROM.
+**Space Zap (1980) contains an 8-bit indexed-token TERSE runtime.** Its dispatcher reads one byte from BC and selects a native handler using a table of 16-bit pointers at `$3DEA`. This is the same broad *byte-token compilation strategy* demonstrated in historical DNA cross-compiler material, most completely in the **original 1982 `FS.XC`**. The surviving **1979 XC fragments** are chronologically more relevant to Space Zap and already contain byte-token compiler definitions, though that archived 1979 XC is incomplete.
 
-The specific **historical compiler version** used for Space Zap is
-not identified. The existing reconstructed XC source is evidence of the
-*mechanism*, not proof that its exact archived binary produced Space Zap.
+**Educated hypothesis:** Space Zap was built with a DNA byte-token TERSE compiler related to the lineage of the preserved 1979 fragments and original 1982 XC. This is an inference about compiler design, **not an identification of the exact Space Zap XC binary**. The 1982 XC cannot literally have compiled a game released in 1980.
 
-![Indexed and direct TERSE threading](../images/spacezap-threading-comparison.svg)
+![Indexed-token versus direct-threaded runtime comparison](../images/spacezap-threading-comparison.svg)
 
-## Inspectable XC source evidence
+## Source pedigree: separate original evidence from current WB adaptations
 
-| WB file | Source mechanism | Significance |
+| Evidence | Provenance | Significance |
 | --- | --- | --- |
-| [recovered-core.terse](https://github.com/lizard43/dnaTERSE-WB/blob/main/src/xc-1979/recovered-core.terse) | `bytarray`, `newbyt`, `byt,`, plus target CODE execution handles | Assigns/reuses 8-bit vocabulary numbers when byte-threading is enabled |
-| [1982-interpret.terse](https://github.com/lizard43/dnaTERSE-WB/blob/main/src/xc-1979/1982-interpret.terse) | `G79-interpret` emits `byt,` for compiled native target definitions | Native TERSE source becomes a byte-token stream |
-| [1982-finalize.terse](https://github.com/lizard43/dnaTERSE-WB/blob/main/src/xc-1979/1982-finalize.terse) | `G79-XCEND` writes the `bytarray` handler list and patches the table pointer | Explains the 16-bit vector-table tail in byte-threaded ROMs |
-| [Extra Bases runtime.terse](https://github.com/lizard43/dnaTERSE-WB/blob/main/src/project-tools/extra-bases/runtime.terse) | Seeds a set of native addresses into `bytarray`; selects byte threading | Concrete known game target using the indexed model |
-| [console-target.terse](https://github.com/lizard43/dnaTERSE-WB/blob/main/runtime/components/astrocade-console/xc/console-target.terse) | `0 G79-BYTERSE !` | Console target explicitly disables byte-token output |
-| [console-interpret.terse](https://github.com/lizard43/dnaTERSE-WB/blob/main/runtime/components/astrocade-console/xc/console-interpret.terse) | Emits native execution cells through `G79-,` | Direct-threaded cartridge output |
-| [COMPILER-DICTIONARY.md](https://github.com/lizard43/dnaTERSE-WB/blob/main/docs/COMPILER-DICTIONARY.md) | A working Extra Bases build uses a seeded vocabulary and allocates further word slots | The indexed compiler mechanism is known to be operational |
+| [Original 1982 `FS.XC` disassembled word listing](https://github.com/lizard43/dnaTERSE-WB/blob/main/research/xc-recovery-2026/fs-xc-1982-words.txt) | Recovered original DNA compiler | Explicit native byte-token allocation, word lookup, table emission and XC finalization |
+| [Original 1982 `FS.XC` Z80 source](https://github.com/lizard43/dnaTERSE-WB/blob/main/src/xc-1982/fs-xc-1982.asm) | Disassembled historical compiler binary, not a replacement | Independent original binary evidence for the compiler mechanism |
+| [Original 1979 upper-XC fragment audit](https://github.com/lizard43/dnaTERSE-WB/blob/main/docs/GORF-XC-ALLOCATION.md) | Partial original 1979 XC saved in spare disk block | Establishes survival and limits of early compiler artifacts |
+| [1979 XC recovered source and provenance](https://github.com/lizard43/dnaTERSE-WB/blob/main/src/xc-1979/README.md) | Original upper source reconstructed alongside **explicit later adaptations** | `bytarray`, `newbyt`, `byt,` mechanisms partially preserved; *not* an intact original complete XC |
+| [Extra Bases XC runtime configuration](https://github.com/lizard43/dnaTERSE-WB/blob/main/src/project-tools/extra-bases/runtime.terse) | Modern WB reconstruction of Extra Bases target bindings | Operational comparison to another **historical game ROM using byte tokens**; this configuration file is not claimed original |
+| [Space Zap ROM vectors](TERSE-TOKEN-VECTORS.md) | Original Space Zap arcade ROM | Actual 256-slot indexed native-handler table and byte-token NEXT |
 
-### Representative source
+## Original 1982 XC: precise mechanisms
 
-From the recovered/adapted XC:
+The original `MSGPATLD` `FS.XC` image, separately archived and reconstructed in WB, contains the following historical dictionary words. The addresses below are **XC host execution tokens**, not Space Zap ROM addresses.
 
-```forth
-0 ARRAY bytarray
-: newbyt ... bytarray ! ... ;
-: byt, ... bytarray @ ... newbyt ... ;
-: G79-XCEND G79-BYTERSE @ IF
-    G79-HERE .bytbase. 1+ G79-U!
-    0 G79-,
-    G79-BYTERSE @ 1 DO I bytarray @ G79-, LOOP
-THEN ... ;
-```
+| Original word | XC address | Behavior observed in the disassembly |
+| --- | --- | --- |
+| `BYTE-TERSE` | `$82D3` | Increments the `byterse` counter used by byte compilation |
+| `bytarray` | `$82F9` | Array storing the native target addresses assigned token IDs |
+| `newbyt` | `$8439` | Registers a target execution address and emits its newly assigned one-byte token |
+| `byt,` | `$8475` | Finds or creates a byte-token index, or emits a full word when byte mode is disabled |
+| `XCEND` | `$8669` | Appends the address vector and patches the target's vector-table location |
+| `interpret` | `$8B49` | Resolves target words and compiles them through `xccalc byt,` |
 
-The console target instead specifies:
+The relevant original XC definitions, expressed as *abbreviated summaries* rather than a purported exact source transcription:
 
 ```forth
-0 G79-BYTERSE !
+: newbyt   ( target-XT -- )
+  ... bytarray ! ... B, byterse 1+! ;
+
+: byt,     ( target-XT -- )
+  byterse @ IF
+    ... search bytarray ...
+    ... B, OR newbyt ...
+  ELSE
+    ,
+  THEN ;
+
+: XCEND
+  byterse @ IF
+    ... patch .bytbase. ...
+    ... emit 16-bit bytarray entries ...
+  THEN
+  ... patch .topdef. ... FLUSH ;
 ```
 
-Its separate interpreter emits address cells via `G79-,`. These are
-real native TERSE XC source configurations, rather than a proposed
-JavaScript translation of compiled bytes.
+The **original 1982 compiler supports both byte-indexed and wider emission internally**. This point is proven by the original `byt,` implementation and does **not** rely on the current `astrocade-console` XC. The compiler's ability to emit full words does not establish that the Astrocade home cartridge games used this exact historical compiler.
 
-## ROM evidence that fits this mechanism
+## What survived from 1979
 
-Space Zap's `$0035` NEXT reads one byte from BC, doubles it, adds
-`$3DEA`, retrieves a native 16-bit address and jumps to it. The
-entire 256-slot table at `$3DEA–$3FE9` is now typed in the assembly
-and recorded [slot by slot](TERSE-TOKEN-VECTORS.md). Five slots have
-`$FFFF` sentinels; 251 contain distinct ROM addresses.
+The archived 1979 Gorf system retains XC-looking **upper-memory fragments** in a saved spare block. Recovered definitions include `bytarray`, `newbyt` and `byt,`. Their alignment and some original byte bodies were verified by native recovery work, but the lower referenced code bodies are missing, and the saved `XCEND` tail is incomplete. The original 1979 saved system is **not an operational complete XC**.
 
-The [primitive comparison](TERSE-PRIMITIVE-COMPARISON.md) identifies
-nine corresponding low-level words with **70 matching machine-code bytes**
-between Space Zap and the direct-threaded cartridge runtime. Those
-bodies cover colon entry, EXIT, literal widths, constants, and basic
-stack operations. Such bounded instruction matches support common
-TERSE runtime *implementation code*, not merely shared design terminology.
+The maintained `src/xc-1979/recovered-core.terse` reproduces the surviving upper definitions; other files in that directory supply 1982-derived or modern host-compatibility adaptations. Treat only independently verified original fragments as original evidence.
 
-## Why the coincidental 688-byte lengths do not prove identity
+Thus the 1979 material provides the key **chronological bridge** to Space Zap's 1980 date. The original 1982 saved XC provides the complete later **mechanistic comparison**. Neither establishes Space Zap's exact build environment.
 
-- Space Zap's archived signature is an **arbitrary first 688-byte
-  ROM window** (`$0000–$02AF`).
-- Coloring Book and Cosmic Raiders have a **shared 688-byte runtime
-  span** in their cartridge implementation (`$2050–$22FF`).
-- The **Space Zap NEXT** in the first window reads a one-byte token
-  then consults a vector table; the **cartridge NEXT** reads a
-  two-byte native address and branches directly.
-- Therefore the windows are *not merely address-relocated copies*;
-  their format differences change the interpreter.
-- The corresponding primitive bodies are more meaningful evidence
-  of common ancestry than the matching length.
+## Compare the original target ROMs
 
-## Historical XC pedigree: what remains open
+Space Zap's native NEXT at `$0035`:
 
-**Established from maintained source:** An XC targeting one-byte
-native-vector tokens exists in the recovered/adapted DNA TERSE system.
-An explicitly configured direct-address target also exists; Extra Bases
-is a concrete byte-token application.
+```z80
+LD A,(BC)
+INC BC
+LD DE,$3DEA
+LD L,A
+LD H,$00
+ADD HL,HL
+ADD HL,DE
+LD E,(HL)
+INC HL
+LD D,(HL)
+EX DE,HL
+JP (HL)
+```
 
-**Inferred from Space Zap ROM:** Its byte-threaded program was
-plausibly produced by a similar compiler family or configuration.
-Matching native words suggest reuse of a core kernel vocabulary.
+One byte in the program stream chooses a two-byte target from the vector table. That table occupies `$3DEA–$3FE9`; the original source now represents it as **256 typed `DW` cells**.
 
-**Not established:** That Space Zap's original development environment
-used the same **binary XC image**, identical source screens, or any
-specific surviving disk presently loaded by WB. No original
-Space Zap compiler artifact has been recovered here.
+Extra Bases is an independent game-level byte-token example, whereas Coloring Book and Cosmic Raiders illustrate **16-bit native-address direct threading** in their released prototype ROMs. These are historical runtime observations. They are **not evidence of any modern XC's historical use**.
 
-## Next RE proof points
+Nine bounded Space Zap/cartridge primitive routines contain **70 matching machine-code bytes**, as documented in [the primitive comparison](TERSE-PRIMITIVE-COMPARISON.md). This strengthens the case for a common native **runtime library** despite differing dispatch encodings. It does not prove the same historical XC compiled both games.
 
-1. Compare the ordered native handler addresses and kernel word bodies
-   with Extra Bases, with relocation-normalized fingerprints.
-2. Decode the initial Space Zap token program at `$3CDC` into named
-   words and inline parameters, then use the native XC vocabulary
-   model to test the encoding hypothesis.
-3. If any Space Zap archival disks/source emerge, inspect original
-   `XCLOAD`, `XCEND`, `BYTERSE` and `bytarray` bindings rather
-   than retrofitting a new compiler.
-4. Verify any amended source by executing zmac and comparing all
-   four original ROM SHA-1 hashes. Do not claim that a reconstructed
-   compiler generated historical bytes without native evidence.
+## The two 688-byte windows
 
-**Engineering rule:** Preserve original DNA software and original
-language behavior. Do not replace TERSE compilation with synthetic
-JavaScript/Python opcode rewriting, and do not modify the original
-historical XC binaries to force the hypothesis.
+- Space Zap's stored 688-byte signature is its **first** `$0000–$02AF` window.
+- Coloring Book/Cosmic Raiders share an exact **688-byte** direct-threaded runtime region at `$2050–$22FF`.
+- Matching lengths do **not** make the blocks identical or merely relocated. Their NEXT implementations interpret different execution cells.
+- The exact matched primitive bodies are meaningful evidence of shared TERSE code; the arbitrary equal-size windows are not.
+
+## Recommended historical conclusion
+
+> The Space Zap ROM preserves a compact, one-byte indexed TERSE interpreter. Surviving partial 1979 DNA XC material contains related byte-token allocation definitions, while the original 1982 FS.XC provides a later complete example of the byte-token compiler and native-handler table mechanism. Space Zap most likely belongs to this historical DNA byte-token XC lineage, although the specific compiler version used to build the 1980 game remains unidentified. Separately, its native primitive routines share substantial exact code with later Astrocade cartridge TERSE kernels.
+
+## Next proof steps
+
+1. Recover the used token program and operand contracts from Space Zap's original ROM, beginning at `$3CDC`.
+2. Compare token table ordering, words and instruction bodies with original Extra Bases and other arcade games, accounting for relocation.
+3. Search contemporary Space Zap source disks, loader listings or original compiler saves for `BYTE-TERSE`, `bytarray`, `byt,` and `XCEND`.
+4. Perform a native zmac build and compare all four original ROM SHA-1 hashes before claiming a fully reconstructed source build.
+
+**Original DNA software first:** The original saved compiler, modern compatible XC recovery, and current console XC are different provenance classes. No modern source can be retroactively treated as a historical compiler artifact.
