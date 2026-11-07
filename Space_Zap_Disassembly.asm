@@ -663,19 +663,17 @@ NATIVE_ATOMIC_RECORD_CHECK:
 	 add  a,$09
 	 out  ($00),a
 	 jp   $032E
-	 and  c
-	 ret  nc
-	 rst  $10
-	 ret  nc
-	 exx
-	 ret  nc
-	 rrca
-	 pop  de
-	 ld   de,$2FD1
-	 pop  de
-	 ld   sp,$4FD1
-	 pop  de
-	 ld   hl,$0336
+;==============================================================================
+; EVENT_RAM_ADDRESS_TABLE_0336 ($0336-$0345)
+; Eight little-endian RAM addresses passed to the native record handlers.
+;==============================================================================
+EVENT_RAM_ADDRESS_TABLE_0336:
+	 DW $D0A1,$D0D7,$D0D9,$D10F
+	 DW $D111,$D12F,$D131,$D14F
+
+; Native event/state record dispatch.
+NATIVE_EVENT_RECORD_DISPATCH_0346:
+	 ld   hl,EVENT_RAM_ADDRESS_TABLE_0336
 	 ld   a,$01
 	 push iy
 	 ld   ($D09E),a
