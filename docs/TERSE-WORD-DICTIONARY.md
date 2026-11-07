@@ -34,12 +34,35 @@ See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector invent
 | [`LOOP_INDEX`](#loop-index) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
 | [`PORT_OUT`](#port-out) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
 | [`PORT_IN`](#port-in) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
+| [`INDEXED_DISPATCH`](#indexed-dispatch) | `$3D` | `$023E` | `( index -- )` | Indexed native target table, inline end address. |
 | [`COMPARE_BRANCH_NE`](#compare-branch-ne) | `$93` | `$0229` | `( a b -- )` equal; `( a b -- a )` unequal | Compare two cells; on inequality branch to inline 16-bit thread address, retaining a. |
 | [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
 | [`BRANCH_ABSOLUTE`](#branch-absolute) | `$46` | `$01F4` | `( -- )` | Set BC to the little-endian address following the token. |
 | [`ZERO_BRANCH`](#zero-branch) | `$03` | `$01FC` | `( flag -- )` | Jump to the inline absolute thread address if flag is zero; otherwise skip its two-byte operand. |
 
 ## Recovered words
+
+### INDEXED_DISPATCH
+
+**Token:** `$3D` · **Native:** `$023E` · **Stack:** `( index -- )`.
+
+Reads an inline little-endian 16-bit end/default continuation address, then pops a zero-based index. The table starts immediately after the end-address operand and consists of 16-bit native execution addresses. Native code doubles the index, adds it to the table start, and compares the indexed pointer to the end address. If the table pointer is before the end, it loads the 16-bit target and executes `JP (HL)`; otherwise it resumes NEXT with BC set to the end address. These are native execution addresses, not one-byte TERSE tokens.
+
+Seven recovered dispatch sites have four entries each: `$2779`, `$27C7`, `$27D8`, `$27E4`, `$285A`, `$2866`, and `$287C`.
+
+Example: the recovered colon word at `$2866` reads RAM byte `$D198` and uses it as an index for four native words at `$2709`, `$26FA`, `$26FF`, `$2704`, otherwise continuing at EXIT (`$2876`). The original historical word spelling is unknown.
+
+```asm
+TERSE_COLON_2866:
+    RST $08
+    DB $1B
+    DW $D198
+    DB $25
+    DB $3D
+    DW $2876
+    DW $2709,$26FA,$26FF,$2704
+    DB $06
+```
 
 ### COMPARE_BRANCH_NE
 
