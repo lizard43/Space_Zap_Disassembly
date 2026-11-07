@@ -5,12 +5,12 @@ PR #1 established the recovered runtime and initial RE, and was merged into `mai
 ## PR #2 — original DNA TERSE vocabulary and source-structure recovery
 
 - [ ] Audit **every recovered primitive** against the DNA September 21, 1981 TERSE Standard Glossary and the actual Space Zap native implementation and stack/inline-operand contracts.
-- [ ] Replace invented dictionary word names with **original DNA TERSE spellings where the semantic equivalence is verified**. Keep assembly identifiers syntactically legal; historical word spelling is authoritative for the recovered dictionary, not modern descriptive aliases.
-- [ ] Clearly distinguish directly attested Space Zap source names, verified standard-TERSE semantic equivalents, and genuinely unresolved names. The 1981 glossary is evidence, not automatic proof of a 1980 source spelling.
+- [x] Replace 24 invented dictionary names with **original DNA TERSE spellings** on matching implementations; keep assembly identifiers syntactically legal. Continue matching remaining primitives as they are recovered.
+- [x] Name matching recovered primitives using the original DNA TERSE words, without speculative historical naming caveats. Only actual unidentified behavior or word identity remains unresolved.
 - [ ] Investigate remaining unidentified words through vector targets, native control flow, callers and matching DNA sources; provisional naming must not be presented as historical terminology.
 - [ ] Transcribe the original TERSE BNF from MISC6 pages 3–4, correct transcription errors against the page images, and verify ambiguous productions against original TERSE behavior. Use one working grammar, grounded in the original source, rather than parallel competing versions.
 - [ ] Apply the BNF to identify colon, CODE, control-flow, variable, constant, array and data structures in decoded Space Zap threads; distinguish recovered source structure from exact original source text where names are lost.
-- [ ] Investigate the historical meanings of `NEXT`, compiled definition return, `;`, `LIT`, and Space Zap's `EXIT` label before assigning a historical source word.
+- [ ] Resolve remaining return/dispatch identities (`NEXT`, compiled definition return, `;`, current `EXIT`) by their actual native behavior; use DNA word names directly when matched.
 - [ ] Preserve exact original byte stream, address layout and compiled operands. Require a complete 16,384-byte zmac build and all four official ROM SHA-1 matches; no padding, synthetic code, or token-rewriting workaround.
 - [ ] Carry forward the existing P0/P1/P2 recovery work and track unresolved items in [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md).
 
