@@ -52,7 +52,7 @@ TERSE_COLD_START:
 TERSE_INDEXED_NEXT:
 	 ld   a,(bc)
 	 inc  bc
-	 ld   de,$3DEA
+	 ld   de,TERSE_TOKEN_VECTORS
 	 ld   l,a
 	 ld   h,$00
 	 add  hl,hl
@@ -9756,331 +9756,268 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ret  nc
 	 djnz $3DE3
 	 ld   b,$F3
-	 nop
-	 nop
-	 adc  a,h
-	 nop
-	 inc  c
-	 ld   bc,$01FC
-	 sub  a
-	 nop
-	 sub  h
-	 nop
-	 ld   b,h
-	 nop
-	 inc  (hl)
-	 ld   bc,$00B2
-	 add  a,c
-	 nop
-	 ld   e,(hl)
-	 ld   (bc),a
-	 ld   a,e
-	 nop
-	 sbc  a,l
-	 nop
-	 add  a,a
-	 nop
-	 ld   e,c
-	 nop
-	 cp   a
-	 nop
-	 xor  e
-	 nop
-	 rst  $38
-	 rst  $38
-	 dec  bc
-	 inc  b
-	 ex   (sp),hl
-	 ld   bc,$00D9
-	 call nc,$5F00
-	 ld   bc,$10DA
-	 call pe,$FC10
-	 ld   de,$1207
-	 ld   d,b
-	 nop
-	 or   a
-	 nop
-	 ld   h,(hl)
-	 ld   (bc),a
-	 ld   a,(hl)
-	 ld   (bc),a
-	 pop  de
-	 ld   bc,$05E5
-	 exx
-	 ld   bc,$0D43
-	 ld   l,l
-	 ld   bc,$01B6
-	 and  h
-	 nop
-	 adc  a,b
-	 ld   bc,$0139
-	 sub  e
-	 ld   hl,$1F10
-	 cpl
-	 inc  b
-	 and  e
-	 ld   hl,$2126
-	 ld   b,(hl)
-	 ld   hl,$2101
-	 add  hl,de
-	 ld   hl,$2188
-	 ld   h,d
-	 ld   hl,$216C
-	 pop  hl
-	 jr   nz,$3DEF
-	 ld   hl,$04A6
-	 ld   d,$12
-	 xor  d
-	 ld   hl,$21D8
-	 ld   e,$11
-	 sbc  a,$00
-	 dec  l
-	 ld   de,$20FE
-	 ld   a,$02
-	 inc  hl
-	 ld   ($00C5),hl
-	 ld   d,h
-	 ld   hl,$12B1
-	 adc  a,l
-	 ld   hl,$00E6
-	 xor  $00
-	 jp   pe,$F401
-	 ld   bc,$1F01
-	 ld   d,b
-	 inc  hl
-	 ld   h,d
-	 ld   (bc),a
-	 ex   af,af'
-	 rra
-	 scf
-	 ld   (de),a
-	 ld   c,c
-	 ld   bc,$1EF8
-	 ccf
-	 ld   bc,$0EC7
-	 or   $24
-	 or   a
-	 ld   (de),a
-	 rla
-	 ld   (bc),a
-	 jr   $3EB1
-	 ld   d,h
-	 ld   bc,$04BB
-	 jp   $1C11
-	 ld   (de),a
-	 ld   (de),a
-	 ld   (de),a
-	 and  b
-	 ld   de,$11F1
-	 ld   de,$9C0E
-	 djnz $3ECB
-	 ld   c,$DC
-	 rrca
-	 jp   z,$B80F
-	 rrca
-	 and  (hl)
-	 rrca
-	 sub  e
-	 inc  hl
-	 ld   e,b
-	 ld   de,$0220
-	 sub  l
-	 ld   de,$0E31
-	 add  a,d
-	 ld   de,$1229
-	 sbc  a,b
-	 rrca
-	 call $B710
-	 djnz $3EA5
-	 inc  c
-	 rst  $00
-	 ld   (de),a
-	 or   (hl)
-	 ld   de,$24E8
-	 xor  e
-	 ld   de,$1166
-	 inc  iyh
-	 ld   de,$4C0D
-	 dec  h
-	 jp   m,$D022
-	 ld   de,$11DB
-	 jp   c,$DA24
-	 ld   c,$ED
-	 ld   c,$18
-	 daa
-	 ld   a,$26
-	 ld   a,(bc)
-	 djnz $3F1A
-	 jr   z,$3F0F
-	 djnz $3F1A
-	 jr   z,$3F24
-	 jr   z,$3EBC
-	 nop
-	 ld   c,l
-	 ld   c,$EE
-	 rrca
-	 call m,$550F
-	 djnz $3F3B
-	 djnz $3F63
-	 djnz $3F74
-	 djnz $3F65
-	 jr   z,$3F56
-	 jr   z,$3F7A
-	 jr   z,$3F63
-	 ld   ($25D0),hl
-	 add  a,a
-	 ld   ($047E),hl
-	 or   (hl)
-	 ld   h,$5C
-	 daa
-	 add  hl,hl
-	 ld   (bc),a
-	 ld   l,e
-	 nop
-	 adc  a,b
-	 ld   de,$26E6
-	 inc  b
-	 daa
-	 jp   nc,$E226
-	 ld   hl,($26EB)
-	 add  hl,bc
-	 daa
-	 rst  $10
-	 ld   h,$F0
-	 ld   h,$FA
-	 ld   h,$DC
-	 ld   h,$F5
-	 ld   h,$FF
-	 ld   h,$E1
-	 ld   h,$E6
-	 ld   de,$2AF6
-	 in   a,($12)
-	 inc  a
-	 ld   de,$10FE
-	 ld   c,d
-	 ld   de,$110E
-	 sub  c
-	 djnz $3F76
-	 ld   h,$1D
-	 inc  hl
-	 add  a,(hl)
-	 djnz $3F66
-	 ld   h,$26
-	 inc  l
-	 ex   af,af'
-	 dec  h
-	 ld   a,l
-	 dec  l
-	 or   d
-	 inc  l
-	 add  hl,de
-	 dec  l
-	 ld   c,(hl)
-	 inc  l
-	 ret  nz
-	 dec  hl
-	 cp   e
-	 inc  h
-	 halt
-	 jr   nc,$3F92
-	 dec  d
-	 sub  c
-	 jr   nc,$3FDB
-	 jr   nc,$3F13
-	 jr   nc,$3F30
-	 jr   nc,$3FDE
-	 ld   d,$92
-	 ld   d,$EC
-	 ld   sp,$31CB
-	 ld   bc,$FD32
-	 nop
-	 add  hl,bc
-	 ld   (bc),a
-	 ld   b,$13
-	 or   b
-	 ld   ($3358),a
-	 inc  d
-	 ld   ($3206),a
-	 jp   pe,$4032
-	 ld   c,$05
-	 inc  (hl)
-	 ld   b,c
-	 ld   sp,$30E7
-	 pop  af
-	 ld   e,$A9
-	 inc  hl
-	 sub  c
-	 dec  (hl)
-	 and  d
-	 inc  (hl)
-	 jr   nz,$3F91
-	 ex   (sp),hl
-	 dec  (hl)
-	 ld   a,e
-	 ld   sp,$3189
-	 or   d
-	 dec  (hl)
-	 ld   ($D132),hl
-	 dec  (hl)
-	 call z,$9A34
-	 dec  (hl)
-	 xor  b
-	 ld   ($34BE),a
-	 inc  c
-	 jr   nc,$4016
-	 inc  (hl)
-	 pop  bc
-	 inc  sp
-	 ld   l,$33
-	 adc  a,d
-	 ld   ($327C),a
-	 ld   (hl),a
-	 inc  sp
-	 call nz,$E335
-	 ld   hl,$28AA
-	 ld   e,(hl)
-	 inc  h
-	 jp   z,$2022
-	 dec  (hl)
-	 ld   b,c
-	 dec  (hl)
-	 sub  l
-	 inc  h
-	 rlca
-	 inc  h
-	 and  l
-	 inc  (hl)
-	 rst  $28
-	 dec  (hl)
-	 exx
-	 dec  sp
-	 ld   sp,$6722
-	 cpl
-	 ld   de,$9213
-	 rra
-	 jr   nz,$3FF3
-	 cp   a
-	 ld   bc,$2DE3
-	 call m,$D63B
-	 ld   l,$52
-	 inc  (hl)
-	 ld   l,e
-	 inc  a
-	 sub  h
-	 inc  bc
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
+; $3DEA-$3FE9: 256 indexed TERSE native execution vectors.
+; Each byte token from BC selects one little-endian DW.
+; Derived from the official ROM. Undefined tokens remain $FFFF.
+TERSE_TOKEN_VECTORS:
+	 .DW $0000	; token $00 (zero vector)
+	 .DW $008C	; token $01
+	 .DW $010C	; token $02
+	 .DW $01FC	; token $03
+	 .DW $0097	; token $04
+	 .DW $0094	; token $05
+	 .DW TERSE_EXIT	; token $06
+	 .DW $0134	; token $07
+	 .DW $00B2	; token $08
+	 .DW $0081	; token $09
+	 .DW $025E	; token $0A
+	 .DW $007B	; token $0B
+	 .DW $009D	; token $0C
+	 .DW $0087	; token $0D
+	 .DW TERSE_LIT8	; token $0E
+	 .DW $00BF	; token $0F
+	 .DW $00AB	; token $10
+	 .DW $FFFF	; token $11 (unassigned)
+	 .DW $040B	; token $12
+	 .DW $01E3	; token $13
+	 .DW $00D9	; token $14
+	 .DW $00D4	; token $15
+	 .DW $015F	; token $16
+	 .DW $10DA	; token $17
+	 .DW $10EC	; token $18
+	 .DW $11FC	; token $19
+	 .DW $1207	; token $1A
+	 .DW TERSE_LIT16	; token $1B
+	 .DW $00B7	; token $1C
+	 .DW $0266	; token $1D
+	 .DW $027E	; token $1E
+	 .DW $01D1	; token $1F
+	 .DW $05E5	; token $20
+	 .DW $01D9	; token $21
+	 .DW $0D43	; token $22
+	 .DW $016D	; token $23
+	 .DW $01B6	; token $24
+	 .DW $00A4	; token $25
+	 .DW $0188	; token $26
+	 .DW $0139	; token $27
+	 .DW $2193	; token $28
+	 .DW $1F10	; token $29
+	 .DW $042F	; token $2A
+	 .DW $21A3	; token $2B
+	 .DW $2126	; token $2C
+	 .DW $2146	; token $2D
+	 .DW $2101	; token $2E
+	 .DW $2119	; token $2F
+	 .DW $2188	; token $30
+	 .DW $2162	; token $31
+	 .DW $216C	; token $32
+	 .DW $20E1	; token $33
+	 .DW $219C	; token $34
+	 .DW $04A6	; token $35
+	 .DW $1216	; token $36
+	 .DW $21AA	; token $37
+	 .DW $21D8	; token $38
+	 .DW $111E	; token $39
+	 .DW $00DE	; token $3A
+	 .DW $112D	; token $3B
+	 .DW $20FE	; token $3C
+	 .DW $023E	; token $3D
+	 .DW $2223	; token $3E
+	 .DW $00C5	; token $3F
+	 .DW $2154	; token $40
+	 .DW $12B1	; token $41
+	 .DW $218D	; token $42
+	 .DW $00E6	; token $43
+	 .DW $00EE	; token $44
+	 .DW $01EA	; token $45
+	 .DW $01F4	; token $46
+	 .DW $1F01	; token $47
+	 .DW $2350	; token $48
+	 .DW $0262	; token $49
+	 .DW $1F08	; token $4A
+	 .DW $1237	; token $4B
+	 .DW $0149	; token $4C
+	 .DW $1EF8	; token $4D
+	 .DW $013F	; token $4E
+	 .DW $0EC7	; token $4F
+	 .DW $24F6	; token $50
+	 .DW $12B7	; token $51
+	 .DW $0217	; token $52
+	 .DW $1F18	; token $53
+	 .DW $0154	; token $54
+	 .DW $04BB	; token $55
+	 .DW $11C3	; token $56
+	 .DW $121C	; token $57
+	 .DW $1212	; token $58
+	 .DW $11A0	; token $59
+	 .DW $11F1	; token $5A
+	 .DW $0E11	; token $5B
+	 .DW $109C	; token $5C
+	 .DW $0E26	; token $5D
+	 .DW $0FDC	; token $5E
+	 .DW $0FCA	; token $5F
+	 .DW $0FB8	; token $60
+	 .DW $0FA6	; token $61
+	 .DW $2393	; token $62
+	 .DW $1158	; token $63
+	 .DW $0220	; token $64
+	 .DW $1195	; token $65
+	 .DW $0E31	; token $66
+	 .DW $1182	; token $67
+	 .DW $1229	; token $68
+	 .DW $0F98	; token $69
+	 .DW $10CD	; token $6A
+	 .DW $10B7	; token $6B
+	 .DW $0CE2	; token $6C
+	 .DW $12C7	; token $6D
+	 .DW $11B6	; token $6E
+	 .DW $24E8	; token $6F
+	 .DW $11AB	; token $70
+	 .DW $1166	; token $71
+	 .DW $24FD	; token $72
+	 .DW $0D11	; token $73
+	 .DW $254C	; token $74
+	 .DW $22FA	; token $75
+	 .DW $11D0	; token $76
+	 .DW $11DB	; token $77
+	 .DW $24DA	; token $78
+	 .DW $0EDA	; token $79
+	 .DW $0EED	; token $7A
+	 .DW $2718	; token $7B
+	 .DW $263E	; token $7C
+	 .DW $100A	; token $7D
+	 .DW $2833	; token $7E
+	 .DW $1026	; token $7F
+	 .DW $282F	; token $80
+	 .DW $2837	; token $81
+	 .DW $00CD	; token $82
+	 .DW $0E4D	; token $83
+	 .DW $0FEE	; token $84
+	 .DW $0FFC	; token $85
+	 .DW $1055	; token $86
+	 .DW $1042	; token $87
+	 .DW $1068	; token $88
+	 .DW $1077	; token $89
+	 .DW $2866	; token $8A
+	 .DW $2855	; token $8B
+	 .DW $2877	; token $8C
+	 .DW $225E	; token $8D
+	 .DW $25D0	; token $8E
+	 .DW $2287	; token $8F
+	 .DW $047E	; token $90
+	 .DW $26B6	; token $91
+	 .DW $275C	; token $92
+	 .DW $0229	; token $93
+	 .DW $006B	; token $94
+	 .DW $1188	; token $95
+	 .DW $26E6	; token $96
+	 .DW $2704	; token $97
+	 .DW $26D2	; token $98
+	 .DW $2AE2	; token $99
+	 .DW $26EB	; token $9A
+	 .DW $2709	; token $9B
+	 .DW $26D7	; token $9C
+	 .DW $26F0	; token $9D
+	 .DW $26FA	; token $9E
+	 .DW $26DC	; token $9F
+	 .DW $26F5	; token $A0
+	 .DW $26FF	; token $A1
+	 .DW $26E1	; token $A2
+	 .DW $11E6	; token $A3
+	 .DW $2AF6	; token $A4
+	 .DW $12DB	; token $A5
+	 .DW $113C	; token $A6
+	 .DW $10FE	; token $A7
+	 .DW $114A	; token $A8
+	 .DW $110E	; token $A9
+	 .DW $1091	; token $AA
+	 .DW $2635	; token $AB
+	 .DW $231D	; token $AC
+	 .DW $1086	; token $AD
+	 .DW $261F	; token $AE
+	 .DW $2C26	; token $AF
+	 .DW $2508	; token $B0
+	 .DW $2D7D	; token $B1
+	 .DW $2CB2	; token $B2
+	 .DW $2D19	; token $B3
+	 .DW $2C4E	; token $B4
+	 .DW $2BC0	; token $B5
+	 .DW $24BB	; token $B6
+	 .DW $3076	; token $B7
+	 .DW $1537	; token $B8
+	 .DW $3091	; token $B9
+	 .DW $307C	; token $BA
+	 .DW $30B2	; token $BB
+	 .DW $30CD	; token $BC
+	 .DW $1679	; token $BD
+	 .DW $1692	; token $BE
+	 .DW $31EC	; token $BF
+	 .DW $31CB	; token $C0
+	 .DW $3201	; token $C1
+	 .DW $00FD	; token $C2
+	 .DW $0209	; token $C3
+	 .DW $1306	; token $C4
+	 .DW $32B0	; token $C5
+	 .DW $3358	; token $C6
+	 .DW $3214	; token $C7
+	 .DW $3206	; token $C8
+	 .DW $32EA	; token $C9
+	 .DW $0E40	; token $CA
+	 .DW $3405	; token $CB
+	 .DW $3141	; token $CC
+	 .DW $30E7	; token $CD
+	 .DW $1EF1	; token $CE
+	 .DW $23A9	; token $CF
+	 .DW $3591	; token $D0
+	 .DW $34A2	; token $D1
+	 .DW $0120	; token $D2
+	 .DW $35E3	; token $D3
+	 .DW $317B	; token $D4
+	 .DW $3189	; token $D5
+	 .DW $35B2	; token $D6
+	 .DW $3222	; token $D7
+	 .DW $35D1	; token $D8
+	 .DW $34CC	; token $D9
+	 .DW $359A	; token $DA
+	 .DW $32A8	; token $DB
+	 .DW $34BE	; token $DC
+	 .DW $300C	; token $DD
+	 .DW $346F	; token $DE
+	 .DW $33C1	; token $DF
+	 .DW $332E	; token $E0
+	 .DW $328A	; token $E1
+	 .DW $327C	; token $E2
+	 .DW $3377	; token $E3
+	 .DW $35C4	; token $E4
+	 .DW $21E3	; token $E5
+	 .DW $28AA	; token $E6
+	 .DW $245E	; token $E7
+	 .DW $22CA	; token $E8
+	 .DW $3520	; token $E9
+	 .DW $3541	; token $EA
+	 .DW $2495	; token $EB
+	 .DW $2407	; token $EC
+	 .DW $34A5	; token $ED
+	 .DW $35EF	; token $EE
+	 .DW $3BD9	; token $EF
+	 .DW $2231	; token $F0
+	 .DW $2F67	; token $F1
+	 .DW $1311	; token $F2
+	 .DW $1F92	; token $F3
+	 .DW $1F20	; token $F4
+	 .DW $01BF	; token $F5
+	 .DW $2DE3	; token $F6
+	 .DW $3BFC	; token $F7
+	 .DW $2ED6	; token $F8
+	 .DW $3452	; token $F9
+	 .DW $3C6B	; token $FA
+	 .DW $0394	; token $FB
+	 .DW $FFFF	; token $FC (unassigned)
+	 .DW $FFFF	; token $FD (unassigned)
+	 .DW $FFFF	; token $FE (unassigned)
+	 .DW $FFFF	; token $FF (unassigned)
+; $3FEA-$3FEE: original ROM padding between table and title.
+	 .DB $FF,$FF,$FF,$FF,$FF
 ; $3FEF-$3FFF: original ROM text and terminal metadata, not executable Z80.
 SPACE_ZAP_ROM_TITLE:
 	 .DB $53,$50,$41,$43,$45,$20,$5A,$41,$50,$00 ; "SPACE ZAP", NUL
