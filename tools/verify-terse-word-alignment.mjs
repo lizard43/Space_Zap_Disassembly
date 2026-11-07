@@ -35,15 +35,13 @@ assert.equal(quickRows.length, words.length, 'quick reference count differs from
 let sourceOccurrences = 0;
 for (const [token, name] of words) {
   assert.ok(quickRows.includes(name), `word ${name} ($${token}) missing in quick reference`);
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const vector = new RegExp(`^\\| \\`\\$${token}\\` \\| \\`\\$[0-9A-F]{4}\\` \\| ${escaped}: recovered contract\\b`, 'mi');
   // Punctuation is followed by a colon, so use the simpler exact row parser.
-  const row = vectors.split('\n').find(line => line.startsWith(`| \\`$${token}\\` |`));
+  const row = vectors.split('\n').find(line => line.startsWith('| `' + '$' + token + '` |'));
   assert.ok(row, `no vector row for $${token}`);
   const description = row.split('|')[3].trim();
   assert.ok(description.startsWith(name + ':'), `vector $${token}: expected ${name}, found ${description}`);
   for (const line of source.split('\n')) {
-    const m = line.match(/^\\s*DB\\s+\\$([0-9A-F]{2})\\s*;\\s*(.+?)\\s*$/i);
+    const m = line.match(/^\s*DB\s+\$([0-9A-F]{2})\s*;\s*(.+?)\s*$/i);
     if (!m || m[1].toUpperCase() !== token) continue;
     const annotation = m[2].trim();
     if (annotation.startsWith('TOKEN_$')) continue;
