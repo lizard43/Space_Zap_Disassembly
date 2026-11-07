@@ -6995,303 +6995,328 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  bc
 	 jr   nz,$2DA7
 	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 and  a
-	 dec  de
-	 pop  de
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 sub  a
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 DB $DD,$2D ; 16-bit TERSE 0BRANCH target $2DDD
-	 dec  bc
-	 rla
-	 ld   c,$55
-	 jr   $2DB6
-	 sbc  a,h
-	 pop  de
-	 inc  c
-	 add  a,d
-	 xor  c
-	 sub  (hl)
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 xor  (hl)
-	 dec  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 sub  a
-	 ld   a,c
-	 ld   c,$18
-	 ld   a,a
-	 ld   l,h
-	 sub  (hl)
-	 dec  e
-	 ld   a,d
-	 sub  a
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 add  a,$2D
-	 xor  a
-	 ld   l,h
-	 ld   b,(hl)
-	 in   a,($2D)
-	 adc  a,(hl)
-	 xor  l
-	 dec  bc
-	 ld   a,a
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 add  a,h
-	 dec  l
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($6771)
-	 ld   d,a
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 call nz,$562E
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 ld   c,c
-	 sbc  a,e
-	 ld   c,c
-	 and  c
-	 ld   c,c
-	 sub  a
-	 ld   c,c
-	 sbc  a,(hl)
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 add  hl,bc
-	 ld   c,h
-	 daa
-	 inc  bc
-	 rrca
-	 ld   l,$1B
-	 inc  bc
-	 ret  nc
-	 add  hl,hl
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 scf
-	 ld   c,$06
-	 dec  de
-	 dec  l
-	 call nc,$9808
-	 ld   d,l
-	 sbc  a,a
-	 ld   d,l
-	 and  d
-	 ld   d,l
-	 sbc  a,h
-	 ld   d,l
-	 dec  de
-	 or   l
-	 pop  de
-	 ld   d,l
-	 dec  de
-	 ld   c,l
-	 jp   nc,$7255
-	 ld   (hl),e
-	 ld   d,b
-	 dec  de
-; The threaded base-render script embeds object-record pointers at these
-; locations:
-;   $2E29, $2E49  LASER_BASE_BODY_DESTROY
-;   $2E39, $2EC6  LASER_BASE_BODY
-;   $2E78, $2EA2  LASER_BASE_DESTROY_3
-	 ld   e,(hl)
-	 jr   $2DC1
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 ld   c,$09
-	 ld   c,a
-	 ld   (hl),e
-	 dec  de
-	 call c,$9517
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 ld   c,$09
-	 ld   c,a
-	 ld   (hl),e
-	 dec  de
-	 ld   e,(hl)
-	 jr   $2DE1
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$10
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$12
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$16
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$20
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$10
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$12
-	 or   b
-	 ld   (hl),e
-	 sub  b
-	 dec  de
-	 dec  l
-	 call nc,$2725
-	 inc  bc
-	 ld   a,b
-	 ld   l,$1B
-	 ld   de,$25D0
-	 dec  de
-	 ld   (de),a
-	 ret  nc
-	 rrca
-	 dec  h
-	 daa
-	 inc  bc
-	 sub  h
-	 ld   l,$1B
-	 add  a,b
-	 ld   bc,$9646
-	 ld   l,$0E
-	 ld   h,b
-	 ld   c,a
-	 dec  de
-	 and  e
-	 pop  de
-	 ld   a,c
-	 ld   (hl),e
-	 ld   c,$06
-	 dec  de
-	 ld   l,$D4
-	 ex   af,af'
-	 sub  b
-	 dec  de
-	 ld   l,$D4
-	 dec  h
-	 daa
-	 inc  bc
-	 and  d
-	 ld   l,$98
-	 or   c
-	 sbc  a,a
-	 or   d
-	 dec  de
-	 ld   c,l
-	 jp   nc,$A292
-	 or   e
-	 sbc  a,h
-	 or   h
-	 dec  de
-	 or   l
-	 pop  de
-	 or   l
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 cp   e
-	 ld   l,$B6
-	 dec  de
-	 call c,$9517
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 dec  bc
-	 inc  bc
-	 ret  pe
-	 dec  l
+; $2D7C: EXIT of preceding colon program.
+	 DB $06 ; TERSE_EXIT
+; $2D7D compiled TERSE byte-token definition.
+TERSE_COLON_2D7D:
+	 RST $08
+	 DB $2A ; $2D7E => $042F
+	 DB $0E ; $2D7F => $0059
+	 DB $0C ; LIT8
+	 DB $65 ; $2D81 => $1195
+	 DB $56 ; $2D82 => $11C3
+	 DB $71 ; $2D83 => $1166
+TERSE_THREAD_2D84:
+	 DB $0B ; $2D84 => $007B
+	 DB $A7 ; $2D85 => $10FE
+	 DB $1B ; $2D86 => $0050
+	 DW $24D1 ; LIT16
+	 DB $5C ; $2D89 => $109C
+	 DB $57 ; $2D8A => $121C
+	 DB $6A ; $2D8B => $10CD
+	 DB $97 ; $2D8C => $2704
+	 DB $1D ; $2D8D => $0266
+	 DB $35 ; $2D8E => $04A6
+	 DB $78 ; $2D8F => $24DA
+	 DB $4E ; $2D90 => $013F
+	 DB $27 ; $2D91 => $0139
+	 DB $03 ; $2D92 => $01FC
+	 DW TERSE_THREAD_2DDD ; 0BRANCH
+	 DB $0B ; $2D95 => $007B
+	 DB $17 ; $2D96 => $10DA
+	 DB $0E ; $2D97 => $0059
+	 DB $55 ; LIT8
+	 DB $18 ; $2D99 => $10EC
+	 DB $1B ; $2D9A => $0050
+	 DW $D19C ; LIT16
+	 DB $0C ; $2D9D => $009D
+	 DB $82 ; $2D9E => $00CD
+	 DB $A9 ; $2D9F => $110E
+	 DB $96 ; $2DA0 => $26E6
+	 DB $49 ; $2DA1 => $0262
+	 DB $1B ; $2DA2 => $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $2DA5 => $00A4
+	 DB $27 ; $2DA6 => $0139
+	 DB $03 ; $2DA7 => $01FC
+	 DW TERSE_THREAD_2DAE ; 0BRANCH
+	 DB $1B ; $2DAA => $0050
+	 DW $D155 ; LIT16
+	 DB $AC ; $2DAD => $231D
+TERSE_THREAD_2DAE:
+	 DB $AD ; $2DAE => $1086
+	 DB $70 ; $2DAF => $11AB
+	 DB $AE ; $2DB0 => $261F
+	 DB $6B ; $2DB1 => $10B7
+	 DB $97 ; $2DB2 => $2704
+	 DB $79 ; $2DB3 => $0EDA
+	 DB $0E ; $2DB4 => $0059
+	 DB $18 ; LIT8
+	 DB $7F ; $2DB6 => $1026
+	 DB $6C ; $2DB7 => $0CE2
+	 DB $96 ; $2DB8 => $26E6
+	 DB $1D ; $2DB9 => $0266
+	 DB $7A ; $2DBA => $0EED
+	 DB $97 ; $2DBB => $2704
+	 DB $25 ; $2DBC => $00A4
+	 DB $54 ; $2DBD => $0154
+	 DB $03 ; $2DBE => $01FC
+	 DW TERSE_THREAD_2DC6 ; 0BRANCH
+	 DB $AF ; $2DC1 => $2C26
+	 DB $6C ; $2DC2 => $0CE2
+	 DB $46 ; $2DC3 => $01F4
+	 DW TERSE_THREAD_2DDB ; BRANCH
+TERSE_THREAD_2DC6:
+	 DB $8E ; $2DC6 => $25D0
+	 DB $AD ; $2DC7 => $1086
+	 DB $0B ; $2DC8 => $007B
+	 DB $7F ; $2DC9 => $1026
+	 DB $6C ; $2DCA => $0CE2
+	 DB $71 ; $2DCB => $1166
+	 DB $1B ; $2DCC => $0050
+	 DW $D3C9 ; LIT16
+	 DB $55 ; $2DCF => $04BB
+	 DB $58 ; $2DD0 => $1212
+	 DB $70 ; $2DD1 => $11AB
+	 DB $1B ; $2DD2 => $0050
+	 DW $1DC9 ; LIT16
+	 DB $6B ; $2DD5 => $10B7
+	 DB $0E ; $2DD6 => $0059
+	 DB $26 ; LIT8
+	 DB $4F ; $2DD8 => $0EC7
+	 DB $6C ; $2DD9 => $0CE2
+	 DB $62 ; $2DDA => $2393
+TERSE_THREAD_2DDB:
+	 DB $6D ; $2DDB => $12C7
+	 DB $78 ; $2DDC => $24DA
+TERSE_THREAD_2DDD:
+	 DB $03 ; $2DDD => $01FC
+	 DW TERSE_THREAD_2D84 ; 0BRANCH
+	 DB $36 ; $2DE0 => $1216
+	 DB $7C ; $2DE1 => $263E
+	 DB $06 ; $2DE2 => $0044
+; $2DE3 compiled TERSE byte-token definition.
+TERSE_COLON_2DE3:
+	 RST $08
+	 DB $2A ; $2DE4 => $042F
+	 DB $71 ; $2DE5 => $1166
+	 DB $67 ; $2DE6 => $1182
+	 DB $57 ; $2DE7 => $121C
+TERSE_THREAD_2DE8:
+	 DB $35 ; $2DE8 => $04A6
+	 DB $1B ; $2DE9 => $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2DEC => $00A4
+	 DB $03 ; $2DED => $01FC
+	 DW TERSE_THREAD_2EC4 ; 0BRANCH
+	 DB $56 ; $2DF0 => $11C3
+	 DB $1B ; $2DF1 => $0050
+	 DW $D19A ; LIT16
+	 DB $49 ; $2DF4 => $0262
+	 DB $9B ; $2DF5 => $2709
+	 DB $49 ; $2DF6 => $0262
+	 DB $A1 ; $2DF7 => $26FF
+	 DB $49 ; $2DF8 => $0262
+	 DB $97 ; $2DF9 => $2704
+	 DB $49 ; $2DFA => $0262
+	 DB $9E ; $2DFB => $26FA
+	 DB $49 ; $2DFC => $0262
+	 DB $1B ; $2DFD => $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $2E00 => $00A4
+	 DB $09 ; $2E01 => $0081
+	 DB $4C ; $2E02 => $0149
+	 DB $27 ; $2E03 => $0139
+	 DB $03 ; $2E04 => $01FC
+	 DW TERSE_THREAD_2E0F ; 0BRANCH
+	 DB $1B ; $2E07 => $0050
+	 DW $D003 ; LIT16
+	 DB $29 ; $2E0A => $1F10
+	 DB $1B ; $2E0B => $0050
+	 DW $D155 ; LIT16
+	 DB $37 ; $2E0E => $21AA
+TERSE_THREAD_2E0F:
+	 DB $0E ; $2E0F => $0059
+	 DB $06 ; LIT8
+	 DB $1B ; $2E11 => $0050
+	 DW $D42D ; LIT16
+	 DB $08 ; $2E14 => $00B2
+	 DB $98 ; $2E15 => $26D2
+	 DB $55 ; $2E16 => $04BB
+	 DB $9F ; $2E17 => $26DC
+	 DB $55 ; $2E18 => $04BB
+	 DB $A2 ; $2E19 => $26E1
+	 DB $55 ; $2E1A => $04BB
+	 DB $9C ; $2E1B => $26D7
+	 DB $55 ; $2E1C => $04BB
+	 DB $1B ; $2E1D => $0050
+	 DW $D1B5 ; LIT16
+	 DB $55 ; $2E20 => $04BB
+	 DB $1B ; $2E21 => $0050
+	 DW $D24D ; LIT16
+	 DB $55 ; $2E24 => $04BB
+	 DB $72 ; $2E25 => $24FD
+	 DB $73 ; $2E26 => $0D11
+	 DB $50 ; $2E27 => $24F6
+	 DB $1B ; $2E28 => $0050
+	 DW $185E ; LIT16
+	 DB $95 ; $2E2B => $1188
+	 DB $A5 ; $2E2C => $12DB
+	 DB $76 ; $2E2D => $11D0
+	 DB $A5 ; $2E2E => $12DB
+	 DB $77 ; $2E2F => $11DB
+	 DB $A5 ; $2E30 => $12DB
+	 DB $19 ; $2E31 => $11FC
+	 DB $A5 ; $2E32 => $12DB
+	 DB $1A ; $2E33 => $1207
+	 DB $0E ; $2E34 => $0059
+	 DB $09 ; LIT8
+	 DB $4F ; $2E36 => $0EC7
+	 DB $73 ; $2E37 => $0D11
+	 DB $1B ; $2E38 => $0050
+	 DW $17DC ; LIT16
+	 DB $95 ; $2E3B => $1188
+	 DB $A5 ; $2E3C => $12DB
+	 DB $76 ; $2E3D => $11D0
+	 DB $A5 ; $2E3E => $12DB
+	 DB $77 ; $2E3F => $11DB
+	 DB $A5 ; $2E40 => $12DB
+	 DB $19 ; $2E41 => $11FC
+	 DB $A5 ; $2E42 => $12DB
+	 DB $1A ; $2E43 => $1207
+	 DB $0E ; $2E44 => $0059
+	 DB $09 ; LIT8
+	 DB $4F ; $2E46 => $0EC7
+	 DB $73 ; $2E47 => $0D11
+	 DB $1B ; $2E48 => $0050
+	 DW $185E ; LIT16
+	 DB $95 ; $2E4B => $1188
+	 DB $A5 ; $2E4C => $12DB
+	 DB $76 ; $2E4D => $11D0
+	 DB $A5 ; $2E4E => $12DB
+	 DB $77 ; $2E4F => $11DB
+	 DB $A5 ; $2E50 => $12DB
+	 DB $19 ; $2E51 => $11FC
+	 DB $A5 ; $2E52 => $12DB
+	 DB $1A ; $2E53 => $1207
+	 DB $72 ; $2E54 => $24FD
+	 DB $73 ; $2E55 => $0D11
+	 DB $0E ; $2E56 => $0059
+	 DB $10 ; LIT8
+	 DB $B0 ; $2E58 => $2508
+	 DB $73 ; $2E59 => $0D11
+	 DB $72 ; $2E5A => $24FD
+	 DB $73 ; $2E5B => $0D11
+	 DB $0E ; $2E5C => $0059
+	 DB $12 ; LIT8
+	 DB $B0 ; $2E5E => $2508
+	 DB $73 ; $2E5F => $0D11
+	 DB $72 ; $2E60 => $24FD
+	 DB $73 ; $2E61 => $0D11
+	 DB $0E ; $2E62 => $0059
+	 DB $16 ; LIT8
+	 DB $B0 ; $2E64 => $2508
+	 DB $73 ; $2E65 => $0D11
+	 DB $72 ; $2E66 => $24FD
+	 DB $73 ; $2E67 => $0D11
+	 DB $0E ; $2E68 => $0059
+	 DB $20 ; LIT8
+	 DB $B0 ; $2E6A => $2508
+	 DB $73 ; $2E6B => $0D11
+	 DB $72 ; $2E6C => $24FD
+	 DB $73 ; $2E6D => $0D11
+	 DB $0E ; $2E6E => $0059
+	 DB $10 ; LIT8
+	 DB $B0 ; $2E70 => $2508
+	 DB $73 ; $2E71 => $0D11
+	 DB $72 ; $2E72 => $24FD
+	 DB $73 ; $2E73 => $0D11
+	 DB $0E ; $2E74 => $0059
+	 DB $12 ; LIT8
+	 DB $B0 ; $2E76 => $2508
+	 DB $73 ; $2E77 => $0D11
+TERSE_THREAD_2E78:
+	 DB $90 ; $2E78 => $047E
+	 DB $1B ; $2E79 => $0050
+	 DW $D42D ; LIT16
+	 DB $25 ; $2E7C => $00A4
+	 DB $27 ; $2E7D => $0139
+	 DB $03 ; $2E7E => $01FC
+	 DW TERSE_THREAD_2E78 ; 0BRANCH
+	 DB $1B ; $2E81 => $0050
+	 DW $D011 ; LIT16
+	 DB $25 ; $2E84 => $00A4
+	 DB $1B ; $2E85 => $0050
+	 DW $D012 ; LIT16
+	 DB $0F ; $2E88 => $00BF
+	 DB $25 ; $2E89 => $00A4
+	 DB $27 ; $2E8A => $0139
+	 DB $03 ; $2E8B => $01FC
+	 DW TERSE_THREAD_2E94 ; 0BRANCH
+	 DB $1B ; $2E8E => $0050
+	 DW $0180 ; LIT16
+	 DB $46 ; $2E91 => $01F4
+	 DW TERSE_THREAD_2E96 ; BRANCH
+TERSE_THREAD_2E94:
+	 DB $0E ; $2E94 => $0059
+	 DB $60 ; LIT8
+TERSE_THREAD_2E96:
+	 DB $4F ; $2E96 => $0EC7
+	 DB $1B ; $2E97 => $0050
+	 DW $D1A3 ; LIT16
+	 DB $79 ; $2E9A => $0EDA
+	 DB $73 ; $2E9B => $0D11
+	 DB $0E ; $2E9C => $0059
+	 DB $06 ; LIT8
+	 DB $1B ; $2E9E => $0050
+	 DW $D42E ; LIT16
+	 DB $08 ; $2EA1 => $00B2
+TERSE_THREAD_2EA2:
+	 DB $90 ; $2EA2 => $047E
+	 DB $1B ; $2EA3 => $0050
+	 DW $D42E ; LIT16
+	 DB $25 ; $2EA6 => $00A4
+	 DB $27 ; $2EA7 => $0139
+	 DB $03 ; $2EA8 => $01FC
+	 DW TERSE_THREAD_2EA2 ; 0BRANCH
+	 DB $98 ; $2EAB => $26D2
+	 DB $B1 ; $2EAC => $2D7D
+	 DB $9F ; $2EAD => $26DC
+	 DB $B2 ; $2EAE => $2CB2
+	 DB $1B ; $2EAF => $0050
+	 DW $D24D ; LIT16
+	 DB $92 ; $2EB2 => $275C
+	 DB $A2 ; $2EB3 => $26E1
+	 DB $B3 ; $2EB4 => $2D19
+	 DB $9C ; $2EB5 => $26D7
+	 DB $B4 ; $2EB6 => $2C4E
+	 DB $1B ; $2EB7 => $0050
+	 DW $D1B5 ; LIT16
+	 DB $B5 ; $2EBA => $2BC0
+TERSE_THREAD_2EBB:
+	 DB $35 ; $2EBB => $04A6
+	 DB $1B ; $2EBC => $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2EBF => $00A4
+	 DB $27 ; $2EC0 => $0139
+	 DB $03 ; $2EC1 => $01FC
+	 DW TERSE_THREAD_2EBB ; 0BRANCH
+TERSE_THREAD_2EC4:
+	 DB $B6 ; $2EC4 => $24BB
+	 DB $1B ; $2EC5 => $0050
+	 DW $17DC ; LIT16
+	 DB $95 ; $2EC8 => $1188
+	 DB $A5 ; $2EC9 => $12DB
+	 DB $76 ; $2ECA => $11D0
+	 DB $A5 ; $2ECB => $12DB
+	 DB $77 ; $2ECC => $11DB
+	 DB $A5 ; $2ECD => $12DB
+	 DB $19 ; $2ECE => $11FC
+	 DB $A5 ; $2ECF => $12DB
+	 DB $1A ; $2ED0 => $1207
+	 DB $0B ; $2ED1 => $007B
+	 DB $03 ; $2ED2 => $01FC
+	 DW TERSE_THREAD_2DE8 ; 0BRANCH
 	 ld   b,$CF
 	 ld   hl,($080E)
 	 ld   h,l
