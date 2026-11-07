@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0025
+; RE version: v20261107-0026
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -10256,43 +10256,43 @@ SPACE_ZAP_MAIN_TRAILING_BYTE:
 ; Derived from the official ROM. Undefined tokens remain $FFFF.
 TERSE_TOKEN_VECTORS:
 	 DW $0000	; token $00 (zero vector)
-	 DW TERSE_2DUP	; token $01
+	 DW TERSE_2DUP	; token $01 — 2DUP
 	 DW $010C	; token $02
-	 DW TERSE_ZERO_BRANCH	; token $03
-	 DW TERSE_SWAP	; token $04
-	 DW TERSE_DROP	; token $05
-	 DW TERSE_EXIT	; token $06
+	 DW TERSE_ZERO_BRANCH	; token $03 — ZERO_BRANCH
+	 DW TERSE_SWAP	; token $04 — SWAP
+	 DW TERSE_DROP	; token $05 — DROP
+	 DW TERSE_EXIT	; token $06 — EXIT
 	 DW $0134	; token $07
-	 DW TERSE_BYTE_STORE	; token $08
-	 DW TERSE_ONE	; token $09
+	 DW TERSE_BYTE_STORE	; token $08 — B!
+	 DW TERSE_ONE	; token $09 — 1
 	 DW $025E	; token $0A
-	 DW TERSE_ZERO	; token $0B
-	 DW TERSE_FETCH	; token $0C
-	 DW TERSE_DUP	; token $0D
-	 DW TERSE_LIT8	; token $0E
-	 DW TERSE_ADD	; token $0F
-	 DW TERSE_STORE	; token $10
+	 DW TERSE_ZERO	; token $0B — 0
+	 DW TERSE_FETCH	; token $0C — @
+	 DW TERSE_DUP	; token $0D — DUP
+	 DW TERSE_LIT8	; token $0E — LIT8
+	 DW TERSE_ADD	; token $0F — +
+	 DW TERSE_STORE	; token $10 — !
 	 DW $FFFF	; token $11 (unassigned)
 	 DW $040B	; token $12
-	 DW TERSE_STACK_ROTATE	; token $13
-	 DW TERSE_INCREMENT	; token $14
-	 DW TERSE_DECREMENT	; token $15
-	 DW TERSE_MEMORY_COPY	; token $16
+	 DW TERSE_STACK_ROTATE	; token $13 — ROT
+	 DW TERSE_INCREMENT	; token $14 — 1+
+	 DW TERSE_DECREMENT	; token $15 — 1-
+	 DW TERSE_MEMORY_COPY	; token $16 — BMOVE
 	 DW $10DA	; token $17
 	 DW $10EC	; token $18
 	 DW $11FC	; token $19
 	 DW $1207	; token $1A
-	 DW TERSE_LIT16	; token $1B
-	 DW TERSE_ZERO_WORD_AT_ADDRESS	; token $1C
+	 DW TERSE_LIT16	; token $1B — LIT
+	 DW TERSE_ZERO_WORD_AT_ADDRESS	; token $1C — ZERO
 	 DW $0266	; token $1D
 	 DW $027E	; token $1E
-	 DW TERSE_PORT_OUT	; token $1F
+	 DW TERSE_PORT_OUT	; token $1F — OUTP
 	 DW $05E5	; token $20
-	 DW TERSE_PORT_IN	; token $21
+	 DW TERSE_PORT_IN	; token $21 — INP
 	 DW $0D43	; token $22
 	 DW $016D	; token $23
-	 DW TERSE_LOOP_INDEX	; token $24
-	 DW TERSE_BYTE_FETCH	; token $25
+	 DW TERSE_LOOP_INDEX	; token $24 — I
+	 DW TERSE_BYTE_FETCH	; token $25 — B@
 	 DW $0188	; token $26
 	 DW $0139	; token $27
 	 DW $2193	; token $28
@@ -10313,25 +10313,25 @@ TERSE_TOKEN_VECTORS:
 	 DW $21AA	; token $37
 	 DW $21D8	; token $38
 	 DW $111E	; token $39
-	 DW TERSE_ARITH_SHIFT_RIGHT	; token $3A
+	 DW TERSE_ARITH_SHIFT_RIGHT	; token $3A — ARITH_SHIFT_RIGHT
 	 DW $112D	; token $3B
 	 DW $20FE	; token $3C
-	 DW $023E	; token $3D
+	 DW $023E	; token $3D — INDEXED_DISPATCH
 	 DW $2223	; token $3E
-	 DW TERSE_SUBTRACT	; token $3F
+	 DW TERSE_SUBTRACT	; token $3F — -
 	 DW $2154	; token $40
 	 DW $12B1	; token $41
 	 DW $218D	; token $42
-	 DW TERSE_DECREMENT_BYTE_AT_ADDRESS	; token $43
-	 DW $00EE	; token $44
-	 DW TERSE_STACK_PICK	; token $45
-	 DW TERSE_BRANCH_ABSOLUTE	; token $46
+	 DW TERSE_DECREMENT_BYTE_AT_ADDRESS	; token $43 — 1-B!
+	 DW $00EE	; token $44 — =
+	 DW TERSE_STACK_PICK	; token $45 — PICK
+	 DW TERSE_BRANCH_ABSOLUTE	; token $46 — BRANCH_ABSOLUTE
 	 DW $1F01	; token $47
 	 DW $2350	; token $48
 	 DW $0262	; token $49
 	 DW $1F08	; token $4A
 	 DW $1237	; token $4B
-	 DW TERSE_BITWISE_AND	; token $4C
+	 DW TERSE_BITWISE_AND	; token $4C — AND
 	 DW $1EF8	; token $4D
 	 DW $013F	; token $4E
 	 DW $0EC7	; token $4F
@@ -10339,7 +10339,7 @@ TERSE_TOKEN_VECTORS:
 	 DW $12B7	; token $51
 	 DW $0217	; token $52
 	 DW $1F18	; token $53
-	 DW TERSE_BITWISE_OR	; token $54
+	 DW TERSE_BITWISE_OR	; token $54 — OR
 	 DW $04BB	; token $55
 	 DW $11C3	; token $56
 	 DW $121C	; token $57
@@ -10385,7 +10385,7 @@ TERSE_TOKEN_VECTORS:
 	 DW $1026	; token $7F
 	 DW $282F	; token $80
 	 DW $2837	; token $81
-	 DW $00CD	; token $82
+	 DW $00CD	; token $82 — MINUS
 	 DW $0E4D	; token $83
 	 DW $0FEE	; token $84
 	 DW $0FFC	; token $85
@@ -10402,8 +10402,8 @@ TERSE_TOKEN_VECTORS:
 	 DW $047E	; token $90
 	 DW $26B6	; token $91
 	 DW $275C	; token $92
-	 DW $0229	; token $93
-	 DW $006B	; token $94
+	 DW $0229	; token $93 — COMPARE_BRANCH_NE
+	 DW $006B	; token $94 — ADD_INLINE16
 	 DW $1188	; token $95
 	 DW $26E6	; token $96
 	 DW $2704	; token $97
@@ -10449,7 +10449,7 @@ TERSE_TOKEN_VECTORS:
 	 DW $31EC	; token $BF
 	 DW $31CB	; token $C0
 	 DW $3201	; token $C1
-	 DW $00FD	; token $C2
+	 DW $00FD	; token $C2 — U>=
 	 DW $0209	; token $C3
 	 DW $1306	; token $C4
 	 DW $32B0	; token $C5
