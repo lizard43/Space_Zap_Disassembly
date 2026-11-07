@@ -508,6 +508,11 @@ TERSE_SMALL_COLON_0266:
 	 DB $0B ; TERSE_ZERO
 	 DB $0A ; native token $0A
 	 DB $06 ; TERSE_EXIT
+;==============================================================================
+; NATIVE_NEGATE_HL ($026A)
+; Two's-complement HL; restore AF before returning to native caller.
+;==============================================================================
+NATIVE_NEGATE_HL:
 	 ld   a,h
 	 cpl
 	 ld   h,a
@@ -517,6 +522,12 @@ TERSE_SMALL_COLON_0266:
 	 inc  hl
 	 pop  af
 	 ret
+
+;==============================================================================
+; NATIVE_NEGATE_DE ($0273)
+; Two's-complement DE while preserving AF.
+;==============================================================================
+NATIVE_NEGATE_DE:
 	 push af
 	 ld   a,d
 	 cpl
@@ -527,16 +538,20 @@ TERSE_SMALL_COLON_0266:
 	 inc  de
 	 pop  af
 	 ret
-	 rst  $08
-	 inc  c
-	 dec  c
-	 ld   c,$04
-	 rrca
-	 inc  b
-	 ld   bc,$0E10
-	 ld   (bc),a
-	 rrca
-	 djnz $0292
+;==============================================================================
+; TERSE_COLON_027E: original thirteen-byte TERSE threaded word.
+; Indexed token cells and one literal byte; no Z80 instruction stream.
+;==============================================================================
+TERSE_COLON_027E:
+	 RST $08
+	 DB $0C,$0D,$0E,$04,$0F,$04,$01,$10,$0E,$02,$0F,$10,$06
+
+;==============================================================================
+; NATIVE_ATOMIC_COMPARE_UPDATE ($028C)
+; Compare expected two-byte fields and update the active record under DI.
+; Preserves interrupt-enable state through saved AF; returns status in HL.
+;==============================================================================
+NATIVE_ATOMIC_COMPARE_UPDATE:
 	 ld   a,i
 	 push af
 	 di
@@ -589,6 +604,13 @@ TERSE_SMALL_COLON_0266:
 	 jp   po,$02DE
 	 ei
 	 ret
+
+;==============================================================================
+; NATIVE_ATOMIC_RECORD_CHECK ($02DF)
+; Compare and update an indexed two-word record with interrupts masked.
+; Return status in HL; original interrupt-enable state restored.
+;==============================================================================
+NATIVE_ATOMIC_RECORD_CHECK:
 	 ld   a,i
 	 push af
 	 di
