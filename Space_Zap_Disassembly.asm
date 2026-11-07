@@ -5730,752 +5730,506 @@ TERSE_COLON_2709:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D1A0 ; address/value
-	 ld   b,$CF
-	 ld   (hl),h
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ld   h,$27
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 ld   (hl),l
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   b,$CF
-	 dec  bc
-	 rla
-	 dec  de
-	 xor  b
-	 rst  $38
-	 jr   $2753
-	 dec  hl
-	 ld   a,(de)
-	 ld   b,$CF
-	 dec  bc
-	 rla
-	 ld   c,$58
-	 jr   $275D
-	 dec  hl
-	 ld   a,(de)
-	 halt
-	 ld   b,$CF
-	 ld   c,$8C
-	 rla
-	 dec  bc
-	 jr   $2768
-	 ld   sp,$061A
-	 rst  $08
-	 dec  de
-	 ld   (hl),h
-	 rst  $38
-	 rla
-	 dec  bc
-	 jr   $2773
-	 ld   sp,$771A
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 ld   d,a
-	 ld   l,d
-	 add  hl,de
-	 ld   a,(de)
-	 ld   (hl),b
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 add  hl,bc
-	 jr   z,$27D8
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 dec  e
-	 dec  de
-	 adc  a,b
-	 pop  de
-	 dec  h
-	 dec  d
-	 dec  a
-	 add  a,h
-	 daa
-	 dec  sp
-	 daa
-	 ld   b,(hl)
-	 daa
-	 jr   nc,$27A9
-	 ld   d,b
-	 daa
-	 ld   l,e
-	 dec  de
-	 adc  a,h
-	 pop  de
-	 dec  h
-	 ld   c,(hl)
-	 inc  bc
-	 sbc  a,e
-	 daa
-	 dec  c
-	 dec  de
-	 adc  a,e
-	 pop  de
-	 dec  h
-	 inc  b
-	 ccf
-	 dec  de
-	 sbc  a,e
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 and  e
-	 daa
-	 dec  de
-	 adc  a,e
-	 pop  de
-	 dec  h
-	 dec  de
-	 sbc  a,e
-	 pop  de
-	 dec  e
-	 ld   c,a
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 ld   a,c
-	 ld   l,h
-	 ld   a,d
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 cp   c
-	 daa
-	 ld   c,$32
-	 ld   a,e
-	 ld   l,h
-	 ld   b,(hl)
-	 rlca
-	 jr   z,$27D5
-	 adc  a,h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 rlca
-	 jr   z,$27DC
-	 adc  a,b
-	 pop  de
-	 dec  h
-	 dec  d
-	 dec  c
-	 dec  c
-	 dec  a
-	 jp   nc,$D227
-	 ld   h,$D7
-	 ld   h,$DC
-	 ld   h,$E1
-	 ld   h,$0D
-	 ld   c,e
-	 inc  bc
-	 di
-	 daa
-	 ld   d,l
-	 dec  a
-	 ex   (sp),hl
-	 daa
-	 and  $26
-	 ex   de,hl
-	 ld   h,$F0
-	 ld   h,$F5
-	 ld   h,$49
-	 dec  a
-	 rst  $28
-	 daa
-	 ld   c,$27
-	 inc  de
-	 daa
-	 ld   c,$27
-	 inc  de
-	 daa
-	 ld   l,e
-	 ld   b,(hl)
-	 push af
-	 daa
-	 dec  b
-	 dec  b
-	 dec  de
-	 sbc  a,e
-	 pop  de
-	 dec  h
-	 ld   c,a
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 ld   a,c
-	 ld   l,h
-	 ld   a,d
-	 inc  bc
-	 rlca
-	 jr   z,$2812
-	 ld   ($6C7B),a
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 ld   h,e
-	 daa
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   c,$0A
-	 ld   b,$CF
-	 dec  de
-	 or   $FF
-	 ld   b,$CF
-	 ld   c,$0B
-	 ld   b,$CF
-	 dec  de
-	 push af
-	 rst  $38
-	 ld   b,$CF
-	 dec  bc
-	 ld   b,$CF
-	 add  hl,bc
-	 ld   b,$CF
-	 ld   c,$02
-	 ld   b,$CF
-	 ld   c,$03
-	 ld   b,$CF
-	 ld   c,$C0
-	 ld   b,$CF
-	 ld   c,$80
-	 ld   b,$CF
-	 ld   c,$40
-	 ld   b,$CF
-	 ld   c,$18
-	 ld   a,l
-	 ld   a,(hl)
-	 ld   b,$CF
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,a
-	 add  a,b
-	 ld   b,$CF
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,l
-	 dec  bc
-	 ld   b,$CF
-	 ld   c,$18
-	 ld   a,a
-	 add  a,c
-	 ld   b,$CF
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   h,l
-	 jr   z,$2849
-	 ld   h,$F0
-	 ld   h,$F5
-	 ld   h,$E6
-	 ld   h,$06
-	 rst  $08
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 halt
-	 jr   z,$2878
-	 daa
-	 jp   m,$FF26
-	 ld   h,$04
-	 daa
-	 ld   b,$CF
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 add  a,a
-	 jr   z,$2857
-	 ld   h,$DC
-	 ld   h,$E1
-	 ld   h,$D2
-	 ld   h,$06
-	 rst  $08
-	 ld   c,$37
-	 ld   c,$37
-	 dec  bc
-	 ld   b,$CF
-	 ld   c,$37
-	 ld   c,$37
-	 add  a,d
-	 add  hl,bc
-	 ld   b,$CF
-	 ld   c,$37
-	 add  a,d
-	 ld   c,$37
-	 add  a,d
-	 ld   c,$02
-	 ld   b,$CF
-	 ld   c,$37
-	 add  a,d
-	 ld   c,$37
-	 ld   c,$03
-	 ld   b,$CF
-	 ld   hl,($0E41)
-	 rlca
-	 ld   c,h
-	 dec  de
-	 ld   de,$25D0
-	 inc  bc
-	 cp   l
-	 jr   z,$28D3
-	 sub  e
-	 pop  de
-	 ld   b,(hl)
-	 ret  nz
-	 jr   z,$28D9
-	 sub  d
-	 pop  de
-	 dec  h
-	 rrca
-	 add  hl,bc
-	 ld   d,d
-	 dec  de
-	 sub  (hl)
-	 pop  de
-	 ex   af,af'
-	 ld   c,$0C
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 ld   l,d
-	 ld   d,a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 sub  d
-	 ld   e,$6B
-	 ld   b,c
-	 ld   c,$03
-	 ld   c,h
-	 dec  a
-	 call po,$8828
-	 jr   z,$286E
-	 jr   z,$2878
-	 jr   z,$2884
-	 jr   z,$2900
-	 sub  a
-	 pop  de
-	 ex   af,af'
-	 jr   $2901
-	 ld   c,$58
-	 ld   e,(hl)
-	 dec  de
-	 xor  b
-	 rst  $38
-	 ld   e,a
-	 ld   c,$58
-	 ld   h,b
-	 dec  de
-	 xor  b
-	 rst  $38
-	 ld   h,c
-	 ld   b,c
-	 ld   c,$07
-	 ld   c,h
-	 ld   c,$04
-	 ld   (bc),a
-	 dec  de
-	 sub  h
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   (de),a
-	 add  hl,hl
-	 jr   $2934
-	 jr   $2936
-	 inc  e
-	 jr   z,$292D
-	 jr   z,$2990
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   ($0F29),hl
-	 jr   z,$2930
-	 jr   z,$2932
-	 jr   z,$2930
-	 DB $28,$7F ; original TERSE token/operand at $2921
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  de
-	 sub  h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 inc  a
-	 add  hl,hl
-	 dec  a
-	 add  hl,sp
-	 add  hl,hl
-	 ld   a,e
-	 nop
-	 scf
-	 jr   z,$2969
-	 jr   z,$2967
-	 jr   z,$2980
-	 ld   b,a
-	 add  hl,hl
-	 dec  a
-	 ld   b,a
-	 add  hl,hl
-	 cpl
-	 jr   z,$29BD
-	 nop
-	 scf
-	 jr   z,$2979
-	 jr   z,$29A5
-	 dec  de
-	 nop
-	 inc  bc
-	 ld   e,e
-	 ld   h,(hl)
-	 dec  de
-	 sub  h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 ld   e,c
-	 add  hl,hl
-	 ld   c,$20
-	 ld   b,(hl)
-	 ld   e,h
-	 add  hl,hl
-	 dec  de
-	 ret  po
-	 rst  $38
-	 ld   c,$10
-	 add  a,e
-	 ld   c,$10
-	 ld   c,a
-	 add  a,h
-	 add  a,l
-	 ld   l,c
-	 ld   l,b
-	 ld   l,h
-	 ld   h,(hl)
-	 dec  de
-	 sub  h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 ld   (hl),h
-	 add  hl,hl
-	 ld   c,$20
-	 ld   b,(hl)
-	 ld   (hl),a
-	 add  hl,hl
-	 dec  de
-	 ret  po
-	 rst  $38
-	 ld   c,$10
-	 add  a,e
-	 ld   c,$10
-	 ld   c,a
-	 add  a,h
-	 add  a,l
-	 ld   l,c
-	 ld   l,h
-	 ld   h,(hl)
-	 add  a,(hl)
-	 daa
-	 inc  bc
-	 adc  a,e
-	 add  hl,hl
-	 add  a,h
-	 add  a,l
-	 ld   l,c
-	 ld   l,h
-	 add  a,a
-	 inc  bc
-	 call z,$3629
-	 adc  a,b
-	 add  a,d
-	 ld   a,l
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 and  d
-	 add  hl,hl
-	 inc  sp
-	 jr   z,$29D0
-	 jr   z,$2A1A
-	 nop
-	 ld   a,e
-	 nop
-	 ld   e,l
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 or   d
-	 add  hl,hl
-	 dec  hl
-	 jr   z,$29D1
-	 jr   z,$29D3
-	 jr   z,$29DC
-	 jr   z,$29CE
-	 sbc  a,b
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 push bc
-	 add  hl,hl
-	 dec  hl
-	 jr   z,$29E7
-	 jr   z,$29E6
-	 jr   z,$29E5
-	 jr   z,$29E1
-	 sub  a
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 ld   b,$2A
-	 ld   (hl),$89
-	 add  a,d
-	 ld   a,a
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 rst  $18
-	 add  hl,hl
-	 scf
-	 jr   z,$2A09
-	 jr   z,$2A0B
-	 jr   z,$2A15
-	 jr   z,$2A3D
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 rst  $28
-	 add  hl,hl
-	 ld   hl,$2128
-	 jr   z,$2A13
-	 jr   z,$2A15
-	 jr   z,$2A0B
-	 sbc  a,b
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   (bc),a
-	 ld   hl,($2824)
-	 ld   hl,$2B28
-	 jr   z,$2A28
-	 jr   z,$2A1E
-	 sub  a
-	 pop  de
-	 ex   af,af'
-	 ld   l,b
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   d,$2A
-	 jr   c,$2A35
-	 ld   hl,($3825)
-	 dec  h
-	 ld   hl,($8A25)
-	 dec  e
-	 adc  a,e
-	 ld   c,c
-	 adc  a,d
-	 ld   a,c
-	 ld   (hl),$0E
-	 inc  e
-	 rrca
-	 inc  c
-	 adc  a,h
-	 ld   c,$1C
-	 rrca
-	 djnz $2A5D
-	 ld   c,$1E
-	 rrca
-	 inc  c
-	 adc  a,h
-	 ld   c,$1E
-	 rrca
-	 djnz $2A4C
-	 sub  (hl)
-	 pop  de
-	 ld   b,e
-	 dec  de
-	 sub  (hl)
-	 pop  de
-	 dec  h
-	 daa
-	 inc  bc
-	 sub  (hl)
-	 ld   hl,($981B)
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   c,e
-	 ld   hl,($283B)
-	 ld   b,c
-	 jr   z,$2A90
-	 jr   z,$2A99
-	 jr   z,$2AA9
-	 ld   h,(hl)
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 ld   c,$02
-	 ld   b,h
-	 inc  bc
-	 ld   h,c
-	 ld   hl,($020E)
-	 dec  de
-	 dec  e
-	 call nc,$1B08
-	 ld   d,l
-	 pop  de
-	 adc  a,l
-	 ld   l,h
-	 ld   a,d
-	 inc  bc
-	 ld   l,h
-	 ld   hl,($C80E)
-	 ld   (hl),h
-	 ld   b,(hl)
-	 ld   (hl),c
-	 ld   hl,($1B8E)
-	 ret
-	 out  ($55),a
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 ld   c,$02
-	 ld   b,h
-	 inc  bc
-	 adc  a,b
-	 ld   hl,($030E)
-	 dec  de
-	 dec  e
-	 call nc,$1B08
-	 ld   d,l
-	 pop  de
-	 adc  a,a
-	 ld   b,(hl)
-	 adc  a,h
-	 ld   hl,($1D1B)
-	 call nc,$711D
-	 adc  a,e
-	 dec  e
-	 dec  bc
-	 ld   a,e
-	 ld   l,h
-	 add  hl,bc
-	 ld   b,(hl)
-	 add  a,$2A
-	 ld   h,(hl)
-	 ld   l,h
-	 ld   a,d
-	 adc  a,d
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 push bc
-	 ld   hl,($8B71)
-	 dec  e
-	 ld   c,$C8
-	 ld   a,e
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 ld   c,$02
-	 ld   b,h
-	 inc  bc
-	 cp   h
-	 ld   hl,($030E)
-	 dec  de
-	 dec  e
-	 call nc,$1B08
-	 ld   d,l
-	 pop  de
-	 adc  a,a
-	 ld   b,(hl)
-	 ret  nz
-	 ld   hl,($1D1B)
-	 call nc,$6C1D
-	 add  hl,bc
-	 ld   b,(hl)
-	 add  a,$2A
-	 dec  bc
-	 adc  a,e
-	 dec  e
-	 adc  a,d
-	 dec  e
-	 inc  bc
-	 inc  bc
-	 add  hl,hl
-	 ld   l,l
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 rst  $18
-	 ld   hl,($7890)
-	 inc  bc
-	 push de
-	 ld   hl,($9136)
-	 ld   b,(hl)
-	 pop  hl
-	 ld   hl,($9236)
+
+;==============================================================================
+; TERSE COMPILED WORDS $270D-$2AE0
+;==============================================================================
+; Native indexed tokens and inline operands, represented as typed ROM data.
+	 DB $06 ; EXIT for the preceding LIT16 address word
+
+; Original TERSE colon word at $270E
+TERSE_COLON_270E:
+	 RST $08
+	 DB $1B ; $270F token -> native $0050
+	 DW $1A37 ; LIT16
+	 DB $06 ; $2712 token -> native $0044
+
+; Original TERSE colon word at $2713
+TERSE_COLON_2713:
+	 RST $08
+	 DB $1B ; $2714 token -> native $0050
+	 DW $1A40 ; LIT16
+	 DB $06 ; $2717 token -> native $0044
+
+; Original TERSE colon word at $2718
+TERSE_COLON_2718:
+	 RST $08
+	 DB $74 ; $2719 token -> native $254C
+	 DB $1B ; $271A token -> native $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $271D token -> native $00A4
+	 DB $27 ; $271E token -> native $0139
+	 DB $03 ; $271F token -> native $01FC
+	 DW TERSE_THREAD_2726 ; 0BRANCH
+	 DB $1B ; $2722 token -> native $0050
+	 DW $D155 ; LIT16
+	 DB $75 ; $2725 token -> native $22FA
+TERSE_THREAD_2726:
+	 DB $58 ; $2726 token -> native $1212
+	 DB $70 ; $2727 token -> native $11AB
+	 DB $1B ; $2728 token -> native $0050
+	 DW $1DC9 ; LIT16
+	 DB $6B ; $272B token -> native $10B7
+	 DB $0E ; $272C token -> native $0059
+	 DB $26 ; LIT8
+	 DB $4F ; $272E token -> native $0EC7
+	 DB $06 ; $272F token -> native $0044
+
+; Original TERSE colon word at $2730
+TERSE_COLON_2730:
+	 RST $08
+	 DB $0B ; $2731 token -> native $007B
+	 DB $17 ; $2732 token -> native $10DA
+	 DB $1B ; $2733 token -> native $0050
+	 DW $FFA8 ; LIT16
+	 DB $18 ; $2736 token -> native $10EC
+	 DB $1B ; $2737 token -> native $0050
+	 DW $1A2B ; LIT16
+	 DB $06 ; $273A token -> native $0044
+
+; Original TERSE colon word at $273B
+TERSE_COLON_273B:
+	 RST $08
+	 DB $0B ; $273C token -> native $007B
+	 DB $17 ; $273D token -> native $10DA
+	 DB $0E ; $273E token -> native $0059
+	 DB $58 ; LIT8
+	 DB $18 ; $2740 token -> native $10EC
+	 DB $1B ; $2741 token -> native $0050
+	 DW $1A2B ; LIT16
+	 DB $76 ; $2744 token -> native $11D0
+	 DB $06 ; $2745 token -> native $0044
+
+; Original TERSE colon word at $2746
+TERSE_COLON_2746:
+	 RST $08
+	 DB $0E ; $2747 token -> native $0059
+	 DB $8C ; LIT8
+	 DB $17 ; $2749 token -> native $10DA
+	 DB $0B ; $274A token -> native $007B
+	 DB $18 ; $274B token -> native $10EC
+	 DB $1B ; $274C token -> native $0050
+	 DW $1A31 ; LIT16
+	 DB $06 ; $274F token -> native $0044
+
+; Original TERSE colon word at $2750
+TERSE_COLON_2750:
+	 RST $08
+	 DB $1B ; $2751 token -> native $0050
+	 DW $FF74 ; LIT16
+	 DB $17 ; $2754 token -> native $10DA
+	 DB $0B ; $2755 token -> native $007B
+	 DB $18 ; $2756 token -> native $10EC
+	 DB $1B ; $2757 token -> native $0050
+	 DW $1A31 ; LIT16
+	 DB $77 ; $275A token -> native $11DB
+	 DB $06 ; $275B token -> native $0044
+
+; Original TERSE colon word at $275C
+TERSE_COLON_275C:
+	 RST $08
+	 DB $2A ; $275D token -> native $042F
+	 DB $0E ; $275E token -> native $0059
+	 DB $0C ; LIT8
+	 DB $65 ; $2760 token -> native $1195
+	 DB $56 ; $2761 token -> native $11C3
+	 DB $71 ; $2762 token -> native $1166
+TERSE_THREAD_2763:
+	 DB $57 ; $2763 token -> native $121C
+	 DB $6A ; $2764 token -> native $10CD
+	 DB $19 ; $2765 token -> native $11FC
+	 DB $1A ; $2766 token -> native $1207
+	 DB $70 ; $2767 token -> native $11AB
+	 DB $35 ; $2768 token -> native $04A6
+	 DB $78 ; $2769 token -> native $24DA
+	 DB $4E ; $276A token -> native $013F
+	 DB $27 ; $276B token -> native $0139
+	 DB $03 ; $276C token -> native $01FC
+	 DW TERSE_THREAD_2809 ; 0BRANCH
+	 DB $68 ; $276F token -> native $1229
+	 DB $1B ; $2770 token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $1D ; $2773 token -> native $0266
+	 DB $1B ; $2774 token -> native $0050
+	 DW $D188 ; LIT16
+	 DB $25 ; $2777 token -> native $00A4
+	 DB $15 ; $2778 token -> native $00D4
+	 DB $3D ; $2779 token -> native $023E
+	 DB $84 ; $277A token -> native $0FEE
+	 DB $27 ; $277B token -> native $0139
+	 DB $3B ; $277C token -> native $112D
+	 DB $27 ; $277D token -> native $0139
+	 DB $46 ; $277E token -> native $01F4
+	 DW $3027 ; BRANCH
+	 DB $27 ; $2781 token -> native $0139
+	 DB $50 ; $2782 token -> native $24F6
+	 DB $27 ; $2783 token -> native $0139
+	 DB $6B ; $2784 token -> native $10B7
+	 DB $1B ; $2785 token -> native $0050
+	 DW $D18C ; LIT16
+	 DB $25 ; $2788 token -> native $00A4
+	 DB $4E ; $2789 token -> native $013F
+	 DB $03 ; $278A token -> native $01FC
+	 DW TERSE_THREAD_279B ; 0BRANCH
+	 DB $0D ; $278D token -> native $0087
+	 DB $1B ; $278E token -> native $0050
+	 DW $D18B ; LIT16
+	 DB $25 ; $2791 token -> native $00A4
+	 DB $04 ; $2792 token -> native $0097
+	 DB $3F ; $2793 token -> native $00C5
+	 DB $1B ; $2794 token -> native $0050
+	 DW $D19B ; LIT16
+	 DB $08 ; $2797 token -> native $00B2
+	 DB $46 ; $2798 token -> native $01F4
+	 DW TERSE_THREAD_27A3 ; BRANCH
+TERSE_THREAD_279B:
+	 DB $1B ; $279B token -> native $0050
+	 DW $D18B ; LIT16
+	 DB $25 ; $279E token -> native $00A4
+	 DB $1B ; $279F token -> native $0050
+	 DW $D19B ; LIT16
+	 DB $1D ; $27A2 token -> native $0266
+TERSE_THREAD_27A3:
+	 DB $4F ; $27A3 token -> native $0EC7
+	 DB $1B ; $27A4 token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $79 ; $27A7 token -> native $0EDA
+	 DB $6C ; $27A8 token -> native $0CE2
+	 DB $7A ; $27A9 token -> native $0EED
+	 DB $1B ; $27AA token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $25 ; $27AD token -> native $00A4
+	 DB $54 ; $27AE token -> native $0154
+	 DB $03 ; $27AF token -> native $01FC
+	 DW TERSE_THREAD_27B9 ; 0BRANCH
+	 DB $0E ; $27B2 token -> native $0059
+	 DB $32 ; LIT8
+	 DB $7B ; $27B4 token -> native $2718
+	 DB $6C ; $27B5 token -> native $0CE2
+	 DB $46 ; $27B6 token -> native $01F4
+	 DW TERSE_THREAD_2807 ; BRANCH
+TERSE_THREAD_27B9:
+	 DB $1B ; $27B9 token -> native $0050
+	 DW $D18C ; LIT16
+	 DB $25 ; $27BC token -> native $00A4
+	 DB $03 ; $27BD token -> native $01FC
+	 DW TERSE_THREAD_2807 ; 0BRANCH
+	 DB $1B ; $27C0 token -> native $0050
+	 DW $D188 ; LIT16
+	 DB $25 ; $27C3 token -> native $00A4
+	 DB $15 ; $27C4 token -> native $00D4
+	 DB $0D ; $27C5 token -> native $0087
+	 DB $0D ; $27C6 token -> native $0087
+	 DB $3D ; $27C7 token -> native $023E
+	 DB $D2 ; $27C8 token -> native $0120
+	 DB $27 ; $27C9 token -> native $0139
+	 DB $D2 ; $27CA token -> native $0120
+	 DB $26 ; $27CB token -> native $0188
+	 DB $D7 ; $27CC token -> native $3222
+	 DB $26 ; $27CD token -> native $0188
+	 DB $DC ; $27CE token -> native $34BE
+	 DB $26 ; $27CF token -> native $0188
+	 DB $E1 ; $27D0 token -> native $328A
+	 DB $26 ; $27D1 token -> native $0188
+	 DB $0D ; $27D2 token -> native $0087
+	 DB $4B ; $27D3 token -> native $1237
+	 DB $03 ; $27D4 token -> native $01FC
+	 DW TERSE_THREAD_27F3 ; 0BRANCH
+	 DB $55 ; $27D7 token -> native $04BB
+	 DB $3D ; $27D8 token -> native $023E
+	 DB $E3 ; $27D9 token -> native $3377
+	 DB $27 ; $27DA token -> native $0139
+	 DB $E6 ; $27DB token -> native $28AA
+	 DB $26 ; $27DC token -> native $0188
+	 DB $EB ; $27DD token -> native $2495
+	 DB $26 ; $27DE token -> native $0188
+	 DB $F0 ; $27DF token -> native $2231
+	 DB $26 ; $27E0 token -> native $0188
+	 DB $F5 ; $27E1 token -> native $01BF
+	 DB $26 ; $27E2 token -> native $0188
+	 DB $49 ; $27E3 token -> native $0262
+	 DB $3D ; $27E4 token -> native $023E
+	 DB $EF ; $27E5 token -> native $3BD9
+	 DB $27 ; $27E6 token -> native $0139
+	 DB $0E ; $27E7 token -> native $0059
+	 DB $27 ; LIT8
+	 DB $13 ; $27E9 token -> native $01E3
+	 DB $27 ; $27EA token -> native $0139
+	 DB $0E ; $27EB token -> native $0059
+	 DB $27 ; LIT8
+	 DB $13 ; $27ED token -> native $01E3
+	 DB $27 ; $27EE token -> native $0139
+	 DB $6B ; $27EF token -> native $10B7
+	 DB $46 ; $27F0 token -> native $01F4
+	 DW TERSE_THREAD_27F5 ; BRANCH
+TERSE_THREAD_27F3:
+	 DB $05 ; $27F3 token -> native $0094
+	 DB $05 ; $27F4 token -> native $0094
+TERSE_THREAD_27F5:
+	 DB $1B ; $27F5 token -> native $0050
+	 DW $D19B ; LIT16
+	 DB $25 ; $27F8 token -> native $00A4
+	 DB $4F ; $27F9 token -> native $0EC7
+	 DB $1B ; $27FA token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $79 ; $27FD token -> native $0EDA
+	 DB $6C ; $27FE token -> native $0CE2
+	 DB $7A ; $27FF token -> native $0EED
+	 DB $03 ; $2800 token -> native $01FC
+	 DW TERSE_THREAD_2807 ; 0BRANCH
+	 DB $0E ; $2803 token -> native $0059
+	 DB $32 ; LIT8
+	 DB $7B ; $2805 token -> native $2718
+	 DB $6C ; $2806 token -> native $0CE2
+TERSE_THREAD_2807:
+	 DB $6D ; $2807 token -> native $12C7
+	 DB $78 ; $2808 token -> native $24DA
+TERSE_THREAD_2809:
+	 DB $03 ; $2809 token -> native $01FC
+	 DW TERSE_THREAD_2763 ; 0BRANCH
+	 DB $36 ; $280C token -> native $1216
+	 DB $7C ; $280D token -> native $263E
+	 DB $06 ; $280E token -> native $0044
+
+; Original TERSE colon word at $280F
+TERSE_COLON_280F:
+	 RST $08
+	 DB $0E ; $2810 token -> native $0059
+	 DB $0A ; LIT8
+	 DB $06 ; $2812 token -> native $0044
+
+; Original TERSE colon word at $2813
+TERSE_COLON_2813:
+	 RST $08
+	 DB $1B ; $2814 token -> native $0050
+	 DW $FFF6 ; LIT16
+	 DB $06 ; $2817 token -> native $0044
+
+; Original TERSE colon word at $2818
+TERSE_COLON_2818:
+	 RST $08
+	 DB $0E ; $2819 token -> native $0059
+	 DB $0B ; LIT8
+	 DB $06 ; $281B token -> native $0044
+
+; Original TERSE colon word at $281C
+TERSE_COLON_281C:
+	 RST $08
+	 DB $1B ; $281D token -> native $0050
+	 DW $FFF5 ; LIT16
+	 DB $06 ; $2820 token -> native $0044
+
+; Original TERSE colon word at $2821
+TERSE_COLON_2821:
+	 RST $08
+	 DB $0B ; $2822 token -> native $007B
+	 DB $06 ; $2823 token -> native $0044
+
+; Original TERSE colon word at $2824
+TERSE_COLON_2824:
+	 RST $08
+	 DB $09 ; $2825 token -> native $0081
+	 DB $06 ; $2826 token -> native $0044
+
+; Original TERSE colon word at $2827
+TERSE_COLON_2827:
+	 RST $08
+	 DB $0E ; $2828 token -> native $0059
+	 DB $02 ; LIT8
+	 DB $06 ; $282A token -> native $0044
+
+; Original TERSE colon word at $282B
+TERSE_COLON_282B:
+	 RST $08
+	 DB $0E ; $282C token -> native $0059
+	 DB $03 ; LIT8
+	 DB $06 ; $282E token -> native $0044
+
+; Original TERSE colon word at $282F
+TERSE_COLON_282F:
+	 RST $08
+	 DB $0E ; $2830 token -> native $0059
+	 DB $C0 ; LIT8
+	 DB $06 ; $2832 token -> native $0044
+
+; Original TERSE colon word at $2833
+TERSE_COLON_2833:
+	 RST $08
+	 DB $0E ; $2834 token -> native $0059
+	 DB $80 ; LIT8
+	 DB $06 ; $2836 token -> native $0044
+
+; Original TERSE colon word at $2837
+TERSE_COLON_2837:
+	 RST $08
+	 DB $0E ; $2838 token -> native $0059
+	 DB $40 ; LIT8
+	 DB $06 ; $283A token -> native $0044
+
+; Original TERSE colon word at $283B
+TERSE_COLON_283B:
+	 RST $08
+	 DB $0E ; $283C token -> native $0059
+	 DB $18 ; LIT8
+	 DB $7D ; $283E token -> native $100A
+	 DB $7E ; $283F token -> native $2833
+	 DB $06 ; $2840 token -> native $0044
+
+; Original TERSE colon word at $2841
+TERSE_COLON_2841:
+	 RST $08
+	 DB $1B ; $2842 token -> native $0050
+	 DW $FFE8 ; LIT16
+	 DB $7F ; $2845 token -> native $1026
+	 DB $80 ; $2846 token -> native $282F
+	 DB $06 ; $2847 token -> native $0044
+
+; Original TERSE colon word at $2848
+TERSE_COLON_2848:
+	 RST $08
+	 DB $1B ; $2849 token -> native $0050
+	 DW $FFE8 ; LIT16
+	 DB $7D ; $284C token -> native $100A
+	 DB $0B ; $284D token -> native $007B
+	 DB $06 ; $284E token -> native $0044
+
+; Original TERSE colon word at $284F
+TERSE_COLON_284F:
+	 RST $08
+	 DB $0E ; $2850 token -> native $0059
+	 DB $18 ; LIT8
+	 DB $7F ; $2852 token -> native $1026
+	 DB $81 ; $2853 token -> native $2837
+	 DB $06 ; $2854 token -> native $0044
+
+; Original TERSE colon word at $2855
+TERSE_COLON_2855:
+	 RST $08
+	 DB $1B ; $2856 token -> native $0050
+	 DW $D198 ; LIT16
+	 DB $25 ; $2859 token -> native $00A4
+	 DB $3D ; $285A token -> native $023E
+	 DB $65 ; $285B token -> native $1195
+	 DB $28 ; $285C token -> native $2193
+	 DB $EB ; $285D token -> native $2495
+	 DB $26 ; $285E token -> native $0188
+	 DB $F0 ; $285F token -> native $2231
+	 DB $26 ; $2860 token -> native $0188
+	 DB $F5 ; $2861 token -> native $01BF
+	 DB $26 ; $2862 token -> native $0188
+	 DB $E6 ; $2863 token -> native $28AA
+	 DB $26 ; $2864 token -> native $0188
+	 DB $06 ; $2865 token -> native $0044
+
+; Mixed token/data record
+TERSE_DATA_2866:
+	 DB $CF,$1B,$98,$D1,$25,$3D,$76,$28,$09,$27,$FA,$26,$FF,$26,$04,$27 ; $2866-$2875
+	 DB $06 ; $2876-$2876
+
+; Original TERSE colon word at $2877
+TERSE_COLON_2877:
+	 RST $08
+	 DB $1B ; $2878 token -> native $0050
+	 DW $D198 ; LIT16
+	 DB $25 ; $287B token -> native $00A4
+	 DB $3D ; $287C token -> native $023E
+	 DB $87 ; $287D token -> native $1042
+	 DB $28 ; $287E token -> native $2193
+	 DB $D7 ; $287F token -> native $3222
+	 DB $26 ; $2880 token -> native $0188
+	 DB $DC ; $2881 token -> native $34BE
+	 DB $26 ; $2882 token -> native $0188
+	 DB $E1 ; $2883 token -> native $328A
+	 DB $26 ; $2884 token -> native $0188
+	 DB $D2 ; $2885 token -> native $0120
+	 DB $26 ; $2886 token -> native $0188
+	 DB $06 ; $2887 token -> native $0044
+
+; Original TERSE colon word at $2888
+TERSE_COLON_2888:
+	 RST $08
+	 DB $0E ; $2889 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0E ; $288B token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0B ; $288D token -> native $007B
+	 DB $06 ; $288E token -> native $0044
+
+; Original TERSE colon word at $288F
+TERSE_COLON_288F:
+	 RST $08
+	 DB $0E ; $2890 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0E ; $2892 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $2894 token -> native $00CD
+	 DB $09 ; $2895 token -> native $0081
+	 DB $06 ; $2896 token -> native $0044
+
+; Original TERSE colon word at $2897
+TERSE_COLON_2897:
+	 RST $08
+	 DB $0E ; $2898 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $289A token -> native $00CD
+	 DB $0E ; $289B token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $289D token -> native $00CD
+	 DB $0E ; $289E token -> native $0059
+	 DB $02 ; LIT8
+	 DB $06 ; $28A0 token -> native $0044
+
+; Original TERSE colon word at $28A1
+TERSE_COLON_28A1:
+	 RST $08
+	 DB $0E ; $28A2 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $28A4 token -> native $00CD
+	 DB $0E ; $28A5 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0E ; $28A7 token -> native $0059
+	 DB $03 ; LIT8
+	 DB $06 ; $28A9 token -> native $0044
+
+; Additional original compiled bytes; operand contracts not yet assigned
+TERSE_DATA_28AA:
+	 DB $CF,$2A,$41,$0E,$07,$4C,$1B,$11,$D0,$25,$03,$BD,$28,$1B,$93,$D1 ; $28AA-$28B9
+	 DB $46,$C0,$28,$1B,$92,$D1,$25,$0F,$09,$52,$1B,$96,$D1,$08,$0E,$0C ; $28BA-$28C9
+	 DB $65,$56,$71,$6A,$57,$58,$70,$1B,$92,$1E,$6B,$41,$0E,$03,$4C,$3D ; $28CA-$28D9
+	 DB $E4,$28,$88,$28,$8F,$28,$97,$28,$A1,$28,$1B,$97,$D1,$08,$18,$17 ; $28DA-$28E9
+	 DB $0E,$58,$5E,$1B,$A8,$FF,$5F,$0E,$58,$60,$1B,$A8,$FF,$61,$41,$0E ; $28EA-$28F9
+	 DB $07,$4C,$0E,$04,$02,$1B,$94,$D1,$08,$1B,$97,$D1,$25,$3D,$12,$29 ; $28FA-$2909
+	 DB $18,$28,$18,$28,$1C,$28,$1C,$28,$7D,$1B,$97,$D1,$25,$3D,$22,$29 ; $290A-$2919
+	 DB $0F,$28,$13,$28,$13,$28,$0F,$28,$7F,$1B,$97,$D1,$25,$1B,$94,$D1 ; $291A-$2929
+	 DB $25,$03,$3C,$29,$3D,$39,$29,$7B,$00,$37,$28,$33,$28,$2F,$28,$46 ; $292A-$2939
+	 DB $47,$29,$3D,$47,$29,$2F,$28,$7B,$00,$37,$28,$33,$28,$5D,$1B,$00 ; $293A-$2949
+	 DB $03,$5B,$66,$1B,$94,$D1,$25,$03,$59,$29,$0E,$20,$46,$5C,$29,$1B ; $294A-$2959
+	 DB $E0,$FF,$0E,$10,$83,$0E,$10,$4F,$84,$85,$69,$68,$6C,$66,$1B,$94 ; $295A-$2969
+	 DB $D1,$25,$03,$74,$29,$0E,$20,$46,$77,$29,$1B,$E0,$FF,$0E,$10,$83 ; $296A-$2979
+	 DB $0E,$10,$4F,$84,$85,$69,$6C,$66,$86,$27,$03,$8B,$29,$84,$85,$69 ; $297A-$2989
+	 DB $6C,$87,$03,$CC,$29,$36,$88,$82,$7D,$1B,$97,$D1,$25,$3D,$A2,$29 ; $298A-$2999
+	 DB $33,$28,$33,$28,$7B,$00,$7B,$00,$5D,$1B,$97,$D1,$25,$3D,$B2,$29 ; $299A-$29A9
+	 DB $2B,$28,$24,$28,$24,$28,$2B,$28,$1B,$98,$D1,$08,$1B,$97,$D1,$25 ; $29AA-$29B9
+	 DB $3D,$C5,$29,$2B,$28,$27,$28,$24,$28,$21,$28,$1B,$97,$D1,$08,$46 ; $29BA-$29C9
+	 DB $06,$2A,$36,$89,$82,$7F,$1B,$97,$D1,$25,$3D,$DF,$29,$37,$28,$2F ; $29CA-$29D9
+	 DB $28,$2F,$28,$37,$28,$5D,$1B,$97,$D1,$25,$3D,$EF,$29,$21,$28,$21 ; $29DA-$29E9
+	 DB $28,$27,$28,$27,$28,$1B,$98,$D1,$08,$1B,$97,$D1,$25,$3D,$02,$2A ; $29EA-$29F9
+	 DB $24,$28,$21,$28,$2B,$28,$27,$28,$1B,$97,$D1,$08,$68,$1B,$98,$D1 ; $29FA-$2A09
+	 DB $25,$3D,$16,$2A,$38,$25,$2A,$25,$38,$25,$2A,$25,$8A,$1D,$8B,$49 ; $2A0A-$2A19
+	 DB $8A,$79,$36,$0E,$1C,$0F,$0C,$8C,$0E,$1C,$0F,$10,$36,$0E,$1E,$0F ; $2A1A-$2A29
+	 DB $0C,$8C,$0E,$1E,$0F,$10,$1B,$96,$D1,$43,$1B,$96,$D1,$25,$27,$03 ; $2A2A-$2A39
+	 DB $96,$2A,$1B,$98,$D1,$25,$3D,$4B,$2A,$3B,$28,$41,$28,$48,$28,$4F ; $2A3A-$2A49
+	 DB $28,$5D,$66,$1B,$03,$D0,$25,$0E,$02,$44,$03,$61,$2A,$0E,$02,$1B ; $2A4A-$2A59
+	 DB $1D,$D4,$08,$1B,$55,$D1,$8D,$6C,$7A,$03,$6C,$2A,$0E,$C8,$74,$46 ; $2A5A-$2A69
+	 DB $71,$2A,$8E,$1B,$C9,$D3,$55,$1B,$03,$D0,$25,$0E,$02,$44,$03,$88 ; $2A6A-$2A79
+	 DB $2A,$0E,$03,$1B,$1D,$D4,$08,$1B,$55,$D1,$8F,$46,$8C,$2A,$1B,$1D ; $2A7A-$2A89
+	 DB $D4,$1D,$71,$8B,$1D,$0B,$7B,$6C,$09,$46,$C6,$2A,$66,$6C,$7A,$8A ; $2A8A-$2A99
+	 DB $25,$54,$03,$C5,$2A,$71,$8B,$1D,$0E,$C8,$7B,$1B,$03,$D0,$25,$0E ; $2A9A-$2AA9
+	 DB $02,$44,$03,$BC,$2A,$0E,$03,$1B,$1D,$D4,$08,$1B,$55,$D1,$8F,$46 ; $2AAA-$2AB9
+	 DB $C0,$2A,$1B,$1D,$D4,$1D,$6C,$09,$46,$C6,$2A,$0B,$8B,$1D,$8A,$1D ; $2ABA-$2AC9
+	 DB $03,$03,$29,$6D,$1B,$14,$D0,$25,$03,$DF,$2A,$90,$78,$03,$D5,$2A ; $2ACA-$2AD9
+	 DB $36,$91,$46,$E1,$2A,$36,$92 ; $2ADA-$2AE0
+
 ; $2AE1: EXIT of preceding TERSE definition.
 	 DB $06 ; TERSE_EXIT
 ; $2AE2: original compiled TERSE game-control word.
