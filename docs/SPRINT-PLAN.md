@@ -8,7 +8,8 @@ Development continues on PR #1. A correct build must match all four original 4 K
 - [x] Repair orphaned inline-add comment by labeling its native entry; standardize TERSE constant stack contracts.
 - [x] Replace mechanical token/address/native-target line comments in compiled TERSE with recovered word names, keeping unknown identities as token numbers.
 - [x] Separate five additional executable blocks following `REDRAW_SAVED_OBJECT` and document their object rendering/motion/collision role.
-- [ ] Resolve callers, control-flow edges and IY state-field ownership for all five new native blocks before declaring their complete contracts.
+- [x] Resolve established numeric callers to object-coordinate `$07DA`, object-advance `$0852`, and boundary-check `$0978` native entries.
+- [ ] Finish remaining object control-flow edges, verify physical addresses of other entry blocks, and document IY state-field ownership before completing their contracts.
 
 ## P0 — Finish executable reconstruction
 
