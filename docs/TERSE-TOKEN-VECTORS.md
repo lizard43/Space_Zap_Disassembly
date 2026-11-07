@@ -32,43 +32,43 @@ limited to primitives confirmed by direct disassembly and control flow.
 | Token | Native address | RE classification |
 | --- | --- | --- |
 | `$00` | `$0000` | Zero vector (not demonstrated executable) |
-| `$01` | `$008C` | 2DUP: recovered contract in word dictionary |
+| `$01` | `$008C` | 2DUP: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$02` | `$010C` | Native target; semantics not yet individually recovered |
-| `$03` | `$01FC` | ZERO_BRANCH: recovered contract in word dictionary |
-| `$04` | `$0097` | SWAP: recovered contract in word dictionary |
-| `$05` | `$0094` | DROP: recovered contract in word dictionary |
-| `$06` | `$0044` | TERSE EXIT |
+| `$03` | `$01FC` | ZERO_BRANCH: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$04` | `$0097` | SWAP: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$05` | `$0094` | DROP: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$06` | `$0044` | EXIT: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$07` | `$0134` | Native target; semantics not yet individually recovered |
-| `$08` | `$00B2` | BYTE_STORE: recovered contract in word dictionary |
-| `$09` | `$0081` | ONE: recovered contract in word dictionary |
+| `$08` | `$00B2` | B!: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$09` | `$0081` | 1: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$0A` | `$025E` | Native target; semantics not yet individually recovered |
-| `$0B` | `$007B` | ZERO: recovered contract in word dictionary |
-| `$0C` | `$009D` | FETCH: recovered contract in word dictionary |
-| `$0D` | `$0087` | DUP: recovered contract in word dictionary |
-| `$0E` | `$0059` | TERSE LIT8 |
-| `$0F` | `$00BF` | ADD: recovered contract in word dictionary |
-| `$10` | `$00AB` | STORE: recovered contract in word dictionary |
+| `$0B` | `$007B` | 0: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$0C` | `$009D` | @: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$0D` | `$0087` | DUP: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$0E` | `$0059` | LIT8: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$0F` | `$00BF` | +: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$10` | `$00AB` | !: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$11` | `$FFFF` | Unused/sentinel |
 | `$12` | `$040B` | Native target; semantics not yet individually recovered |
-| `$13` | `$01E3` | STACK_ROTATE: recovered native stack contract |
-| `$14` | `$00D9` | INCREMENT: recovered contract in word dictionary |
-| `$15` | `$00D4` | DECREMENT: recovered contract in word dictionary |
-| `$16` | `$015F` | MEMORY_COPY: recovered native stack contract |
+| `$13` | `$01E3` | ROT: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$14` | `$00D9` | 1+: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$15` | `$00D4` | 1-: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$16` | `$015F` | BMOVE: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$17` | `$10DA` | Native target; semantics not yet individually recovered |
 | `$18` | `$10EC` | Native target; semantics not yet individually recovered |
 | `$19` | `$11FC` | Native target; semantics not yet individually recovered |
 | `$1A` | `$1207` | Native target; semantics not yet individually recovered |
-| `$1B` | `$0050` | TERSE LIT16 |
-| `$1C` | `$00B7` | ZERO_WORD_AT_ADDRESS: recovered contract in word dictionary |
+| `$1B` | `$0050` | LIT: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$1C` | `$00B7` | ZERO: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$1D` | `$0266` | Native target; semantics not yet individually recovered |
 | `$1E` | `$027E` | Native target; semantics not yet individually recovered |
-| `$1F` | `$01D1` | PORT_OUT: recovered contract in word dictionary |
+| `$1F` | `$01D1` | OUTP: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$20` | `$05E5` | Native target; semantics not yet individually recovered |
-| `$21` | `$01D9` | PORT_IN: recovered contract in word dictionary |
+| `$21` | `$01D9` | INP: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$22` | `$0D43` | Native target; semantics not yet individually recovered |
 | `$23` | `$016D` | Native target; semantics not yet individually recovered |
-| `$24` | `$01B6` | LOOP_INDEX: recovered contract in word dictionary |
-| `$25` | `$00A4` | BYTE_FETCH: recovered contract in word dictionary |
+| `$24` | `$01B6` | I: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$25` | `$00A4` | B@: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$26` | `$0188` | Native target; semantics not yet individually recovered |
 | `$27` | `$0139` | Native target; semantics not yet individually recovered |
 | `$28` | `$2193` | Native target; semantics not yet individually recovered |
@@ -89,25 +89,25 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$37` | `$21AA` | Native target; semantics not yet individually recovered |
 | `$38` | `$21D8` | Native target; semantics not yet individually recovered |
 | `$39` | `$111E` | Native target; semantics not yet individually recovered |
-| `$3A` | `$00DE` | ARITH_SHIFT_RIGHT: recovered contract in word dictionary |
+| `$3A` | `$00DE` | ARITH_SHIFT_RIGHT: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$3B` | `$112D` | Native target; semantics not yet individually recovered |
 | `$3C` | `$20FE` | Native target; semantics not yet individually recovered |
-| `$3D` | `$023E` | INDEXED_DISPATCH: inline end pointer and 16-bit native jump table |
+| `$3D` | `$023E` | INDEXED_DISPATCH: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$3E` | `$2223` | Native target; semantics not yet individually recovered |
-| `$3F` | `$00C5` | SUBTRACT: recovered contract in word dictionary |
+| `$3F` | `$00C5` | -: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$40` | `$2154` | Native target; semantics not yet individually recovered |
 | `$41` | `$12B1` | Native target; semantics not yet individually recovered |
 | `$42` | `$218D` | Native target; semantics not yet individually recovered |
-| `$43` | `$00E6` | DECREMENT_BYTE_AT_ADDRESS: recovered native stack contract |
-| `$44` | `$00EE` | EQUAL: `( a b -- flag )`, 1 iff the values match |
-| `$45` | `$01EA` | STACK_PICK: recovered native stack contract |
-| `$46` | `$01F4` | BRANCH_ABSOLUTE: recovered contract in word dictionary |
+| `$43` | `$00E6` | 1-B!: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$44` | `$00EE` | =: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$45` | `$01EA` | PICK: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$46` | `$01F4` | BRANCH_ABSOLUTE: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$47` | `$1F01` | Native target; semantics not yet individually recovered |
 | `$48` | `$2350` | Native target; semantics not yet individually recovered |
 | `$49` | `$0262` | Native target; semantics not yet individually recovered |
 | `$4A` | `$1F08` | Native target; semantics not yet individually recovered |
 | `$4B` | `$1237` | Native target; semantics not yet individually recovered |
-| `$4C` | `$0149` | BITWISE_AND: recovered contract in word dictionary |
+| `$4C` | `$0149` | AND: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$4D` | `$1EF8` | Native target; semantics not yet individually recovered |
 | `$4E` | `$013F` | Native target; semantics not yet individually recovered |
 | `$4F` | `$0EC7` | Native target; semantics not yet individually recovered |
@@ -115,7 +115,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$51` | `$12B7` | Native target; semantics not yet individually recovered |
 | `$52` | `$0217` | Native target; semantics not yet individually recovered |
 | `$53` | `$1F18` | Native target; semantics not yet individually recovered |
-| `$54` | `$0154` | BITWISE_OR: recovered contract in word dictionary |
+| `$54` | `$0154` | OR: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$55` | `$04BB` | Native target; semantics not yet individually recovered |
 | `$56` | `$11C3` | Native target; semantics not yet individually recovered |
 | `$57` | `$121C` | Native target; semantics not yet individually recovered |
@@ -161,7 +161,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$7F` | `$1026` | Native target; semantics not yet individually recovered |
 | `$80` | `$282F` | Native target; semantics not yet individually recovered |
 | `$81` | `$2837` | Native target; semantics not yet individually recovered |
-| `$82` | `$00CD` | NEGATE: recovered native stack contract |
+| `$82` | `$00CD` | MINUS: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$83` | `$0E4D` | Native target; semantics not yet individually recovered |
 | `$84` | `$0FEE` | Native target; semantics not yet individually recovered |
 | `$85` | `$0FFC` | Native target; semantics not yet individually recovered |
@@ -178,8 +178,8 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$90` | `$047E` | Native target; semantics not yet individually recovered |
 | `$91` | `$26B6` | Native target; semantics not yet individually recovered |
 | `$92` | `$275C` | Native target; semantics not yet individually recovered |
-| `$93` | `$0229` | COMPARE_BRANCH_NE: inline 16-bit absolute target, unequal branch preserves deeper operand |
-| `$94` | `$006B` | ADD_INLINE16: `( n -- n+offset )`, consumes following 16-bit little-endian thread operand |
+| `$93` | `$0229` | COMPARE_BRANCH_NE: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
+| `$94` | `$006B` | ADD_INLINE16: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$95` | `$1188` | Native target; semantics not yet individually recovered |
 | `$96` | `$26E6` | Native target; semantics not yet individually recovered |
 | `$97` | `$2704` | Native target; semantics not yet individually recovered |
@@ -225,7 +225,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$BF` | `$31EC` | Native target; semantics not yet individually recovered |
 | `$C0` | `$31CB` | Native target; semantics not yet individually recovered |
 | `$C1` | `$3201` | Native target; semantics not yet individually recovered |
-| `$C2` | `$00FD` | UNSIGNED_GE: recovered native stack contract |
+| `$C2` | `$00FD` | U>=: recovered contract in [word dictionary](TERSE-WORD-DICTIONARY.md) |
 | `$C3` | `$0209` | Native target; semantics not yet individually recovered |
 | `$C4` | `$1306` | Native target; semantics not yet individually recovered |
 | `$C5` | `$32B0` | Native target; semantics not yet individually recovered |
