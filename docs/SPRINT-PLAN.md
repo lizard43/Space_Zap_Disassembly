@@ -2,6 +2,14 @@
 
 Development continues on PR #1. A correct build must match all four original 4 KB ROM SHA-1 values.
 
+## Changes completed on this PR — source readability
+
+- [x] Remove redundant ROM ZIP ownership discussion from README.
+- [x] Repair orphaned inline-add comment by labeling its native entry; standardize TERSE constant stack contracts.
+- [x] Replace mechanical token/address/native-target line comments in compiled TERSE with recovered word names, keeping unknown identities as token numbers.
+- [x] Separate five additional executable blocks following `REDRAW_SAVED_OBJECT` and document their object rendering/motion/collision role.
+- [ ] Resolve callers, control-flow edges and IY state-field ownership for all five new native blocks before declaring their complete contracts.
+
 ## P0 — Finish executable reconstruction
 
 - [ ] Run zmac, verify the 16 KB output and all four ROM SHA-1 values; repair any source discrepancies.

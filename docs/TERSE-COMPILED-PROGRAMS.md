@@ -206,6 +206,10 @@ Five established native routines operate on paired structures separated by `$24`
 
 The source has 37 converted `CALL`/`JP` references across these entries. The application meaning of the paired records remains unproven; the names describe verified register and memory operations.
 
+## Source-level readability of compiled TERSE
+
+The ASM represents original indexed TERSE as `DB` execution tokens and typed `DB/DW` operands. Comments on recognized tokens use their recovered word names, while words without proven dictionary entries remain labeled by their token numbers. The complete token-to-native-address mapping lives in [the vector inventory](TERSE-TOKEN-VECTORS.md), rather than being repeated at every use. Compiled bytecode is not replaced with reconstructed source.
+
 ## Recovered original $28AA colon program
 
 The original `$28AA–$2AE0` span is a single `RST $08` colon definition, now represented in `Space_Zap_Disassembly.asm` as `TERSE_COLON_28AA`. A byte-preserving parse yields **269 indexed token instructions**, **13 native indexed dispatch tables**, and **26 absolute TERSE branches**. The parsing consumes all 567 original bytes and every internal branch destination aligns with a token instruction; the fall-through at `$2AE1` is the following EXIT.
