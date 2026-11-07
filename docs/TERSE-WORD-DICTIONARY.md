@@ -12,46 +12,50 @@ Recovered words use the **original DNA TERSE names** when the native implementat
 
 ## Quick reference
 
-| Word | Token | Native | Stack effect | Purpose |
-| :--- | :---: | :---: | :--- | :--- |
-| [`EXIT`](#exit) | `$06` | `$0044` | `( R: caller-ip -- )` | Return from a colon definition, restoring the caller's threaded instruction pointer. |
-| [`LIT`](#lit-16-bit-inline-literal) | `$1B` | `$0050` | `( -- n )` | Push the little-endian 16-bit word following this token. |
-| [`LIT8`](#lit8) | `$0E` | `$0059` | `( -- u )` | Push the unsigned byte following this token, zero-extended. |
-| [`0`](#token-0b) | `$0B` | `$007B` | `( -- 0 )` | Push the 16-bit constant zero. |
-| [`1`](#token-09) | `$09` | `$0081` | `( -- 1 )` | Push the 16-bit constant one. |
-| [`DUP`](#dup) | `$0D` | `$0087` | `( n -- n n )` | Duplicate the top data-stack cell. |
-| [`2DUP`](#2dup) | `$01` | `$008C` | `( a b -- a b a b )` | Duplicate the top two cells in order. |
-| [`DROP`](#drop) | `$05` | `$0094` | `( n -- )` | Discard the top data-stack cell. |
-| [`SWAP`](#swap) | `$04` | `$0097` | `( a b -- b a )` | Exchange the top two data-stack cells. |
-| [`@`](#token-0c) | `$0C` | `$009D` | `( addr -- n )` | Read a little-endian 16-bit word from memory. |
-| [`B@`](#token-25) | `$25` | `$00A4` | `( addr -- u )` | Read a single memory byte and zero-extend it. |
-| [`!`](#token-10) | `$10` | `$00AB` | `( n addr -- )` | Write a little-endian 16-bit word to memory. |
-| [`B!`](#token-08) | `$08` | `$00B2` | `( n addr -- )` | Write the low eight bits of n to memory. |
-| [`ZERO`](#zero) | `$1C` | `$00B7` | `( addr -- )` | Clear the addressed two-byte word. |
-| [`+`](#token-0f) | `$0F` | `$00BF` | `( a b -- a+b )` | Add two 16-bit stack cells with wraparound. |
-| [`-`](#token-3f) | `$3F` | `$00C5` | `( a b -- a-b )` | Subtract the top cell from the next cell. |
-| [`1-`](#token-15) | `$15` | `$00D4` | `( n -- n-1 )` | Decrement a 16-bit cell. |
-| [`1+`](#token-14) | `$14` | `$00D9` | `( n -- n+1 )` | Increment a 16-bit cell. |
-| [`ARITH_SHIFT_RIGHT`](#arith-shift-right) | `$3A` | `$00DE` | `( signed-n -- signed-n>>1 )` | Arithmetic shift of a signed 16-bit cell; sign bit is retained. |
-| [`AND`](#and) | `$4C` | `$0149` | `( a b -- a&b )` | Bitwise AND of two 16-bit cells. |
-| [`OR`](#or) | `$54` | `$0154` | `( a b -- a|b )` | Bitwise OR of two 16-bit cells. |
-| [`I`](#i) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
-| [`OUTP`](#outp) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
-| [`INP`](#inp) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
-| [`1-B!`](#token-43) | `$43` | `$00E6` | `( addr -- )` | Decrement the byte stored at addr, wrapping modulo 256. |
-| [`=`](#token-44) | `$44` | `$00EE` | `( a b -- flag )` | Return 1 if two 16-bit cells are equal, otherwise 0. |
-| [`BMOVE`](#bmove) | `$16` | `$015F` | `( src dest count -- )` | Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy. |
-| [`ROT`](#rot) | `$13` | `$01E3` | `( a b c -- b c a )` | Rotate the three top stack cells with the deepest moved to the top. |
-| [`PICK`](#pick) | `$45` | `$01EA` | `( index -- value )` | Fetch a 1-based indexed cell from the remaining data stack, leaving the indexed value on top. |
-| [`MINUS`](#minus) | `$82` | `$00CD` | `( n -- -n )` | Two's-complement via subtraction from zero. |
-| [`U>=`](#token-c2) | `$C2` | `$00FD` | `( a b -- flag )` | Unsigned greater/equal comparison. |
-| [`INDEXED_DISPATCH`](#indexed-dispatch) | `$3D` | `$023E` | `( index -- )` | Indexed native target table, inline end address. |
-| [`COMPARE_BRANCH_NE`](#compare-branch-ne) | `$93` | `$0229` | `( a b -- )` equal; `( a b -- a )` unequal | Compare two cells; on inequality branch to inline 16-bit thread address, retaining a. |
-| [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
-| [`BRANCH_ABSOLUTE`](#branch-absolute) | `$46` | `$01F4` | `( -- )` | Set BC to the little-endian address following the token. |
-| [`ZERO_BRANCH`](#zero-branch) | `$03` | `$01FC` | `( flag -- )` | Jump to the inline absolute thread address if flag is zero; otherwise skip its two-byte operand. |
+**Word** is the original TERSE vocabulary entry; **Description** gives its meaning; **Stack effect** shows values before and after execution (top of stack at right). Select a word for its token, native ROM address, example and implementation.
+
+| Word | Description | Stack effect |
+| :--- | :--- | :--- |
+| [`EXIT`](#exit) | Return from a colon definition | `( R: caller-ip -- )` |
+| [`LIT`](#lit-16-bit-inline-literal) | Push inline 16-bit literal | `( -- n )` |
+| [`LIT8`](#lit8) | Push inline unsigned byte | `( -- u )` |
+| [`0`](#token-0b) | Push zero | `( -- 0 )` |
+| [`1`](#token-09) | Push one | `( -- 1 )` |
+| [`DUP`](#dup) | Duplicate top stack value | `( n -- n n )` |
+| [`2DUP`](#2dup) | Duplicate top two stack values | `( a b -- a b a b )` |
+| [`DROP`](#drop) | Discard top stack value | `( n -- )` |
+| [`SWAP`](#swap) | Exchange top two stack values | `( a b -- b a )` |
+| [`@`](#token-0c) | Fetch 16-bit word from memory | `( addr -- n )` |
+| [`B@`](#token-25) | Fetch byte from memory | `( addr -- u )` |
+| [`!`](#token-10) | Store 16-bit word in memory | `( n addr -- )` |
+| [`B!`](#token-08) | Store byte in memory | `( n addr -- )` |
+| [`ZERO`](#zero) | Clear 16-bit memory word | `( addr -- )` |
+| [`+`](#token-0f) | Add two values | `( a b -- a+b )` |
+| [`-`](#token-3f) | Subtract two values | `( a b -- a-b )` |
+| [`1-`](#token-15) | Subtract one | `( n -- n-1 )` |
+| [`1+`](#token-14) | Add one | `( n -- n+1 )` |
+| [`ARITH_SHIFT_RIGHT`](#arith_shift_right) | Arithmetic shift right one bit | `( signed-n -- signed-n>>1 )` |
+| [`AND`](#and) | Bitwise AND | `( a b -- a&b )` |
+| [`OR`](#or) | Bitwise OR | `( a b -- a|b )` |
+| [`I`](#i) | Read current loop index | `( -- index )` |
+| [`OUTP`](#outp) | Write byte to I/O port | `( value port -- )` |
+| [`INP`](#inp) | Read byte from I/O port | `( port -- byte )` |
+| [`1-B!`](#token-43) | Decrement memory byte | `( addr -- )` |
+| [`=`](#token-44) | Compare for equality | `( a b -- flag )` |
+| [`BMOVE`](#bmove) | Copy bytes in memory | `( src dest count -- )` |
+| [`ROT`](#rot) | Rotate top three stack values | `( a b c -- b c a )` |
+| [`PICK`](#pick) | Copy indexed stack value | `( index -- value )` |
+| [`MINUS`](#minus) | Negate signed value | `( n -- -n )` |
+| [`U>=`](#token-c2) | Unsigned greater-than-or-equal comparison | `( a b -- flag )` |
+| [`INDEXED_DISPATCH`](#indexed_dispatch) | Select native handler by index | `( index -- )` |
+| [`COMPARE_BRANCH_NE`](#compare_branch_ne) | Compare and branch when unequal | `( a b -- )` equal; `( a b -- a )` unequal |
+| [`ADD_INLINE16`](#add_inline16) | Add inline 16-bit offset | `( n -- n+offset )` |
+| [`BRANCH_ABSOLUTE`](#branch_absolute) | Jump to inline thread address | `( -- )` |
+| [`ZERO_BRANCH`](#zero_branch) | Branch if value is zero | `( flag -- )` |
 
 ## Recovered words
+
+<a id="token-43"></a>
 
 ### 1-B! — token $43
 
@@ -66,6 +70,8 @@ Decrement the byte stored at addr, wrapping modulo 256.
     DEC (HL)
     JP (IY)
 ```
+
+<a id="token-44"></a>
 
 ### = — token $44
 
@@ -96,6 +102,8 @@ Pop a cell and compute `0-n` modulo 65536 through the existing subtraction body 
     LD HL,$0000
     JP $00C7
 ```
+
+<a id="token-c2"></a>
 
 ### U>= — token $C2
 
@@ -318,6 +326,8 @@ Push the unsigned byte following this token, zero-extended.
     JP (IY)
 ```
 
+<a id="token-0b"></a>
+
 ### 0 — token $0B
 
 **Native:** `$007B` · **Token:** `$0B` · **Stack:** `( -- 0 )`
@@ -333,6 +343,8 @@ Push the 16-bit constant zero.
     PUSH HL
     JP (IY)
 ```
+
+<a id="token-09"></a>
 
 ### 1 — token $09
 
@@ -420,6 +432,8 @@ Exchange the top two data-stack cells.
     JP (IY)
 ```
 
+<a id="token-0c"></a>
+
 ### @ — token $0C
 
 **Native:** `$009D` · **Token:** `$0C` · **Stack:** `( addr -- n )`
@@ -439,6 +453,8 @@ Read a little-endian 16-bit word from memory.
     JP (IY)
 ```
 
+<a id="token-25"></a>
+
 ### B@ — token $25
 
 **Native:** `$00A4` · **Token:** `$25` · **Stack:** `( addr -- u )`
@@ -457,7 +473,9 @@ Read a single memory byte and zero-extend it.
     JP (IY)
 ```
 
-### ! — token ### 0
+<a id="token-10"></a>
+
+### ! — token $10
 
 **Native:** `$00AB` · **Token:** `$10` · **Stack:** `( n addr -- )`
 
@@ -475,6 +493,8 @@ Write a little-endian 16-bit word to memory.
     LD (HL),D
     JP (IY)
 ```
+
+<a id="token-08"></a>
 
 ### B! — token $08
 
@@ -511,6 +531,8 @@ Clear the addressed two-byte word.
     JP (IY)
 ```
 
+<a id="token-0f"></a>
+
 ### + — token $0F
 
 **Native:** `$00BF` · **Token:** `$0F` · **Stack:** `( a b -- a+b )`
@@ -528,6 +550,8 @@ Add two 16-bit stack cells with wraparound.
     PUSH HL
     JP (IY)
 ```
+
+<a id="token-3f"></a>
 
 ### - — token $3F
 
@@ -548,7 +572,9 @@ Subtract the top cell from the next cell.
     JP (IY)
 ```
 
-### 1- — token ### 5
+<a id="token-15"></a>
+
+### 1- — token $15
 
 **Native:** `$00D4` · **Token:** `$15` · **Stack:** `( n -- n-1 )`
 
@@ -565,7 +591,9 @@ Decrement a 16-bit cell.
     JP (IY)
 ```
 
-### 1+ — token ### 4
+<a id="token-14"></a>
+
+### 1+ — token $14
 
 **Native:** `$00D9` · **Token:** `$14` · **Stack:** `( n -- n+1 )`
 
