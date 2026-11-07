@@ -64,4 +64,6 @@ Destination: [DNA TERSE WB](https://github.com/lizard43/dnaTERSE-WB). Add Space 
 
 ## Engineering rules
 
+**Original DNA TERSE vocabulary is authoritative. Match by implementation and stack behavior, use the correct name, and move on.**
+
 Original DNA software and languages first. Discuss deviations before changing architecture or adding substitute tooling. Ordinary Git history provides revision tracking; do not create preservation branches, snapshots or duplicate versioned artifacts. Increment the ASM revision for source changes; only report a verified build after four-ROM SHA-1 PASS.
