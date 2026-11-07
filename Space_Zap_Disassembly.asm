@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0017
+; RE version: v20261107-0018
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -64,13 +64,14 @@ TERSE_COLON_ENTRY:
 TERSE_COLD_START:
 	 ld   a,$01
 	 out  (VIDEO_MODE_WRITE),a ; $01 selects the startup video mode
+; Remaining startup outputs have no established handler in the MAME port map.
 	 ld   a,$F0
-	 out  (BOOT_PORT_F8),a ; $F0, startup-only port; function unresolved
+	 out  (BOOT_PORT_F8),a
 	 ld   a,$0F
-	 out  (BOOT_PORT_FA),a ; $0F, startup-only port; function unresolved
-	 out  (BOOT_PORT_FB),a ; $0F, startup-only port; function unresolved
+	 out  (BOOT_PORT_FA),a
+	 out  (BOOT_PORT_FB),a
 	 ld   a,$01
-	 out  (BOOT_PORT_FF),a ; $01, startup-only port; function unresolved
+	 out  (BOOT_PORT_FF),a
 	 ld   ix,$D800
 	 ld   sp,$D780
 	 ld   bc,$3CDC
@@ -8115,6 +8116,8 @@ TERSE_COLON_3091:
 	 DB $54 ; $3094 token -> native $0154
 	 DB $06 ; $3095 token -> native $0044
 
+; Screen message records: known strings are labeled, but intervening bytes
+; remain partially untyped. Z80-looking instructions here are not proven code.
 SPACE_ZAP_SCREEN_TEXT_PREFIX:
 	 DB $11 ; original byte preceding MIDWAY copyright string
 ; $3097  @ 1980 MIDWAY MFG
