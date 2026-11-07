@@ -147,6 +147,24 @@ at `$1FC9`, oscillator step at `$2034`, noise-envelope step at `$20B5`,
 and indexed register writer at `$213E`. These are labeled in source;
 their hardware/parameter contracts are in [ROM assets and audio](ROM-ASSETS-AND-AUDIO.md).
 
+### Additional native routine boundaries
+
+The original native arithmetic helpers at `$026A` and `$0273` now
+have dedicated labels for two's-complement operations on HL and DE.
+The short colon definition at `$027E` is represented as TERSE tokens,
+followed by two native interrupt-protected record routines at `$028C`
+and `$02DF`.
+
+The 16-byte block at `$0336–$0345` is an eight-entry `DW` table of RAM
+addresses (`$D0A1`, `$D0D7`, `$D0D9`, `$D10F`, `$D111`,
+`$D12F`, `$D131`, `$D14F`). The native record dispatch immediately
+after this table is labeled `NATIVE_EVENT_RECORD_DISPATCH_0346`.
+
+The full `$270D–$2AE0` compiled/data region is now typed in the
+assembly and all **980 reconstructed bytes** were compared to the
+original ROM. This also eliminates the false Z80 relative branches
+that produced repeated zmac v1.3 `Value error` messages.
+
 ### Remaining code recovery
 
 - Continue decoding the remaining colon programs in the middle ROM;
