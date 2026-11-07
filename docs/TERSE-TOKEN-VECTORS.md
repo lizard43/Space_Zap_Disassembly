@@ -5,7 +5,7 @@
 
 ## RE status and sprint coverage
 
-**This inventory is not 256 unresolved items.** All 256 original token-vector cells have been extracted from the ROM. Of these, 251 contain in-ROM addresses and five are unused/sentinel cells. The detailed [TERSE word dictionary](TERSE-WORD-DICTIONARY.md) currently documents 34 indexed words, including inline-operand routines and their stack behavior. Rows below are synchronized with these recovered contracts. Remaining `semantics not yet individually recovered` rows describe outstanding semantic RE, not missing ROM bytes.
+**This inventory is not 256 unresolved items.** All 256 original token-vector cells have been extracted from the ROM. Of these, 251 contain in-ROM addresses and five are unused/sentinel cells. The detailed [TERSE word dictionary](TERSE-WORD-DICTIONARY.md) currently documents 36 indexed words, including inline-operand routines and their stack behavior. Rows below are synchronized with these recovered contracts. Remaining `semantics not yet individually recovered` rows describe outstanding semantic RE, not missing ROM bytes.
 
 The [active Space Zap P0 sprint](SPRINT-PLAN.md) explicitly covers auditing every used vector target, its native or colon definition, stack/inline-operand behavior, and updating this inventory and the programmer's dictionary. Near-final runtime integration into DNA TERSE WB follows that work.
 
@@ -99,7 +99,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$41` | `$12B1` | Native target; semantics not yet individually recovered |
 | `$42` | `$218D` | Native target; semantics not yet individually recovered |
 | `$43` | `$00E6` | DECREMENT_BYTE_AT_ADDRESS: recovered native stack contract |
-| `$44` | `$00EE` | INCREMENT_BYTE_AT_ADDRESS: recovered native stack contract |
+| `$44` | `$00EE` | EQUAL: `( a b -- flag )`, 1 iff the values match |
 | `$45` | `$01EA` | STACK_PICK: recovered native stack contract |
 | `$46` | `$01F4` | BRANCH_ABSOLUTE: recovered contract in word dictionary |
 | `$47` | `$1F01` | Native target; semantics not yet individually recovered |
@@ -161,7 +161,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$7F` | `$1026` | Native target; semantics not yet individually recovered |
 | `$80` | `$282F` | Native target; semantics not yet individually recovered |
 | `$81` | `$2837` | Native target; semantics not yet individually recovered |
-| `$82` | `$00CD` | Native target; semantics not yet individually recovered |
+| `$82` | `$00CD` | NEGATE: recovered native stack contract |
 | `$83` | `$0E4D` | Native target; semantics not yet individually recovered |
 | `$84` | `$0FEE` | Native target; semantics not yet individually recovered |
 | `$85` | `$0FFC` | Native target; semantics not yet individually recovered |
@@ -225,7 +225,7 @@ limited to primitives confirmed by direct disassembly and control flow.
 | `$BF` | `$31EC` | Native target; semantics not yet individually recovered |
 | `$C0` | `$31CB` | Native target; semantics not yet individually recovered |
 | `$C1` | `$3201` | Native target; semantics not yet individually recovered |
-| `$C2` | `$00FD` | Native target; semantics not yet individually recovered |
+| `$C2` | `$00FD` | UNSIGNED_GE: recovered native stack contract |
 | `$C3` | `$0209` | Native target; semantics not yet individually recovered |
 | `$C4` | `$1306` | Native target; semantics not yet individually recovered |
 | `$C5` | `$32B0` | Native target; semantics not yet individually recovered |
