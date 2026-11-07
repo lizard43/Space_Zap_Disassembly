@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0007
+; RE version: v20261107-0008
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -479,6 +479,9 @@ TERSE_COMPARE_BRANCH_NE:
 	 ld   c,l
 	 push de
 	 jp   (iy)
+; $023E, token $3D: indexed native dispatch, ( index -- ).
+; Inline little-endian end address followed by 16-bit native targets.
+TERSE_INDEXED_DISPATCH:
 	 ld   a,(bc)
 	 ld   e,a
 	 inc  bc
@@ -5888,17 +5891,13 @@ TERSE_THREAD_2763:
 	 DW $D188 ; LIT16
 	 DB $25 ; $2777 token -> native $00A4
 	 DB $15 ; $2778 token -> native $00D4
-	 DB $3D ; $2779 token -> native $023E
-	 DB $84 ; $277A token -> native $0FEE
-	 DB $27 ; $277B token -> native $0139
-	 DB $3B ; $277C token -> native $112D
-	 DB $27 ; $277D token -> native $0139
-	 DB $46 ; $277E token -> native $01F4
-	 DW $3027 ; BRANCH
-	 DB $27 ; $2781 token -> native $0139
-	 DB $50 ; $2782 token -> native $24F6
-	 DB $27 ; $2783 token -> native $0139
-	 DB $6B ; $2784 token -> native $10B7
+	 DB $3D ; $2779 -> TERSE_INDEXED_DISPATCH
+	 DW $2784 ; end/default continuation
+	 DW $273B ; native target 0
+	 DW $2746 ; native target 1
+	 DW $2730 ; native target 2
+	 DW $2750 ; native target 3
+DB $6B ; $2784 token -> native $10B7
 	 DB $1B ; $2785 token -> native $0050
 	 DW $D18C ; LIT16
 	 DB $25 ; $2788 token -> native $00A4
@@ -5954,46 +5953,31 @@ TERSE_THREAD_27B9:
 	 DB $15 ; $27C4 token -> native $00D4
 	 DB $0D ; $27C5 token -> native $0087
 	 DB $0D ; $27C6 token -> native $0087
-	 DB $3D ; $27C7 token -> native $023E
-	 DB $D2 ; $27C8 token -> native $0120
-	 DB $27 ; $27C9 token -> native $0139
-	 DB $D2 ; $27CA token -> native $0120
-	 DB $26 ; $27CB token -> native $0188
-	 DB $D7 ; $27CC token -> native $3222
-	 DB $26 ; $27CD token -> native $0188
-	 DB $DC ; $27CE token -> native $34BE
-	 DB $26 ; $27CF token -> native $0188
-	 DB $E1 ; $27D0 token -> native $328A
-	 DB $26 ; $27D1 token -> native $0188
-	 DB $0D ; $27D2 token -> native $0087
+	 DB $3D ; $27C7 -> TERSE_INDEXED_DISPATCH
+	 DW $27D2 ; end/default continuation
+	 DW $26D2 ; native target 0
+	 DW $26D7 ; native target 1
+	 DW $26DC ; native target 2
+	 DW $26E1 ; native target 3
+DB $0D ; $27D2 token -> native $0087
 	 DB $4B ; $27D3 token -> native $1237
 	 DB $03 ; $27D4 token -> native $01FC
 	 DW TERSE_THREAD_27F3 ; 0BRANCH
 	 DB $55 ; $27D7 token -> native $04BB
-	 DB $3D ; $27D8 token -> native $023E
-	 DB $E3 ; $27D9 token -> native $3377
-	 DB $27 ; $27DA token -> native $0139
-	 DB $E6 ; $27DB token -> native $28AA
-	 DB $26 ; $27DC token -> native $0188
-	 DB $EB ; $27DD token -> native $2495
-	 DB $26 ; $27DE token -> native $0188
-	 DB $F0 ; $27DF token -> native $2231
-	 DB $26 ; $27E0 token -> native $0188
-	 DB $F5 ; $27E1 token -> native $01BF
-	 DB $26 ; $27E2 token -> native $0188
-	 DB $49 ; $27E3 token -> native $0262
-	 DB $3D ; $27E4 token -> native $023E
-	 DB $EF ; $27E5 token -> native $3BD9
-	 DB $27 ; $27E6 token -> native $0139
-	 DB $0E ; $27E7 token -> native $0059
-	 DB $27 ; LIT8
-	 DB $13 ; $27E9 token -> native $01E3
-	 DB $27 ; $27EA token -> native $0139
-	 DB $0E ; $27EB token -> native $0059
-	 DB $27 ; LIT8
-	 DB $13 ; $27ED token -> native $01E3
-	 DB $27 ; $27EE token -> native $0139
-	 DB $6B ; $27EF token -> native $10B7
+	 DB $3D ; $27D8 -> TERSE_INDEXED_DISPATCH
+	 DW $27E3 ; end/default continuation
+	 DW $26E6 ; native target 0
+	 DW $26EB ; native target 1
+	 DW $26F0 ; native target 2
+	 DW $26F5 ; native target 3
+DB $49 ; $27E3 token -> native $0262
+	 DB $3D ; $27E4 -> TERSE_INDEXED_DISPATCH
+	 DW $27EF ; end/default continuation
+	 DW $270E ; native target 0
+	 DW $2713 ; native target 1
+	 DW $270E ; native target 2
+	 DW $2713 ; native target 3
+DB $6B ; $27EF token -> native $10B7
 	 DB $46 ; $27F0 token -> native $01F4
 	 DW TERSE_THREAD_27F5 ; BRANCH
 TERSE_THREAD_27F3:
@@ -6142,23 +6126,27 @@ TERSE_COLON_2855:
 	 DB $1B ; $2856 token -> native $0050
 	 DW $D198 ; LIT16
 	 DB $25 ; $2859 token -> native $00A4
-	 DB $3D ; $285A token -> native $023E
-	 DB $65 ; $285B token -> native $1195
-	 DB $28 ; $285C token -> native $2193
-	 DB $EB ; $285D token -> native $2495
-	 DB $26 ; $285E token -> native $0188
-	 DB $F0 ; $285F token -> native $2231
-	 DB $26 ; $2860 token -> native $0188
-	 DB $F5 ; $2861 token -> native $01BF
-	 DB $26 ; $2862 token -> native $0188
-	 DB $E6 ; $2863 token -> native $28AA
-	 DB $26 ; $2864 token -> native $0188
-	 DB $06 ; $2865 token -> native $0044
+	 DB $3D ; $285A -> TERSE_INDEXED_DISPATCH
+	 DW $2865 ; end/default continuation
+	 DW $26EB ; native target 0
+	 DW $26F0 ; native target 1
+	 DW $26F5 ; native target 2
+	 DW $26E6 ; native target 3
+DB $06 ; $2865 token -> native $0044
 
 ; Mixed token/data record
-TERSE_DATA_2866:
-	 DB $CF,$1B,$98,$D1,$25,$3D,$76,$28,$09,$27,$FA,$26,$FF,$26,$04,$27 ; $2866-$2875
-	 DB $06 ; $2876-$2876
+TERSE_COLON_2866:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D198 ; RAM location
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; indexed native dispatch
+	 DW $2876 ; end/default continuation
+	 DW $2709 ; native target 0
+	 DW $26FA ; native target 1
+	 DW $26FF ; native target 2
+	 DW $2704 ; native target 3
+	 DB $06 ; EXIT
 
 ; Original TERSE colon word at $2877
 TERSE_COLON_2877:
@@ -6166,18 +6154,13 @@ TERSE_COLON_2877:
 	 DB $1B ; $2878 token -> native $0050
 	 DW $D198 ; LIT16
 	 DB $25 ; $287B token -> native $00A4
-	 DB $3D ; $287C token -> native $023E
-	 DB $87 ; $287D token -> native $1042
-	 DB $28 ; $287E token -> native $2193
-	 DB $D7 ; $287F token -> native $3222
-	 DB $26 ; $2880 token -> native $0188
-	 DB $DC ; $2881 token -> native $34BE
-	 DB $26 ; $2882 token -> native $0188
-	 DB $E1 ; $2883 token -> native $328A
-	 DB $26 ; $2884 token -> native $0188
-	 DB $D2 ; $2885 token -> native $0120
-	 DB $26 ; $2886 token -> native $0188
-	 DB $06 ; $2887 token -> native $0044
+	 DB $3D ; $287C -> TERSE_INDEXED_DISPATCH
+	 DW $2887 ; end/default continuation
+	 DW $26D7 ; native target 0
+	 DW $26DC ; native target 1
+	 DW $26E1 ; native target 2
+	 DW $26D2 ; native target 3
+DB $06 ; $2887 token -> native $0044
 
 ; Original TERSE colon word at $2888
 TERSE_COLON_2888:
