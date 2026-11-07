@@ -21,6 +21,9 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [x] Recover byte-decrement/increment, memory copy, 3-cell rotate, and stack pick native primitives; synchronize dictionary and token vectors.
 - [x] Consolidate redundant ROM/RE and primitive-comparison notes into reader-focused technical references; enforce ASM section spacing.
 
+- [x] Audit low ROM native boundaries: correct token $44 (EQUAL at $00EE, **not** byte increment at $00EA); recover NEGATE token $82 and unsigned GE token $C2. Correct dictionary/vector bindings.
+- [ ] Cross-check **every** new token/name mapping against the original indexed vector target **and** the exact native entry address before marking semantics complete.
+
 ## WB library follow-on — near-final Space Zap runtime and notes
 
 Destination: [DNA TERSE WB](https://github.com/lizard43/dnaTERSE-WB). Add Space Zap (1980) as a first-class library target when recovered P0 runtime semantics and dictionary contracts are sufficiently complete. This is a working software integration, **not a preservation milestone or frozen revision**.
