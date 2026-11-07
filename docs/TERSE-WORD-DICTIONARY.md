@@ -34,11 +34,44 @@ See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector invent
 | [`LOOP_INDEX`](#loop-index) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
 | [`PORT_OUT`](#port-out) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
 | [`PORT_IN`](#port-in) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
+| [`COMPARE_BRANCH_NE`](#compare-branch-ne) | `$93` | `$0229` | `( a b -- )` equal; `( a b -- a )` unequal | Compare two cells; on inequality branch to inline 16-bit thread address, retaining a. |
 | [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
 | [`BRANCH_ABSOLUTE`](#branch-absolute) | `$46` | `$01F4` | `( -- )` | Set BC to the little-endian address following the token. |
 | [`ZERO_BRANCH`](#zero-branch) | `$03` | `$01FC` | `( flag -- )` | Jump to the inline absolute thread address if flag is zero; otherwise skip its two-byte operand. |
 
 ## Recovered words
+
+### COMPARE_BRANCH_NE
+
+**Native:** `$0229` · **Token:** `$93`
+
+**Stack effects:** equal: `( a b -- )`; unequal: `( a b -- a )`.
+
+Pop top cell b to HL, then a to DE. Compare b against a. If equal, consume the following two bytes by advancing BC and continue; if unequal, read the following little-endian 16-bit address into BC, push a back onto the data stack and branch there. The branch target is an inline operand, **not** two independent TERSE tokens.
+
+**Confirmed uses:** seven branch sites in the decoded game-control definitions at `$2B01`, `$2B2E`, `$2B5D`, `$2B8D`, `$2F03`, `$2F15` and `$2F27`. The unequal-path preserved value makes this more specialized than a conventional Forth comparison or simple 0BRANCH; no original source-level word spelling is claimed.
+
+**Original native implementation (with original branch addresses):**
+
+```z80
+    POP HL
+    POP DE
+    OR A
+    SBC HL,DE
+    JP NZ,$0235
+    INC BC
+    INC BC
+    JP (IY)
+    ; $0235: unequal
+    LD A,(BC)
+    LD L,A
+    INC BC
+    LD A,(BC)
+    LD B,A
+    LD C,L
+    PUSH DE
+    JP (IY)
+```
 
 ### ADD_INLINE16
 
