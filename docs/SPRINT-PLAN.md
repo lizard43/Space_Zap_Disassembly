@@ -1,0 +1,31 @@
+# Space Zap — active RE sprint plan
+
+This is a working plan, not a frozen revision or preservation checkpoint. Continue on the active Space Zap PR and update this plan as the work evolves. Use four original ROM SHA-1 comparisons as the normal build correctness check.
+
+## P0 — Native Z80 and TERSE reverse engineering
+
+- [x] Identify indexed NEXT, colon entry, EXIT, LIT8/LIT16 and 256 vector slots.
+- [x] Recover the major middle-ROM and startup compiled TERSE programs.
+- [x] Recover native token $94 inline 16-bit addition and correct 12 misdecoded inline operands.
+- [ ] Audit vector-referenced native routines; classify true entry points, shared internal branches, inline data, and code joins. Record meaningful, evidence-backed names.
+- [ ] Establish stack effects, inline operands, control stack, RAM and I/O side effects for every actually used token. Update ASM and Forth-style dictionary together.
+- [ ] Finish mixed bytecode/native/data classification in the $21xx–$2Axx area, especially $28AA onward; decode operands and branch targets before assigning instructions.
+- [ ] Reconstruct game control: attract/start, credits, input, firing, object motion, collision, score, sound and interrupts.
+- [ ] Complete RAM address ownership and hardware port interaction map.
+- [ ] Assemble using original native Z80 sources and pass all four official MAME ROM SHA-1 checks.
+
+## WB library follow-on — near-final Space Zap runtime and notes
+
+Destination: [DNA TERSE WB](https://github.com/lizard43/dnaTERSE-WB). Add Space Zap (1980) as a first-class library target when recovered P0 runtime semantics and dictionary contracts are sufficiently complete. This is a working software integration, **not a preservation milestone or frozen revision**.
+
+- [ ] Inventory existing original WB byte-token XC/runtime support and compare Space Zap against Extra Bases and Gorf. Reuse original DNA software wherever supported by opcode evidence.
+- [ ] Add/document original indexed NEXT, colon/EXIT/literals, Space Zap native dictionary, 256-slot vector table, RAM and I/O bindings, startup and thread encoding.
+- [ ] Identify identical primitive bodies versus relocatable or game-specific implementations.
+- [ ] Compile a small real TERSE source program via the original/native XC path; reject JavaScript token-rewrite or binary façade as a substitute.
+- [ ] Add runtime integration tests and exact original four-ROM SHA-1 checks where rebuilding original source is possible.
+- [ ] Distinguish original 1979 XC fragments, original 1982 XC, modern compatible WB work and original Space Zap ROM findings; do not claim which historical compiler produced Space Zap without evidence.
+- [ ] Update WB library index and cross-link the Space Zap architecture, dictionary, vector and compiled-program documentation.
+
+## Engineering rules
+
+Original DNA software and languages first. Discuss deviations before changing architecture or adding substitute tooling. Ordinary Git history provides revision tracking; do not create preservation branches, snapshots or duplicate versioned artifacts. Increment the ASM revision for source changes; only report a verified build after four-ROM SHA-1 PASS.
