@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0018
+; RE version: v20261107-0019
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -35,11 +35,11 @@ SOUND_NOISE_VOLUME           EQU $17 ; sound register 7, noise volume
 IO_INPUT_0                   EQU $10 ; custom IO input latch 0 (read, not tone register)
 IO_INPUT_1                   EQU $11 ; custom IO input latch 1
 IO_INPUT_2                   EQU $12 ; custom IO input latch 2
-PROTECTED_RAM_UNLOCK         EQU $5B ; protected RAM enable, requires A high byte $A5 on OUT
-BOOT_PORT_F8                 EQU $F8 ; startup output observed; function not established
-BOOT_PORT_FA                 EQU $FA ; startup output observed; function not established
-BOOT_PORT_FB                 EQU $FB ; startup output observed; function not established
-BOOT_PORT_FF                 EQU $FF ; startup output observed; function not established
+PROTECTED_RAM_UNLOCK         EQU $5B ; protected RAM write-enable ($A5 on Z80 high I/O address bus)
+BOOT_PORT_F8                 EQU $F8 ; cabinet startup I/O, decode pending
+BOOT_PORT_FA                 EQU $FA ; cabinet startup I/O, decode pending
+BOOT_PORT_FB                 EQU $FB ; cabinet startup I/O, decode pending
+BOOT_PORT_FF                 EQU $FF ; cabinet startup I/O, decode pending
 
 
 ; Reset: disable maskable interrupts (DI), then enter TERSE_COLD_START.
@@ -64,7 +64,7 @@ TERSE_COLON_ENTRY:
 TERSE_COLD_START:
 	 ld   a,$01
 	 out  (VIDEO_MODE_WRITE),a ; $01 selects the startup video mode
-; Remaining startup outputs have no established handler in the MAME port map.
+; Cabinet startup writes; exact board decode remains to be traced.
 	 ld   a,$F0
 	 out  (BOOT_PORT_F8),a
 	 ld   a,$0F
@@ -7911,6 +7911,10 @@ TERSE_THREAD_2F62:
 	 DB $03 ; $2F63 -> $01FC
 	 DW TERSE_THREAD_2EE0 ; 0BRANCH
 	 DB $06 ; $2F66 -> $0044
+
+; Screen-RAM test: exercise $4000-$7FFF; palette writes signal failures.
+; Cabinet service mode runs memory tests; see the original operator manual.
+NATIVE_SCREEN_RAM_TEST:
 	 in   a,(IO_INPUT_0)
 	 bit  2,a
 	 jp   nz,$300A
@@ -7956,6 +7960,9 @@ TERSE_THREAD_2F62:
 	 or   h
 	 exx
 	 jp   nz,$2F75
+; Static-RAM test: exercise $D000-$D7FF via protected-RAM writes.
+; Interrupts are disabled while the test changes the Z80 I register.
+NATIVE_STATIC_RAM_TEST:
 	 exx
 	 di
 	 xor  a
