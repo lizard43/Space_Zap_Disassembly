@@ -283,6 +283,8 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 push hl
 	 push hl
 	 jp   (iy)
+; ( a b -- a AND b ) 16-bit bitwise AND.
+TERSE_BITWISE_AND:
 	 pop  de
 	 pop  hl
 	 ld   a,l
@@ -293,6 +295,8 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+; ( a b -- a OR b ) 16-bit bitwise OR.
+TERSE_BITWISE_OR:
 	 pop  de
 	 pop  hl
 	 ld   a,l
@@ -303,6 +307,8 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+; ( src dest count -- ) Transfer BC bytes with Z80 LDIR; BC/DE/HL preserved on alternate register bank.
+TERSE_MEMORY_COPY:
 	 exx
 	 pop  bc
 	 pop  de
@@ -344,6 +350,8 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 ld   c,(ix+$04)
 	 ld   b,(ix+$05)
 	 jp   (iy)
+; ( -- index ) Push active counted-loop index from the IX frame.
+TERSE_LOOP_INDEX:
 	 ld   l,(ix+$00)
 	 ld   h,(ix+$01)
 	 push hl
@@ -354,6 +362,8 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 push hl
 	 push de
 	 jp   (iy)
+; ( value addr -- ) Add a 16-bit quantity into the addressed little-endian word.
+TERSE_ADD_TO_MEMORY_WORD:
 	 pop  hl
 	 pop  de
 	 ld   a,(hl)
@@ -364,12 +374,16 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 adc  a,d
 	 ld   (hl),a
 	 jp   (iy)
+; ( value port -- ) Write the low data byte through the variable I/O port in C.
+TERSE_PORT_OUT:
 	 exx
 	 pop  bc
 	 pop  hl
 	 out  (c),l
 	 exx
 	 jp   (iy)
+; ( port -- byte ) Read variable I/O port through C, returning zero-extended result.
+TERSE_PORT_IN:
 	 exx
 	 pop  bc
 	 in   l,(c)
@@ -377,12 +391,16 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 push hl
 	 exx
 	 jp   (iy)
+; ( a b c -- b c a ) Rotate three cells through the processor stack.
+TERSE_STACK_ROTATE:
 	 pop  de
 	 pop  hl
 	 ex   (sp),hl
 	 push de
 	 push hl
 	 jp   (iy)
+; ( index -- value ) Fetch a stack cell using a 1-based word offset.
+TERSE_STACK_PICK:
 	 pop  hl
 	 dec  hl
 	 add  hl,hl
@@ -392,6 +410,8 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 ld   d,(hl)
 	 push de
 	 jp   (iy)
+; Read a little-endian 16-bit inline branch target and replace the BC instruction pointer.
+TERSE_BRANCH_ABSOLUTE:
 	 ld   a,(bc)
 	 ld   e,a
 	 inc  bc
@@ -399,6 +419,8 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 ld   b,a
 	 ld   c,e
 	 jp   (iy)
+; ( flag -- ) Test zero and select inline branch target or skip its two-byte operand.
+TERSE_ZERO_BRANCH:
 	 pop  hl
 	 ld   a,h
 	 or   l
