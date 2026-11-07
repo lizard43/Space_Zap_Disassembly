@@ -34,10 +34,36 @@ See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector invent
 | [`LOOP_INDEX`](#loop-index) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
 | [`PORT_OUT`](#port-out) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
 | [`PORT_IN`](#port-in) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
+| [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
 | [`BRANCH_ABSOLUTE`](#branch-absolute) | `$46` | `$01F4` | `( -- )` | Set BC to the little-endian address following the token. |
 | [`ZERO_BRANCH`](#zero-branch) | `$03` | `$01FC` | `( flag -- )` | Jump to the inline absolute thread address if flag is zero; otherwise skip its two-byte operand. |
 
 ## Recovered words
+
+### ADD_INLINE16
+
+**Native:** `$006B` · **Token:** `$94` · **Stack:** `( n -- n+offset )`
+
+Pop one 16-bit stack cell, read the next two bytes from the active BC thread as a little-endian 16-bit displacement, add that displacement to the cell modulo 65536, and push the result. BC advances by two bytes. The inline displacement is **not** two subsequent TERSE tokens.
+
+**Example:** `ZERO ADD_INLINE16 $D1A9` leaves `$D1A9` on the data stack.
+
+**Original native implementation** (`TERSE_ADD_INLINE16`):
+
+```z80
+    POP HL
+    LD A,(BC)
+    INC BC
+    LD E,A
+    LD A,(BC)
+    INC BC
+    LD D,A
+    ADD HL,DE
+    PUSH HL
+    JP (IY)
+```
+
+**Confirmed uses:** twelve inline-operand instances in the decoded `$2B05–$2BE8` programs use values `$D1A9` or `$D1A4`. Earlier source incorrectly treated the operand bytes (`$A9/$A4`, `$D1`) as independent tokens. The 16-bit addition is wrapping and has the same result for signed or unsigned interpretation of the displacement.
 
 ### EXIT
 
