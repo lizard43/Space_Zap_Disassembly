@@ -6416,585 +6416,647 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   b,(hl)
 	 pop  hl
 	 ld   hl,($9236)
-	 ld   b,$CF
-	 dec  de
-	 adc  a,b
-	 pop  de
-	 dec  h
-	 ld   b,h
-	 inc  bc
-	 pop  af
-	 ld   hl,($9A1B)
-	 pop  de
-	 ld   b,(hl)
-	 call p,$1B2A
-	 sbc  a,c
-	 pop  de
-	 ld   c,c
-	 ld   b,$CF
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 dec  h
-	 dec  c
-	 dec  de
-	 sub  l
-	 pop  de
-	 ex   af,af'
-	 add  hl,bc
-	 sub  e
-	 inc  l
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 sub  l
-	 ld   c,$18
-	 jr   $2B18
-	 rla
-	 halt
-	 sub  (hl)
-	 dec  h
-	 inc  bc
-	 daa
-	 dec  hl
-	 sub  a
-	 ld   c,c
-	 sbc  a,b
-	 dec  sp
-	 ld   (hl),$3B
-	 ccf
-	 ld   c,$06
-	 ld   d,d
-	 ld   c,$03
-	 sub  h
-	 xor  c
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 add  hl,hl
-	 dec  hl
-	 add  hl,bc
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 ld   c,$02
-	 sub  e
-	 ld   e,e
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 and  h
-	 pop  de
-	 sub  l
-	 dec  bc
-	 jr   $2B47
-	 jr   $2B52
-	 sbc  a,d
-	 dec  h
-	 inc  bc
-	 ld   d,l
-	 dec  hl
-	 sbc  a,e
-	 ld   c,c
-	 sbc  a,h
-	 add  hl,sp
-	 ld   (hl),$39
-	 ccf
-	 ld   c,$08
-	 ld   d,d
-	 ld   a,($0E3A)
-	 ld   (bc),a
-	 sub  h
-	 and  h
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 ld   e,b
-	 dec  hl
-	 ld   c,$02
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 ld   c,$03
-	 sub  e
-	 adc  a,e
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 sub  l
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 jr   $2B75
-	 rla
-	 sbc  a,l
-	 dec  h
-	 inc  bc
-	 add  a,l
-	 dec  hl
-	 sbc  a,(hl)
-	 ld   c,c
-	 sbc  a,a
-	 dec  sp
-	 add  a,d
-	 ld   (hl),$3B
-	 add  a,d
-	 ccf
-	 ld   c,$06
-	 ld   d,d
-	 ld   c,$03
-	 sub  h
-	 xor  c
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 adc  a,b
-	 dec  hl
-	 ld   c,$03
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 ld   c,$04
-	 sub  e
-	 cp   (hl)
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 and  h
-	 pop  de
-	 sub  l
-	 dec  bc
-	 jr   $2BB3
-	 ret  pe
-	 rst  $38
-	 rla
-	 ld   (hl),a
-	 and  b
-	 dec  h
-	 inc  bc
-	 cp   b
-	 dec  hl
-	 and  c
-	 ld   c,c
-	 and  d
-	 add  hl,sp
-	 add  a,d
-	 ld   (hl),$39
-	 add  a,d
-	 ccf
-	 ld   c,$08
-	 ld   d,d
-	 ld   a,($0E3A)
-	 ld   (bc),a
-	 sub  h
-	 and  h
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 cp   e
-	 dec  hl
-	 ld   c,$04
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 dec  b
-	 ld   b,$CF
-	 ld   hl,($7156)
-	 ld   d,a
-	 and  e
-	 dec  de
-	 jp   nc,$0B17
-	 sub  h
-	 and  h
-	 pop  de
-	 ld   c,$05
-	 ld   d,$1B
-	 rst  $10
-	 rla
-	 dec  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 ld   c,$05
-	 ld   d,$0E
-	 jr   c,$2BEB
-	 inc  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 ex   af,af'
-	 ld   c,$1D
-	 ld   c,$02
-	 sub  h
-	 and  h
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 jr   $2BC1
-	 dec  h
-	 daa
-	 inc  bc
-	 di
-	 dec  hl
-	 dec  (hl)
-	 dec  de
-	 jr   $2BCA
-	 ld   b,e
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 jr   nz,$2C29
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 rra
-	 inc  l
-	 dec  de
-	 sbc  a,c
-	 pop  de
-	 dec  e
-	 and  h
-	 and  l
-	 add  hl,bc
-	 ld   c,a
-	 ld   (hl),e
-	 and  l
-	 dec  de
-	 dec  e
-	 call nc,$0325
-	 ld   e,$2C
-	 dec  de
-	 sbc  a,c
-	 pop  de
-	 dec  h
-	 inc  bc
-	 ld   e,$2C
-	 and  h
-	 ld   e,b
-	 ld   a,b
-	 inc  bc
-	 jp   c,$362B
-	 sub  c
-	 ld   b,$CF
-	 ld   (hl),$A6
-	 add  a,d
-	 and  a
-	 ld   (hl),$A8
-	 add  a,d
-	 xor  c
-	 ld   c,$85
-	 ld   h,b
-	 dec  de
-	 ld   a,e
-	 rst  $38
-	 ld   h,c
-	 ld   c,$56
-	 ld   e,(hl)
-	 dec  de
-	 xor  d
-	 rst  $38
-	 ld   e,a
-	 ld   l,c
-	 ld   c,$19
-	 ld   (hl),h
-	 xor  d
-	 ld   h,d
-	 ld   l,d
-	 ld   e,c
-	 dec  de
-	 adc  a,e
-	 rla
-	 ld   l,e
-	 ld   c,$1E
-	 ld   c,a
-	 ld   b,$8A
-	 rst  $08
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 xor  c
-	 dec  de
-	 ret  z
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 sbc  a,e
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 xor  h
-	 inc  l
-	 ld   c,$84
-	 rla
-	 dec  bc
-	 jr   $2C17
-	 add  a,d
-	 and  a
-	 sbc  a,d
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ld   a,h
-	 inc  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 add  hl,de
-	 sbc  a,e
-	 ld   a,c
-	 ld   c,$18
-	 ld   a,l
-	 ld   l,h
-	 sbc  a,d
-	 dec  e
-	 ld   a,d
-	 sbc  a,e
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 sub  l
-	 inc  l
-	 xor  a
-	 ld   l,h
-	 ld   b,(hl)
-	 xor  d
-	 inc  l
-	 adc  a,(hl)
-	 xor  l
-	 dec  bc
-	 ld   a,l
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 ld   d,l
-	 inc  l
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 and  a
-	 dec  de
-	 pop  de
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 sbc  a,(hl)
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 inc  de
-	 dec  l
-	 dec  bc
-	 rla
-	 dec  de
-	 xor  e
-	 rst  $38
-	 jr   $2CEC
-	 sbc  a,h
-	 pop  de
-	 inc  c
-	 xor  c
-	 sbc  a,l
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ex   (sp),hl
-	 inc  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 sbc  a,(hl)
-	 ld   a,c
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,a
-	 ld   l,h
-	 sbc  a,l
-	 dec  e
-	 ld   a,d
-	 sbc  a,(hl)
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 call m,$AF2C
-	 ld   l,h
-	 ld   b,(hl)
-	 ld   de,$8E2D
-	 xor  l
-	 dec  bc
-	 ld   a,a
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 cp   c
-	 inc  l
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 xor  c
-	 dec  de
-	 ret  z
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 and  c
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 ld   (hl),a
-	 dec  l
-	 dec  de
-	 ld   a,h
-	 rst  $38
-	 rla
-	 dec  bc
-	 jr   $2CE3
-	 and  a
-	 and  b
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ld   b,a
-	 dec  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 and  c
-	 ld   a,c
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,l
-	 ld   l,h
-	 and  b
-	 dec  e
-	 ld   a,d
-	 and  c
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 ld   h,b
-	 dec  l
-	 xor  a
-	 ld   l,h
-	 ld   b,(hl)
-	 ld   (hl),l
-	 dec  l
-	 adc  a,(hl)
-	 xor  l
-	 dec  bc
-	 ld   a,l
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 jr   nz,$2DA7
-	 ld   (hl),$7C
+; $2AE1: EXIT of preceding TERSE definition.
+	 DB $06 ; TERSE_EXIT
+; $2AE2: original compiled TERSE game-control word.
+TERSE_COLON_2AE2:
+	 RST $08
+	 DB $1B ; $2AE3 -> $0050
+	 DW $D188 ; LIT16
+	 DB $25 ; $2AE6 -> $00A4
+	 DB $44 ; $2AE7 -> $00EE
+	 DB $03 ; $2AE8 -> $01FC
+	 DW TERSE_THREAD_2AF1 ; 0BRANCH
+	 DB $1B ; $2AEB -> $0050
+	 DW $D19A ; LIT16
+	 DB $46 ; $2AEE -> $01F4
+	 DW TERSE_THREAD_2AF4 ; BRANCH
+TERSE_THREAD_2AF1:
+	 DB $1B ; $2AF1 -> $0050
+	 DW $D199 ; LIT16
+TERSE_THREAD_2AF4:
+	 DB $49 ; $2AF4 -> $0262
+	 DB $06 ; $2AF5 -> $0044
+; $2AF6: original compiled TERSE game-control word.
+TERSE_COLON_2AF6:
+	 RST $08
+	 DB $1B ; $2AF7 -> $0050
+	 DW $D189 ; LIT16
+	 DB $25 ; $2AFA -> $00A4
+	 DB $0D ; $2AFB -> $0087
+	 DB $1B ; $2AFC -> $0050
+	 DW $D195 ; LIT16
+	 DB $08 ; $2AFF -> $00B2
+	 DB $09 ; $2B00 -> $0081
+	 DB $93 ; $2B01 -> $0229
+	 DB $2C ; $2B02 -> $2126
+	 DB $2B ; $2B03 -> $21A3
+	 DB $0B ; $2B04 -> $007B
+	 DB $94 ; $2B05 -> $006B
+	 DB $A9 ; $2B06 -> $110E
+	 DB $D1 ; $2B07 -> $34A2
+	 DB $95 ; $2B08 -> $1188
+	 DB $0E ; $2B09 -> $0059
+	 DB $18 ; LIT8
+	 DB $18 ; $2B0B -> $10EC
+	 DB $0B ; $2B0C -> $007B
+	 DB $17 ; $2B0D -> $10DA
+	 DB $76 ; $2B0E -> $11D0
+	 DB $96 ; $2B0F -> $26E6
+	 DB $25 ; $2B10 -> $00A4
+	 DB $03 ; $2B11 -> $01FC
+	 DW TERSE_THREAD_2B27 ; 0BRANCH
+	 DB $97 ; $2B14 -> $2704
+	 DB $49 ; $2B15 -> $0262
+	 DB $98 ; $2B16 -> $26D2
+	 DB $3B ; $2B17 -> $112D
+	 DB $36 ; $2B18 -> $1216
+	 DB $3B ; $2B19 -> $112D
+	 DB $3F ; $2B1A -> $00C5
+	 DB $0E ; $2B1B -> $0059
+	 DB $06 ; LIT8
+	 DB $52 ; $2B1D -> $0217
+	 DB $0E ; $2B1E -> $0059
+	 DB $03 ; LIT8
+	 DB $94 ; $2B20 -> $006B
+	 DB $A9 ; $2B21 -> $110E
+	 DB $D1 ; $2B22 -> $34A2
+	 DB $08 ; $2B23 -> $00B2
+	 DB $46 ; $2B24 -> $01F4
+	 DW TERSE_THREAD_2B29 ; BRANCH
+TERSE_THREAD_2B27:
+	 DB $09 ; $2B27 -> $0081
+	 DB $99 ; $2B28 -> $2AE2
+TERSE_THREAD_2B29:
+	 DB $46 ; $2B29 -> $01F4
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $0E ; $2B2C -> $0059
+	 DB $02 ; LIT8
+	 DB $93 ; $2B2E -> $0229
+	 DB $5B ; $2B2F -> $0E11
+	 DB $2B ; $2B30 -> $21A3
+	 DB $0B ; $2B31 -> $007B
+	 DB $94 ; $2B32 -> $006B
+	 DB $A4 ; $2B33 -> $2AF6
+	 DB $D1 ; $2B34 -> $34A2
+	 DB $95 ; $2B35 -> $1188
+	 DB $0B ; $2B36 -> $007B
+	 DB $18 ; $2B37 -> $10EC
+	 DB $0E ; $2B38 -> $0059
+	 DB $18 ; LIT8
+	 DB $17 ; $2B3A -> $10DA
+	 DB $9A ; $2B3B -> $26EB
+	 DB $25 ; $2B3C -> $00A4
+	 DB $03 ; $2B3D -> $01FC
+	 DW TERSE_THREAD_2B55 ; 0BRANCH
+	 DB $9B ; $2B40 -> $2709
+	 DB $49 ; $2B41 -> $0262
+	 DB $9C ; $2B42 -> $26D7
+	 DB $39 ; $2B43 -> $111E
+	 DB $36 ; $2B44 -> $1216
+	 DB $39 ; $2B45 -> $111E
+	 DB $3F ; $2B46 -> $00C5
+	 DB $0E ; $2B47 -> $0059
+	 DB $08 ; LIT8
+	 DB $52 ; $2B49 -> $0217
+	 DB $3A ; $2B4A -> $00DE
+	 DB $3A ; $2B4B -> $00DE
+	 DB $0E ; $2B4C -> $0059
+	 DB $02 ; LIT8
+	 DB $94 ; $2B4E -> $006B
+	 DB $A4 ; $2B4F -> $2AF6
+	 DB $D1 ; $2B50 -> $34A2
+	 DB $08 ; $2B51 -> $00B2
+	 DB $46 ; $2B52 -> $01F4
+	 DW TERSE_THREAD_2B58 ; BRANCH
+TERSE_THREAD_2B55:
+	 DB $0E ; $2B55 -> $0059
+	 DB $02 ; LIT8
+	 DB $99 ; $2B57 -> $2AE2
+TERSE_THREAD_2B58:
+	 DB $46 ; $2B58 -> $01F4
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $0E ; $2B5B -> $0059
+	 DB $03 ; LIT8
+	 DB $93 ; $2B5D -> $0229
+	 DB $8B ; $2B5E -> $2855
+	 DB $2B ; $2B5F -> $21A3
+	 DB $0B ; $2B60 -> $007B
+	 DB $94 ; $2B61 -> $006B
+	 DB $A9 ; $2B62 -> $110E
+	 DB $D1 ; $2B63 -> $34A2
+	 DB $95 ; $2B64 -> $1188
+	 DB $1B ; $2B65 -> $0050
+	 DW $FFE8 ; LIT16
+	 DB $18 ; $2B68 -> $10EC
+	 DB $0B ; $2B69 -> $007B
+	 DB $17 ; $2B6A -> $10DA
+	 DB $9D ; $2B6B -> $26F0
+	 DB $25 ; $2B6C -> $00A4
+	 DB $03 ; $2B6D -> $01FC
+	 DW TERSE_THREAD_2B85 ; 0BRANCH
+	 DB $9E ; $2B70 -> $26FA
+	 DB $49 ; $2B71 -> $0262
+	 DB $9F ; $2B72 -> $26DC
+	 DB $3B ; $2B73 -> $112D
+	 DB $82 ; $2B74 -> $00CD
+	 DB $36 ; $2B75 -> $1216
+	 DB $3B ; $2B76 -> $112D
+	 DB $82 ; $2B77 -> $00CD
+	 DB $3F ; $2B78 -> $00C5
+	 DB $0E ; $2B79 -> $0059
+	 DB $06 ; LIT8
+	 DB $52 ; $2B7B -> $0217
+	 DB $0E ; $2B7C -> $0059
+	 DB $03 ; LIT8
+	 DB $94 ; $2B7E -> $006B
+	 DB $A9 ; $2B7F -> $110E
+	 DB $D1 ; $2B80 -> $34A2
+	 DB $08 ; $2B81 -> $00B2
+	 DB $46 ; $2B82 -> $01F4
+	 DW TERSE_THREAD_2B88 ; BRANCH
+TERSE_THREAD_2B85:
+	 DB $0E ; $2B85 -> $0059
+	 DB $03 ; LIT8
+	 DB $99 ; $2B87 -> $2AE2
+TERSE_THREAD_2B88:
+	 DB $46 ; $2B88 -> $01F4
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $0E ; $2B8B -> $0059
+	 DB $04 ; LIT8
+	 DB $93 ; $2B8D -> $0229
+	 DB $BE ; $2B8E -> $1692
+	 DB $2B ; $2B8F -> $21A3
+	 DB $0B ; $2B90 -> $007B
+	 DB $94 ; $2B91 -> $006B
+	 DB $A4 ; $2B92 -> $2AF6
+	 DB $D1 ; $2B93 -> $34A2
+	 DB $95 ; $2B94 -> $1188
+	 DB $0B ; $2B95 -> $007B
+	 DB $18 ; $2B96 -> $10EC
+	 DB $1B ; $2B97 -> $0050
+	 DW $FFE8 ; LIT16
+	 DB $17 ; $2B9A -> $10DA
+	 DB $77 ; $2B9B -> $11DB
+	 DB $A0 ; $2B9C -> $26F5
+	 DB $25 ; $2B9D -> $00A4
+	 DB $03 ; $2B9E -> $01FC
+	 DW TERSE_THREAD_2BB8 ; 0BRANCH
+	 DB $A1 ; $2BA1 -> $26FF
+	 DB $49 ; $2BA2 -> $0262
+	 DB $A2 ; $2BA3 -> $26E1
+	 DB $39 ; $2BA4 -> $111E
+	 DB $82 ; $2BA5 -> $00CD
+	 DB $36 ; $2BA6 -> $1216
+	 DB $39 ; $2BA7 -> $111E
+	 DB $82 ; $2BA8 -> $00CD
+	 DB $3F ; $2BA9 -> $00C5
+	 DB $0E ; $2BAA -> $0059
+	 DB $08 ; LIT8
+	 DB $52 ; $2BAC -> $0217
+	 DB $3A ; $2BAD -> $00DE
+	 DB $3A ; $2BAE -> $00DE
+	 DB $0E ; $2BAF -> $0059
+	 DB $02 ; LIT8
+	 DB $94 ; $2BB1 -> $006B
+	 DB $A4 ; $2BB2 -> $2AF6
+	 DB $D1 ; $2BB3 -> $34A2
+	 DB $08 ; $2BB4 -> $00B2
+	 DB $46 ; $2BB5 -> $01F4
+	 DW TERSE_THREAD_2BBB ; BRANCH
+TERSE_THREAD_2BB8:
+	 DB $0E ; $2BB8 -> $0059
+	 DB $04 ; LIT8
+	 DB $99 ; $2BBA -> $2AE2
+TERSE_THREAD_2BBB:
+	 DB $46 ; $2BBB -> $01F4
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $05 ; $2BBE -> $0094
+TERSE_THREAD_2BBF:
+	 DB $06 ; $2BBF -> $0044
+; $2BC0: original compiled TERSE game-control word.
+TERSE_COLON_2BC0:
+	 RST $08
+	 DB $2A ; $2BC1 -> $042F
+	 DB $56 ; $2BC2 -> $11C3
+	 DB $71 ; $2BC3 -> $1166
+	 DB $57 ; $2BC4 -> $121C
+	 DB $A3 ; $2BC5 -> $11E6
+	 DB $1B ; $2BC6 -> $0050
+	 DW $17D2 ; LIT16
+	 DB $0B ; $2BC9 -> $007B
+	 DB $94 ; $2BCA -> $006B
+	 DB $A4 ; $2BCB -> $2AF6
+	 DB $D1 ; $2BCC -> $34A2
+	 DB $0E ; $2BCD -> $0059
+	 DB $05 ; LIT8
+	 DB $16 ; $2BCF -> $015F
+	 DB $1B ; $2BD0 -> $0050
+	 DW $17D7 ; LIT16
+	 DB $0B ; $2BD3 -> $007B
+	 DB $94 ; $2BD4 -> $006B
+	 DB $A9 ; $2BD5 -> $110E
+	 DB $D1 ; $2BD6 -> $34A2
+	 DB $0E ; $2BD7 -> $0059
+	 DB $05 ; LIT8
+	 DB $16 ; $2BD9 -> $015F
+TERSE_THREAD_2BDA:
+	 DB $0E ; $2BDA -> $0059
+	 DB $38 ; LIT8
+	 DB $0E ; $2BDC -> $0059
+	 DB $03 ; LIT8
+	 DB $94 ; $2BDE -> $006B
+	 DB $A9 ; $2BDF -> $110E
+	 DB $D1 ; $2BE0 -> $34A2
+	 DB $08 ; $2BE1 -> $00B2
+	 DB $0E ; $2BE2 -> $0059
+	 DB $1D ; LIT8
+	 DB $0E ; $2BE4 -> $0059
+	 DB $02 ; LIT8
+	 DB $94 ; $2BE6 -> $006B
+	 DB $A4 ; $2BE7 -> $2AF6
+	 DB $D1 ; $2BE8 -> $34A2
+	 DB $08 ; $2BE9 -> $00B2
+	 DB $1B ; $2BEA -> $0050
+	 DW $D418 ; LIT16
+	 DB $25 ; $2BED -> $00A4
+	 DB $27 ; $2BEE -> $0139
+	 DB $03 ; $2BEF -> $01FC
+	 DW TERSE_THREAD_2BF3 ; 0BRANCH
+	 DB $35 ; $2BF2 -> $04A6
+TERSE_THREAD_2BF3:
+	 DB $1B ; $2BF3 -> $0050
+	 DW $D418 ; LIT16
+	 DB $43 ; $2BF6 -> $00E6
+	 DB $78 ; $2BF7 -> $24DA
+	 DB $4E ; $2BF8 -> $013F
+	 DB $27 ; $2BF9 -> $0139
+	 DB $03 ; $2BFA -> $01FC
+	 DW TERSE_THREAD_2C20 ; 0BRANCH
+	 DB $1B ; $2BFD -> $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2C00 -> $00A4
+	 DB $27 ; $2C01 -> $0139
+	 DB $03 ; $2C02 -> $01FC
+	 DW TERSE_THREAD_2C1F ; 0BRANCH
+	 DB $1B ; $2C05 -> $0050
+	 DW $D199 ; LIT16
+	 DB $1D ; $2C08 -> $0266
+	 DB $A4 ; $2C09 -> $2AF6
+	 DB $A5 ; $2C0A -> $12DB
+	 DB $09 ; $2C0B -> $0081
+	 DB $4F ; $2C0C -> $0EC7
+	 DB $73 ; $2C0D -> $0D11
+	 DB $A5 ; $2C0E -> $12DB
+	 DB $1B ; $2C0F -> $0050
+	 DW $D41D ; LIT16
+	 DB $25 ; $2C12 -> $00A4
+	 DB $03 ; $2C13 -> $01FC
+	 DW TERSE_THREAD_2C1E ; 0BRANCH
+	 DB $1B ; $2C16 -> $0050
+	 DW $D199 ; LIT16
+	 DB $25 ; $2C19 -> $00A4
+	 DB $03 ; $2C1A -> $01FC
+	 DW TERSE_THREAD_2C1E ; 0BRANCH
+	 DB $A4 ; $2C1D -> $2AF6
+TERSE_THREAD_2C1E:
+	 DB $58 ; $2C1E -> $1212
+TERSE_THREAD_2C1F:
+	 DB $78 ; $2C1F -> $24DA
+TERSE_THREAD_2C20:
+	 DB $03 ; $2C20 -> $01FC
+	 DW TERSE_THREAD_2BDA ; 0BRANCH
+	 DB $36 ; $2C23 -> $1216
+	 DB $91 ; $2C24 -> $26B6
+	 DB $06 ; $2C25 -> $0044
+; $2C26: original compiled TERSE game-control word.
+TERSE_COLON_2C26:
+	 RST $08
+	 DB $36 ; $2C27 -> $1216
+	 DB $A6 ; $2C28 -> $113C
+	 DB $82 ; $2C29 -> $00CD
+	 DB $A7 ; $2C2A -> $10FE
+	 DB $36 ; $2C2B -> $1216
+	 DB $A8 ; $2C2C -> $114A
+	 DB $82 ; $2C2D -> $00CD
+	 DB $A9 ; $2C2E -> $110E
+	 DB $0E ; $2C2F -> $0059
+	 DB $85 ; LIT8
+	 DB $60 ; $2C31 -> $0FB8
+	 DB $1B ; $2C32 -> $0050
+	 DW $FF7B ; LIT16
+	 DB $61 ; $2C35 -> $0FA6
+	 DB $0E ; $2C36 -> $0059
+	 DB $56 ; LIT8
+	 DB $5E ; $2C38 -> $0FDC
+	 DB $1B ; $2C39 -> $0050
+	 DW $FFAA ; LIT16
+	 DB $5F ; $2C3C -> $0FCA
+	 DB $69 ; $2C3D -> $0F98
+	 DB $0E ; $2C3E -> $0059
+	 DB $19 ; LIT8
+	 DB $74 ; $2C40 -> $254C
+	 DB $AA ; $2C41 -> $1091
+	 DB $62 ; $2C42 -> $2393
+	 DB $6A ; $2C43 -> $10CD
+	 DB $59 ; $2C44 -> $11A0
+	 DB $1B ; $2C45 -> $0050
+	 DW $178B ; LIT16
+	 DB $6B ; $2C48 -> $10B7
+	 DB $0E ; $2C49 -> $0059
+	 DB $1E ; LIT8
+	 DB $4F ; $2C4B -> $0EC7
+	 DB $06 ; $2C4C -> $0044
+TERSE_INTERWORD_2C4D:
+	 DB $8A ; original byte between colon definitions
+; $2C4E: original compiled TERSE game-control word.
+TERSE_COLON_2C4E:
+	 RST $08
+	 DB $2A ; $2C4F -> $042F
+	 DB $0E ; $2C50 -> $0059
+	 DB $0C ; LIT8
+	 DB $65 ; $2C52 -> $1195
+	 DB $56 ; $2C53 -> $11C3
+	 DB $71 ; $2C54 -> $1166
+TERSE_THREAD_2C55:
+	 DB $0B ; $2C55 -> $007B
+	 DB $A9 ; $2C56 -> $110E
+	 DB $1B ; $2C57 -> $0050
+	 DW $24C8 ; LIT16
+	 DB $5C ; $2C5A -> $109C
+	 DB $57 ; $2C5B -> $121C
+	 DB $6A ; $2C5C -> $10CD
+	 DB $9B ; $2C5D -> $2709
+	 DB $1D ; $2C5E -> $0266
+	 DB $35 ; $2C5F -> $04A6
+	 DB $78 ; $2C60 -> $24DA
+	 DB $4E ; $2C61 -> $013F
+	 DB $27 ; $2C62 -> $0139
+	 DB $03 ; $2C63 -> $01FC
+	 DW TERSE_THREAD_2CAC ; 0BRANCH
+	 DB $0E ; $2C66 -> $0059
+	 DB $84 ; LIT8
+	 DB $17 ; $2C68 -> $10DA
+	 DB $0B ; $2C69 -> $007B
+	 DB $18 ; $2C6A -> $10EC
+	 DB $AB ; $2C6B -> $2635
+	 DB $82 ; $2C6C -> $00CD
+	 DB $A7 ; $2C6D -> $10FE
+	 DB $9A ; $2C6E -> $26EB
+	 DB $49 ; $2C6F -> $0262
+	 DB $1B ; $2C70 -> $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $2C73 -> $00A4
+	 DB $27 ; $2C74 -> $0139
+	 DB $03 ; $2C75 -> $01FC
+	 DW TERSE_THREAD_2C7C ; 0BRANCH
+	 DB $1B ; $2C78 -> $0050
+	 DW $D155 ; LIT16
+	 DB $AC ; $2C7B -> $231D
+TERSE_THREAD_2C7C:
+	 DB $AD ; $2C7C -> $1086
+	 DB $70 ; $2C7D -> $11AB
+	 DB $AE ; $2C7E -> $261F
+	 DB $6B ; $2C7F -> $10B7
+	 DB $19 ; $2C80 -> $11FC
+	 DB $9B ; $2C81 -> $2709
+	 DB $79 ; $2C82 -> $0EDA
+	 DB $0E ; $2C83 -> $0059
+	 DB $18 ; LIT8
+	 DB $7D ; $2C85 -> $100A
+	 DB $6C ; $2C86 -> $0CE2
+	 DB $9A ; $2C87 -> $26EB
+	 DB $1D ; $2C88 -> $0266
+	 DB $7A ; $2C89 -> $0EED
+	 DB $9B ; $2C8A -> $2709
+	 DB $25 ; $2C8B -> $00A4
+	 DB $54 ; $2C8C -> $0154
+	 DB $03 ; $2C8D -> $01FC
+	 DW TERSE_THREAD_2C95 ; 0BRANCH
+	 DB $AF ; $2C90 -> $2C26
+	 DB $6C ; $2C91 -> $0CE2
+	 DB $46 ; $2C92 -> $01F4
+	 DW TERSE_THREAD_2CAA ; BRANCH
+TERSE_THREAD_2C95:
+	 DB $8E ; $2C95 -> $25D0
+	 DB $AD ; $2C96 -> $1086
+	 DB $0B ; $2C97 -> $007B
+	 DB $7D ; $2C98 -> $100A
+	 DB $6C ; $2C99 -> $0CE2
+	 DB $71 ; $2C9A -> $1166
+	 DB $1B ; $2C9B -> $0050
+	 DW $D3C9 ; LIT16
+	 DB $55 ; $2C9E -> $04BB
+	 DB $58 ; $2C9F -> $1212
+	 DB $70 ; $2CA0 -> $11AB
+	 DB $1B ; $2CA1 -> $0050
+	 DW $1DC9 ; LIT16
+	 DB $6B ; $2CA4 -> $10B7
+	 DB $0E ; $2CA5 -> $0059
+	 DB $26 ; LIT8
+	 DB $4F ; $2CA7 -> $0EC7
+	 DB $6C ; $2CA8 -> $0CE2
+	 DB $62 ; $2CA9 -> $2393
+TERSE_THREAD_2CAA:
+	 DB $6D ; $2CAA -> $12C7
+	 DB $78 ; $2CAB -> $24DA
+TERSE_THREAD_2CAC:
+	 DB $03 ; $2CAC -> $01FC
+	 DW TERSE_THREAD_2C55 ; 0BRANCH
+	 DB $36 ; $2CAF -> $1216
+	 DB $7C ; $2CB0 -> $263E
+	 DB $06 ; $2CB1 -> $0044
+; $2CB2: original compiled TERSE game-control word.
+TERSE_COLON_2CB2:
+	 RST $08
+	 DB $2A ; $2CB3 -> $042F
+	 DB $0E ; $2CB4 -> $0059
+	 DB $0C ; LIT8
+	 DB $65 ; $2CB6 -> $1195
+	 DB $56 ; $2CB7 -> $11C3
+	 DB $71 ; $2CB8 -> $1166
+TERSE_THREAD_2CB9:
+	 DB $0B ; $2CB9 -> $007B
+	 DB $A7 ; $2CBA -> $10FE
+	 DB $1B ; $2CBB -> $0050
+	 DW $24D1 ; LIT16
+	 DB $5C ; $2CBE -> $109C
+	 DB $57 ; $2CBF -> $121C
+	 DB $6A ; $2CC0 -> $10CD
+	 DB $9E ; $2CC1 -> $26FA
+	 DB $1D ; $2CC2 -> $0266
+	 DB $35 ; $2CC3 -> $04A6
+	 DB $78 ; $2CC4 -> $24DA
+	 DB $4E ; $2CC5 -> $013F
+	 DB $27 ; $2CC6 -> $0139
+	 DB $03 ; $2CC7 -> $01FC
+	 DW TERSE_THREAD_2D13 ; 0BRANCH
+	 DB $0B ; $2CCA -> $007B
+	 DB $17 ; $2CCB -> $10DA
+	 DB $1B ; $2CCC -> $0050
+	 DW $FFAB ; LIT16
+	 DB $18 ; $2CCF -> $10EC
+	 DB $1B ; $2CD0 -> $0050
+	 DW $D19C ; LIT16
+	 DB $0C ; $2CD3 -> $009D
+	 DB $A9 ; $2CD4 -> $110E
+	 DB $9D ; $2CD5 -> $26F0
+	 DB $49 ; $2CD6 -> $0262
+	 DB $1B ; $2CD7 -> $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $2CDA -> $00A4
+	 DB $27 ; $2CDB -> $0139
+	 DB $03 ; $2CDC -> $01FC
+	 DW TERSE_THREAD_2CE3 ; 0BRANCH
+	 DB $1B ; $2CDF -> $0050
+	 DW $D155 ; LIT16
+	 DB $AC ; $2CE2 -> $231D
+TERSE_THREAD_2CE3:
+	 DB $AD ; $2CE3 -> $1086
+	 DB $70 ; $2CE4 -> $11AB
+	 DB $AE ; $2CE5 -> $261F
+	 DB $6B ; $2CE6 -> $10B7
+	 DB $9E ; $2CE7 -> $26FA
+	 DB $79 ; $2CE8 -> $0EDA
+	 DB $1B ; $2CE9 -> $0050
+	 DW $FFE8 ; LIT16
+	 DB $7F ; $2CEC -> $1026
+	 DB $6C ; $2CED -> $0CE2
+	 DB $9D ; $2CEE -> $26F0
+	 DB $1D ; $2CEF -> $0266
+	 DB $7A ; $2CF0 -> $0EED
+	 DB $9E ; $2CF1 -> $26FA
+	 DB $25 ; $2CF2 -> $00A4
+	 DB $54 ; $2CF3 -> $0154
+	 DB $03 ; $2CF4 -> $01FC
+	 DW TERSE_THREAD_2CFC ; 0BRANCH
+	 DB $AF ; $2CF7 -> $2C26
+	 DB $6C ; $2CF8 -> $0CE2
+	 DB $46 ; $2CF9 -> $01F4
+	 DW TERSE_THREAD_2D11 ; BRANCH
+TERSE_THREAD_2CFC:
+	 DB $8E ; $2CFC -> $25D0
+	 DB $AD ; $2CFD -> $1086
+	 DB $0B ; $2CFE -> $007B
+	 DB $7F ; $2CFF -> $1026
+	 DB $6C ; $2D00 -> $0CE2
+	 DB $71 ; $2D01 -> $1166
+	 DB $1B ; $2D02 -> $0050
+	 DW $D3C9 ; LIT16
+	 DB $55 ; $2D05 -> $04BB
+	 DB $58 ; $2D06 -> $1212
+	 DB $70 ; $2D07 -> $11AB
+	 DB $1B ; $2D08 -> $0050
+	 DW $1DC9 ; LIT16
+	 DB $6B ; $2D0B -> $10B7
+	 DB $0E ; $2D0C -> $0059
+	 DB $26 ; LIT8
+	 DB $4F ; $2D0E -> $0EC7
+	 DB $6C ; $2D0F -> $0CE2
+	 DB $62 ; $2D10 -> $2393
+TERSE_THREAD_2D11:
+	 DB $6D ; $2D11 -> $12C7
+	 DB $78 ; $2D12 -> $24DA
+TERSE_THREAD_2D13:
+	 DB $03 ; $2D13 -> $01FC
+	 DW TERSE_THREAD_2CB9 ; 0BRANCH
+	 DB $36 ; $2D16 -> $1216
+	 DB $7C ; $2D17 -> $263E
+	 DB $06 ; $2D18 -> $0044
+; $2D19: original compiled TERSE game-control word.
+TERSE_COLON_2D19:
+	 RST $08
+	 DB $2A ; $2D1A -> $042F
+	 DB $0E ; $2D1B -> $0059
+	 DB $0C ; LIT8
+	 DB $65 ; $2D1D -> $1195
+	 DB $56 ; $2D1E -> $11C3
+	 DB $71 ; $2D1F -> $1166
+TERSE_THREAD_2D20:
+	 DB $0B ; $2D20 -> $007B
+	 DB $A9 ; $2D21 -> $110E
+	 DB $1B ; $2D22 -> $0050
+	 DW $24C8 ; LIT16
+	 DB $5C ; $2D25 -> $109C
+	 DB $57 ; $2D26 -> $121C
+	 DB $6A ; $2D27 -> $10CD
+	 DB $A1 ; $2D28 -> $26FF
+	 DB $1D ; $2D29 -> $0266
+	 DB $35 ; $2D2A -> $04A6
+	 DB $78 ; $2D2B -> $24DA
+	 DB $4E ; $2D2C -> $013F
+	 DB $27 ; $2D2D -> $0139
+	 DB $03 ; $2D2E -> $01FC
+	 DW TERSE_THREAD_2D77 ; 0BRANCH
+	 DB $1B ; $2D31 -> $0050
+	 DW $FF7C ; LIT16
+	 DB $17 ; $2D34 -> $10DA
+	 DB $0B ; $2D35 -> $007B
+	 DB $18 ; $2D36 -> $10EC
+	 DB $AB ; $2D37 -> $2635
+	 DB $A7 ; $2D38 -> $10FE
+	 DB $A0 ; $2D39 -> $26F5
+	 DB $49 ; $2D3A -> $0262
+	 DB $1B ; $2D3B -> $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $2D3E -> $00A4
+	 DB $27 ; $2D3F -> $0139
+	 DB $03 ; $2D40 -> $01FC
+	 DW TERSE_THREAD_2D47 ; 0BRANCH
+	 DB $1B ; $2D43 -> $0050
+	 DW $D155 ; LIT16
+	 DB $AC ; $2D46 -> $231D
+TERSE_THREAD_2D47:
+	 DB $AD ; $2D47 -> $1086
+	 DB $70 ; $2D48 -> $11AB
+	 DB $AE ; $2D49 -> $261F
+	 DB $6B ; $2D4A -> $10B7
+	 DB $A1 ; $2D4B -> $26FF
+	 DB $79 ; $2D4C -> $0EDA
+	 DB $1B ; $2D4D -> $0050
+	 DW $FFE8 ; LIT16
+	 DB $7D ; $2D50 -> $100A
+	 DB $6C ; $2D51 -> $0CE2
+	 DB $A0 ; $2D52 -> $26F5
+	 DB $1D ; $2D53 -> $0266
+	 DB $7A ; $2D54 -> $0EED
+	 DB $A1 ; $2D55 -> $26FF
+	 DB $25 ; $2D56 -> $00A4
+	 DB $54 ; $2D57 -> $0154
+	 DB $03 ; $2D58 -> $01FC
+	 DW TERSE_THREAD_2D60 ; 0BRANCH
+	 DB $AF ; $2D5B -> $2C26
+	 DB $6C ; $2D5C -> $0CE2
+	 DB $46 ; $2D5D -> $01F4
+	 DW TERSE_THREAD_2D75 ; BRANCH
+TERSE_THREAD_2D60:
+	 DB $8E ; $2D60 -> $25D0
+	 DB $AD ; $2D61 -> $1086
+	 DB $0B ; $2D62 -> $007B
+	 DB $7D ; $2D63 -> $100A
+	 DB $6C ; $2D64 -> $0CE2
+	 DB $71 ; $2D65 -> $1166
+	 DB $1B ; $2D66 -> $0050
+	 DW $D3C9 ; LIT16
+	 DB $55 ; $2D69 -> $04BB
+	 DB $58 ; $2D6A -> $1212
+	 DB $70 ; $2D6B -> $11AB
+	 DB $1B ; $2D6C -> $0050
+	 DW $1DC9 ; LIT16
+	 DB $6B ; $2D6F -> $10B7
+	 DB $0E ; $2D70 -> $0059
+	 DB $26 ; LIT8
+	 DB $4F ; $2D72 -> $0EC7
+	 DB $6C ; $2D73 -> $0CE2
+	 DB $62 ; $2D74 -> $2393
+TERSE_THREAD_2D75:
+	 DB $6D ; $2D75 -> $12C7
+	 DB $78 ; $2D76 -> $24DA
+TERSE_THREAD_2D77:
+	 DB $03 ; $2D77 -> $01FC
+	 DW TERSE_THREAD_2D20 ; 0BRANCH
+	 DB $36 ; $2D7A -> $1216
+	 DB $7C ; $2D7B -> $263E
 ; $2D7C: EXIT of preceding colon program.
 	 DB $06 ; TERSE_EXIT
 ; $2D7D compiled TERSE byte-token definition.
