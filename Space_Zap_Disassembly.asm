@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0011
+; RE version: v20261107-0012
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -6315,46 +6315,469 @@ TERSE_COLON_28A1:
 	 DB $03 ; LIT8
 	 DB $06 ; $28A9 token -> native $0044
 
-; Additional original compiled bytes; operand contracts not yet assigned
-TERSE_DATA_28AA:
-	 DB $CF,$2A,$41,$0E,$07,$4C,$1B,$11,$D0,$25,$03,$BD,$28,$1B,$93,$D1 ; $28AA-$28B9
-	 DB $46,$C0,$28,$1B,$92,$D1,$25,$0F,$09,$52,$1B,$96,$D1,$08,$0E,$0C ; $28BA-$28C9
-	 DB $65,$56,$71,$6A,$57,$58,$70,$1B,$92,$1E,$6B,$41,$0E,$03,$4C,$3D ; $28CA-$28D9
-	 DB $E4,$28,$88,$28,$8F,$28,$97,$28,$A1,$28,$1B,$97,$D1,$08,$18,$17 ; $28DA-$28E9
-	 DB $0E,$58,$5E,$1B,$A8,$FF,$5F,$0E,$58,$60,$1B,$A8,$FF,$61,$41,$0E ; $28EA-$28F9
-	 DB $07,$4C,$0E,$04,$02,$1B,$94,$D1,$08,$1B,$97,$D1,$25,$3D,$12,$29 ; $28FA-$2909
-	 DB $18,$28,$18,$28,$1C,$28,$1C,$28,$7D,$1B,$97,$D1,$25,$3D,$22,$29 ; $290A-$2919
-	 DB $0F,$28,$13,$28,$13,$28,$0F,$28,$7F,$1B,$97,$D1,$25,$1B,$94,$D1 ; $291A-$2929
-	 DB $25,$03,$3C,$29,$3D,$39,$29,$7B,$00,$37,$28,$33,$28,$2F,$28,$46 ; $292A-$2939
-	 DB $47,$29,$3D,$47,$29,$2F,$28,$7B,$00,$37,$28,$33,$28,$5D,$1B,$00 ; $293A-$2949
-	 DB $03,$5B,$66,$1B,$94,$D1,$25,$03,$59,$29,$0E,$20,$46,$5C,$29,$1B ; $294A-$2959
-	 DB $E0,$FF,$0E,$10,$83,$0E,$10,$4F,$84,$85,$69,$68,$6C,$66,$1B,$94 ; $295A-$2969
-	 DB $D1,$25,$03,$74,$29,$0E,$20,$46,$77,$29,$1B,$E0,$FF,$0E,$10,$83 ; $296A-$2979
-	 DB $0E,$10,$4F,$84,$85,$69,$6C,$66,$86,$27,$03,$8B,$29,$84,$85,$69 ; $297A-$2989
-	 DB $6C,$87,$03,$CC,$29,$36,$88,$82,$7D,$1B,$97,$D1,$25,$3D,$A2,$29 ; $298A-$2999
-	 DB $33,$28,$33,$28,$7B,$00,$7B,$00,$5D,$1B,$97,$D1,$25,$3D,$B2,$29 ; $299A-$29A9
-	 DB $2B,$28,$24,$28,$24,$28,$2B,$28,$1B,$98,$D1,$08,$1B,$97,$D1,$25 ; $29AA-$29B9
-	 DB $3D,$C5,$29,$2B,$28,$27,$28,$24,$28,$21,$28,$1B,$97,$D1,$08,$46 ; $29BA-$29C9
-	 DB $06,$2A,$36,$89,$82,$7F,$1B,$97,$D1,$25,$3D,$DF,$29,$37,$28,$2F ; $29CA-$29D9
-	 DB $28,$2F,$28,$37,$28,$5D,$1B,$97,$D1,$25,$3D,$EF,$29,$21,$28,$21 ; $29DA-$29E9
-	 DB $28,$27,$28,$27,$28,$1B,$98,$D1,$08,$1B,$97,$D1,$25,$3D,$02,$2A ; $29EA-$29F9
-	 DB $24,$28,$21,$28,$2B,$28,$27,$28,$1B,$97,$D1,$08,$68,$1B,$98,$D1 ; $29FA-$2A09
-	 DB $25,$3D,$16,$2A,$38,$25,$2A,$25,$38,$25,$2A,$25,$8A,$1D,$8B,$49 ; $2A0A-$2A19
-	 DB $8A,$79,$36,$0E,$1C,$0F,$0C,$8C,$0E,$1C,$0F,$10,$36,$0E,$1E,$0F ; $2A1A-$2A29
-	 DB $0C,$8C,$0E,$1E,$0F,$10,$1B,$96,$D1,$43,$1B,$96,$D1,$25,$27,$03 ; $2A2A-$2A39
-	 DB $96,$2A,$1B,$98,$D1,$25,$3D,$4B,$2A,$3B,$28,$41,$28,$48,$28,$4F ; $2A3A-$2A49
-	 DB $28,$5D,$66,$1B,$03,$D0,$25,$0E,$02,$44,$03,$61,$2A,$0E,$02,$1B ; $2A4A-$2A59
-	 DB $1D,$D4,$08,$1B,$55,$D1,$8D,$6C,$7A,$03,$6C,$2A,$0E,$C8,$74,$46 ; $2A5A-$2A69
-	 DB $71,$2A,$8E,$1B,$C9,$D3,$55,$1B,$03,$D0,$25,$0E,$02,$44,$03,$88 ; $2A6A-$2A79
-	 DB $2A,$0E,$03,$1B,$1D,$D4,$08,$1B,$55,$D1,$8F,$46,$8C,$2A,$1B,$1D ; $2A7A-$2A89
-	 DB $D4,$1D,$71,$8B,$1D,$0B,$7B,$6C,$09,$46,$C6,$2A,$66,$6C,$7A,$8A ; $2A8A-$2A99
-	 DB $25,$54,$03,$C5,$2A,$71,$8B,$1D,$0E,$C8,$7B,$1B,$03,$D0,$25,$0E ; $2A9A-$2AA9
-	 DB $02,$44,$03,$BC,$2A,$0E,$03,$1B,$1D,$D4,$08,$1B,$55,$D1,$8F,$46 ; $2AAA-$2AB9
-	 DB $C0,$2A,$1B,$1D,$D4,$1D,$6C,$09,$46,$C6,$2A,$0B,$8B,$1D,$8A,$1D ; $2ABA-$2AC9
-	 DB $03,$03,$29,$6D,$1B,$14,$D0,$25,$03,$DF,$2A,$90,$78,$03,$D5,$2A ; $2ACA-$2AD9
-	 DB $36,$91,$46,$E1,$2A,$36,$92 ; $2ADA-$2AE0
+; $28AA-$2AE0: original 1980 TERSE compiled colon definition.
+; Decode: 269 indexed token instructions, 13 four-way native dispatch tables,
+; and 26 absolute branches. Values and operand boundaries validated against 567 bytes.
+; This is typed original bytecode, not reconstructed TERSE source-language text.
+TERSE_COLON_28AA:
+	 RST $08
+	 DB $2A ; $28AB: token -> native $042F
+	 DB $41 ; $28AC: token -> native $12B1
+	 DB $0E ; $28AD: LIT8 -> native $0059
+	 DB $07 ; inline unsigned byte
+	 DB $4C ; $28AF: AND -> native $0149
+	 DB $1B ; $28B0: LIT16 -> native $0050
+	 DW $D011 ; inline 16-bit operand
+	 DB $25 ; $28B3: BYTE_FETCH -> native $00A4
+	 DB $03 ; $28B4: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_28BD ; inline absolute thread address
+	 DB $1B ; $28B7: LIT16 -> native $0050
+	 DW $D193 ; inline 16-bit operand
+	 DB $46 ; $28BA: BRANCH -> native $01F4
+	 DW TERSE_THREAD_28C0 ; inline absolute thread address
+TERSE_THREAD_28BD:
+	 DB $1B ; $28BD: LIT16 -> native $0050
+	 DW $D192 ; inline 16-bit operand
+TERSE_THREAD_28C0:
+	 DB $25 ; $28C0: BYTE_FETCH -> native $00A4
+	 DB $0F ; $28C1: ADD -> native $00BF
+	 DB $09 ; $28C2: ONE -> native $0081
+	 DB $52 ; $28C3: token -> native $0217
+	 DB $1B ; $28C4: LIT16 -> native $0050
+	 DW $D196 ; inline 16-bit operand
+	 DB $08 ; $28C7: BYTE_STORE -> native $00B2
+	 DB $0E ; $28C8: LIT8 -> native $0059
+	 DB $0C ; inline unsigned byte
+	 DB $65 ; $28CA: token -> native $1195
+	 DB $56 ; $28CB: token -> native $11C3
+	 DB $71 ; $28CC: token -> native $1166
+	 DB $6A ; $28CD: token -> native $10CD
+	 DB $57 ; $28CE: token -> native $121C
+	 DB $58 ; $28CF: token -> native $1212
+	 DB $70 ; $28D0: token -> native $11AB
+	 DB $1B ; $28D1: LIT16 -> native $0050
+	 DW $1E92 ; inline 16-bit operand
+	 DB $6B ; $28D4: token -> native $10B7
+	 DB $41 ; $28D5: token -> native $12B1
+	 DB $0E ; $28D6: LIT8 -> native $0059
+	 DB $03 ; inline unsigned byte
+	 DB $4C ; $28D8: AND -> native $0149
+	 DB $3D ; $28D9: INDEXED_DISPATCH -> native $023E
+	 DW $28E4 ; table end/default continuation
+	 DW $2888 ; native execution target index 0
+	 DW $288F ; native execution target index 1
+	 DW $2897 ; native execution target index 2
+	 DW $28A1 ; native execution target index 3
+	 DB $1B ; $28E4: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $08 ; $28E7: BYTE_STORE -> native $00B2
+	 DB $18 ; $28E8: token -> native $10EC
+	 DB $17 ; $28E9: token -> native $10DA
+	 DB $0E ; $28EA: LIT8 -> native $0059
+	 DB $58 ; inline unsigned byte
+	 DB $5E ; $28EC: token -> native $0FDC
+	 DB $1B ; $28ED: LIT16 -> native $0050
+	 DW $FFA8 ; inline 16-bit operand
+	 DB $5F ; $28F0: token -> native $0FCA
+	 DB $0E ; $28F1: LIT8 -> native $0059
+	 DB $58 ; inline unsigned byte
+	 DB $60 ; $28F3: token -> native $0FB8
+	 DB $1B ; $28F4: LIT16 -> native $0050
+	 DW $FFA8 ; inline 16-bit operand
+	 DB $61 ; $28F7: token -> native $0FA6
+	 DB $41 ; $28F8: token -> native $12B1
+	 DB $0E ; $28F9: LIT8 -> native $0059
+	 DB $07 ; inline unsigned byte
+	 DB $4C ; $28FB: AND -> native $0149
+	 DB $0E ; $28FC: LIT8 -> native $0059
+	 DB $04 ; inline unsigned byte
+	 DB $02 ; $28FE: token -> native $010C
+	 DB $1B ; $28FF: LIT16 -> native $0050
+	 DW $D194 ; inline 16-bit operand
+	 DB $08 ; $2902: BYTE_STORE -> native $00B2
+TERSE_THREAD_2903:
+	 DB $1B ; $2903: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $2906: BYTE_FETCH -> native $00A4
+	 DB $3D ; $2907: INDEXED_DISPATCH -> native $023E
+	 DW $2912 ; table end/default continuation
+	 DW $2818 ; native execution target index 0
+	 DW $2818 ; native execution target index 1
+	 DW $281C ; native execution target index 2
+	 DW $281C ; native execution target index 3
+	 DB $7D ; $2912: token -> native $100A
+	 DB $1B ; $2913: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $2916: BYTE_FETCH -> native $00A4
+	 DB $3D ; $2917: INDEXED_DISPATCH -> native $023E
+	 DW $2922 ; table end/default continuation
+	 DW $280F ; native execution target index 0
+	 DW $2813 ; native execution target index 1
+	 DW $2813 ; native execution target index 2
+	 DW $280F ; native execution target index 3
+	 DB $7F ; $2922: token -> native $1026
+	 DB $1B ; $2923: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $2926: BYTE_FETCH -> native $00A4
+	 DB $1B ; $2927: LIT16 -> native $0050
+	 DW $D194 ; inline 16-bit operand
+	 DB $25 ; $292A: BYTE_FETCH -> native $00A4
+	 DB $03 ; $292B: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_293C ; inline absolute thread address
+	 DB $3D ; $292E: INDEXED_DISPATCH -> native $023E
+	 DW $2939 ; table end/default continuation
+	 DW $007B ; native execution target index 0
+	 DW $2837 ; native execution target index 1
+	 DW $2833 ; native execution target index 2
+	 DW $282F ; native execution target index 3
+	 DB $46 ; $2939: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2947 ; inline absolute thread address
+TERSE_THREAD_293C:
+	 DB $3D ; $293C: INDEXED_DISPATCH -> native $023E
+	 DW $2947 ; table end/default continuation
+	 DW $282F ; native execution target index 0
+	 DW $007B ; native execution target index 1
+	 DW $2837 ; native execution target index 2
+	 DW $2833 ; native execution target index 3
+TERSE_THREAD_2947:
+	 DB $5D ; $2947: token -> native $0E26
+	 DB $1B ; $2948: LIT16 -> native $0050
+	 DW $0300 ; inline 16-bit operand
+	 DB $5B ; $294B: token -> native $0E11
+	 DB $66 ; $294C: token -> native $0E31
+	 DB $1B ; $294D: LIT16 -> native $0050
+	 DW $D194 ; inline 16-bit operand
+	 DB $25 ; $2950: BYTE_FETCH -> native $00A4
+	 DB $03 ; $2951: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2959 ; inline absolute thread address
+	 DB $0E ; $2954: LIT8 -> native $0059
+	 DB $20 ; inline unsigned byte
+	 DB $46 ; $2956: BRANCH -> native $01F4
+	 DW TERSE_THREAD_295C ; inline absolute thread address
+TERSE_THREAD_2959:
+	 DB $1B ; $2959: LIT16 -> native $0050
+	 DW $FFE0 ; inline 16-bit operand
+TERSE_THREAD_295C:
+	 DB $0E ; $295C: LIT8 -> native $0059
+	 DB $10 ; inline unsigned byte
+	 DB $83 ; $295E: token -> native $0E4D
+	 DB $0E ; $295F: LIT8 -> native $0059
+	 DB $10 ; inline unsigned byte
+	 DB $4F ; $2961: token -> native $0EC7
+	 DB $84 ; $2962: token -> native $0FEE
+	 DB $85 ; $2963: token -> native $0FFC
+	 DB $69 ; $2964: token -> native $0F98
+	 DB $68 ; $2965: token -> native $1229
+	 DB $6C ; $2966: token -> native $0CE2
+	 DB $66 ; $2967: token -> native $0E31
+	 DB $1B ; $2968: LIT16 -> native $0050
+	 DW $D194 ; inline 16-bit operand
+	 DB $25 ; $296B: BYTE_FETCH -> native $00A4
+	 DB $03 ; $296C: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2974 ; inline absolute thread address
+	 DB $0E ; $296F: LIT8 -> native $0059
+	 DB $20 ; inline unsigned byte
+	 DB $46 ; $2971: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2977 ; inline absolute thread address
+TERSE_THREAD_2974:
+	 DB $1B ; $2974: LIT16 -> native $0050
+	 DW $FFE0 ; inline 16-bit operand
+TERSE_THREAD_2977:
+	 DB $0E ; $2977: LIT8 -> native $0059
+	 DB $10 ; inline unsigned byte
+	 DB $83 ; $2979: token -> native $0E4D
+	 DB $0E ; $297A: LIT8 -> native $0059
+	 DB $10 ; inline unsigned byte
+	 DB $4F ; $297C: token -> native $0EC7
+	 DB $84 ; $297D: token -> native $0FEE
+	 DB $85 ; $297E: token -> native $0FFC
+	 DB $69 ; $297F: token -> native $0F98
+	 DB $6C ; $2980: token -> native $0CE2
+	 DB $66 ; $2981: token -> native $0E31
+	 DB $86 ; $2982: token -> native $1055
+	 DB $27 ; $2983: token -> native $0139
+	 DB $03 ; $2984: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_298B ; inline absolute thread address
+	 DB $84 ; $2987: token -> native $0FEE
+	 DB $85 ; $2988: token -> native $0FFC
+	 DB $69 ; $2989: token -> native $0F98
+	 DB $6C ; $298A: token -> native $0CE2
+TERSE_THREAD_298B:
+	 DB $87 ; $298B: token -> native $1042
+	 DB $03 ; $298C: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_29CC ; inline absolute thread address
+	 DB $36 ; $298F: token -> native $1216
+	 DB $88 ; $2990: token -> native $1068
+	 DB $82 ; $2991: token -> native $00CD
+	 DB $7D ; $2992: token -> native $100A
+	 DB $1B ; $2993: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $2996: BYTE_FETCH -> native $00A4
+	 DB $3D ; $2997: INDEXED_DISPATCH -> native $023E
+	 DW $29A2 ; table end/default continuation
+	 DW $2833 ; native execution target index 0
+	 DW $2833 ; native execution target index 1
+	 DW $007B ; native execution target index 2
+	 DW $007B ; native execution target index 3
+	 DB $5D ; $29A2: token -> native $0E26
+	 DB $1B ; $29A3: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $29A6: BYTE_FETCH -> native $00A4
+	 DB $3D ; $29A7: INDEXED_DISPATCH -> native $023E
+	 DW $29B2 ; table end/default continuation
+	 DW $282B ; native execution target index 0
+	 DW $2824 ; native execution target index 1
+	 DW $2824 ; native execution target index 2
+	 DW $282B ; native execution target index 3
+	 DB $1B ; $29B2: LIT16 -> native $0050
+	 DW $D198 ; inline 16-bit operand
+	 DB $08 ; $29B5: BYTE_STORE -> native $00B2
+	 DB $1B ; $29B6: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $29B9: BYTE_FETCH -> native $00A4
+	 DB $3D ; $29BA: INDEXED_DISPATCH -> native $023E
+	 DW $29C5 ; table end/default continuation
+	 DW $282B ; native execution target index 0
+	 DW $2827 ; native execution target index 1
+	 DW $2824 ; native execution target index 2
+	 DW $2821 ; native execution target index 3
+	 DB $1B ; $29C5: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $08 ; $29C8: BYTE_STORE -> native $00B2
+	 DB $46 ; $29C9: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2A06 ; inline absolute thread address
+TERSE_THREAD_29CC:
+	 DB $36 ; $29CC: token -> native $1216
+	 DB $89 ; $29CD: token -> native $1077
+	 DB $82 ; $29CE: token -> native $00CD
+	 DB $7F ; $29CF: token -> native $1026
+	 DB $1B ; $29D0: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $29D3: BYTE_FETCH -> native $00A4
+	 DB $3D ; $29D4: INDEXED_DISPATCH -> native $023E
+	 DW $29DF ; table end/default continuation
+	 DW $2837 ; native execution target index 0
+	 DW $282F ; native execution target index 1
+	 DW $282F ; native execution target index 2
+	 DW $2837 ; native execution target index 3
+	 DB $5D ; $29DF: token -> native $0E26
+	 DB $1B ; $29E0: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $29E3: BYTE_FETCH -> native $00A4
+	 DB $3D ; $29E4: INDEXED_DISPATCH -> native $023E
+	 DW $29EF ; table end/default continuation
+	 DW $2821 ; native execution target index 0
+	 DW $2821 ; native execution target index 1
+	 DW $2827 ; native execution target index 2
+	 DW $2827 ; native execution target index 3
+	 DB $1B ; $29EF: LIT16 -> native $0050
+	 DW $D198 ; inline 16-bit operand
+	 DB $08 ; $29F2: BYTE_STORE -> native $00B2
+	 DB $1B ; $29F3: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $25 ; $29F6: BYTE_FETCH -> native $00A4
+	 DB $3D ; $29F7: INDEXED_DISPATCH -> native $023E
+	 DW $2A02 ; table end/default continuation
+	 DW $2824 ; native execution target index 0
+	 DW $2821 ; native execution target index 1
+	 DW $282B ; native execution target index 2
+	 DW $2827 ; native execution target index 3
+	 DB $1B ; $2A02: LIT16 -> native $0050
+	 DW $D197 ; inline 16-bit operand
+	 DB $08 ; $2A05: BYTE_STORE -> native $00B2
+TERSE_THREAD_2A06:
+	 DB $68 ; $2A06: token -> native $1229
+	 DB $1B ; $2A07: LIT16 -> native $0050
+	 DW $D198 ; inline 16-bit operand
+	 DB $25 ; $2A0A: BYTE_FETCH -> native $00A4
+	 DB $3D ; $2A0B: INDEXED_DISPATCH -> native $023E
+	 DW $2A16 ; table end/default continuation
+	 DW $2538 ; native execution target index 0
+	 DW $252A ; native execution target index 1
+	 DW $2538 ; native execution target index 2
+	 DW $252A ; native execution target index 3
+	 DB $8A ; $2A16: token -> native $2866
+	 DB $1D ; $2A17: token -> native $0266
+	 DB $8B ; $2A18: token -> native $2855
+	 DB $49 ; $2A19: token -> native $0262
+	 DB $8A ; $2A1A: token -> native $2866
+	 DB $79 ; $2A1B: token -> native $0EDA
+	 DB $36 ; $2A1C: token -> native $1216
+	 DB $0E ; $2A1D: LIT8 -> native $0059
+	 DB $1C ; inline unsigned byte
+	 DB $0F ; $2A1F: ADD -> native $00BF
+	 DB $0C ; $2A20: token -> native $009D
+	 DB $8C ; $2A21: token -> native $2877
+	 DB $0E ; $2A22: LIT8 -> native $0059
+	 DB $1C ; inline unsigned byte
+	 DB $0F ; $2A24: ADD -> native $00BF
+	 DB $10 ; $2A25: token -> native $00AB
+	 DB $36 ; $2A26: token -> native $1216
+	 DB $0E ; $2A27: LIT8 -> native $0059
+	 DB $1E ; inline unsigned byte
+	 DB $0F ; $2A29: ADD -> native $00BF
+	 DB $0C ; $2A2A: token -> native $009D
+	 DB $8C ; $2A2B: token -> native $2877
+	 DB $0E ; $2A2C: LIT8 -> native $0059
+	 DB $1E ; inline unsigned byte
+	 DB $0F ; $2A2E: ADD -> native $00BF
+	 DB $10 ; $2A2F: token -> native $00AB
+	 DB $1B ; $2A30: LIT16 -> native $0050
+	 DW $D196 ; inline 16-bit operand
+	 DB $43 ; $2A33: token -> native $00E6
+	 DB $1B ; $2A34: LIT16 -> native $0050
+	 DW $D196 ; inline 16-bit operand
+	 DB $25 ; $2A37: BYTE_FETCH -> native $00A4
+	 DB $27 ; $2A38: token -> native $0139
+	 DB $03 ; $2A39: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2A96 ; inline absolute thread address
+	 DB $1B ; $2A3C: LIT16 -> native $0050
+	 DW $D198 ; inline 16-bit operand
+	 DB $25 ; $2A3F: BYTE_FETCH -> native $00A4
+	 DB $3D ; $2A40: INDEXED_DISPATCH -> native $023E
+	 DW $2A4B ; table end/default continuation
+	 DW $283B ; native execution target index 0
+	 DW $2841 ; native execution target index 1
+	 DW $2848 ; native execution target index 2
+	 DW $284F ; native execution target index 3
+	 DB $5D ; $2A4B: token -> native $0E26
+	 DB $66 ; $2A4C: token -> native $0E31
+	 DB $1B ; $2A4D: LIT16 -> native $0050
+	 DW $D003 ; inline 16-bit operand
+	 DB $25 ; $2A50: BYTE_FETCH -> native $00A4
+	 DB $0E ; $2A51: LIT8 -> native $0059
+	 DB $02 ; inline unsigned byte
+	 DB $44 ; $2A53: token -> native $00EE
+	 DB $03 ; $2A54: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2A61 ; inline absolute thread address
+	 DB $0E ; $2A57: LIT8 -> native $0059
+	 DB $02 ; inline unsigned byte
+	 DB $1B ; $2A59: LIT16 -> native $0050
+	 DW $D41D ; inline 16-bit operand
+	 DB $08 ; $2A5C: BYTE_STORE -> native $00B2
+	 DB $1B ; $2A5D: LIT16 -> native $0050
+	 DW $D155 ; inline 16-bit operand
+	 DB $8D ; $2A60: token -> native $225E
+TERSE_THREAD_2A61:
+	 DB $6C ; $2A61: token -> native $0CE2
+	 DB $7A ; $2A62: token -> native $0EED
+	 DB $03 ; $2A63: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2A6C ; inline absolute thread address
+	 DB $0E ; $2A66: LIT8 -> native $0059
+	 DB $C8 ; inline unsigned byte
+	 DB $74 ; $2A68: token -> native $254C
+	 DB $46 ; $2A69: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2A71 ; inline absolute thread address
+TERSE_THREAD_2A6C:
+	 DB $8E ; $2A6C: token -> native $25D0
+	 DB $1B ; $2A6D: LIT16 -> native $0050
+	 DW $D3C9 ; inline 16-bit operand
+	 DB $55 ; $2A70: token -> native $04BB
+TERSE_THREAD_2A71:
+	 DB $1B ; $2A71: LIT16 -> native $0050
+	 DW $D003 ; inline 16-bit operand
+	 DB $25 ; $2A74: BYTE_FETCH -> native $00A4
+	 DB $0E ; $2A75: LIT8 -> native $0059
+	 DB $02 ; inline unsigned byte
+	 DB $44 ; $2A77: token -> native $00EE
+	 DB $03 ; $2A78: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2A88 ; inline absolute thread address
+	 DB $0E ; $2A7B: LIT8 -> native $0059
+	 DB $03 ; inline unsigned byte
+	 DB $1B ; $2A7D: LIT16 -> native $0050
+	 DW $D41D ; inline 16-bit operand
+	 DB $08 ; $2A80: BYTE_STORE -> native $00B2
+	 DB $1B ; $2A81: LIT16 -> native $0050
+	 DW $D155 ; inline 16-bit operand
+	 DB $8F ; $2A84: token -> native $2287
+	 DB $46 ; $2A85: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2A8C ; inline absolute thread address
+TERSE_THREAD_2A88:
+	 DB $1B ; $2A88: LIT16 -> native $0050
+	 DW $D41D ; inline 16-bit operand
+	 DB $1D ; $2A8B: token -> native $0266
+TERSE_THREAD_2A8C:
+	 DB $71 ; $2A8C: token -> native $1166
+	 DB $8B ; $2A8D: token -> native $2855
+	 DB $1D ; $2A8E: token -> native $0266
+	 DB $0B ; $2A8F: ZERO -> native $007B
+	 DB $7B ; $2A90: token -> native $2718
+	 DB $6C ; $2A91: token -> native $0CE2
+	 DB $09 ; $2A92: ONE -> native $0081
+	 DB $46 ; $2A93: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2AC6 ; inline absolute thread address
+TERSE_THREAD_2A96:
+	 DB $66 ; $2A96: token -> native $0E31
+	 DB $6C ; $2A97: token -> native $0CE2
+	 DB $7A ; $2A98: token -> native $0EED
+	 DB $8A ; $2A99: token -> native $2866
+	 DB $25 ; $2A9A: BYTE_FETCH -> native $00A4
+	 DB $54 ; $2A9B: token -> native $0154
+	 DB $03 ; $2A9C: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2AC5 ; inline absolute thread address
+	 DB $71 ; $2A9F: token -> native $1166
+	 DB $8B ; $2AA0: token -> native $2855
+	 DB $1D ; $2AA1: token -> native $0266
+	 DB $0E ; $2AA2: LIT8 -> native $0059
+	 DB $C8 ; inline unsigned byte
+	 DB $7B ; $2AA4: token -> native $2718
+	 DB $1B ; $2AA5: LIT16 -> native $0050
+	 DW $D003 ; inline 16-bit operand
+	 DB $25 ; $2AA8: BYTE_FETCH -> native $00A4
+	 DB $0E ; $2AA9: LIT8 -> native $0059
+	 DB $02 ; inline unsigned byte
+	 DB $44 ; $2AAB: token -> native $00EE
+	 DB $03 ; $2AAC: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2ABC ; inline absolute thread address
+	 DB $0E ; $2AAF: LIT8 -> native $0059
+	 DB $03 ; inline unsigned byte
+	 DB $1B ; $2AB1: LIT16 -> native $0050
+	 DW $D41D ; inline 16-bit operand
+	 DB $08 ; $2AB4: BYTE_STORE -> native $00B2
+	 DB $1B ; $2AB5: LIT16 -> native $0050
+	 DW $D155 ; inline 16-bit operand
+	 DB $8F ; $2AB8: token -> native $2287
+	 DB $46 ; $2AB9: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2AC0 ; inline absolute thread address
+TERSE_THREAD_2ABC:
+	 DB $1B ; $2ABC: LIT16 -> native $0050
+	 DW $D41D ; inline 16-bit operand
+	 DB $1D ; $2ABF: token -> native $0266
+TERSE_THREAD_2AC0:
+	 DB $6C ; $2AC0: token -> native $0CE2
+	 DB $09 ; $2AC1: ONE -> native $0081
+	 DB $46 ; $2AC2: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2AC6 ; inline absolute thread address
+TERSE_THREAD_2AC5:
+	 DB $0B ; $2AC5: ZERO -> native $007B
+TERSE_THREAD_2AC6:
+	 DB $8B ; $2AC6: token -> native $2855
+	 DB $1D ; $2AC7: token -> native $0266
+	 DB $8A ; $2AC8: token -> native $2866
+	 DB $1D ; $2AC9: token -> native $0266
+	 DB $03 ; $2ACA: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2903 ; inline absolute thread address
+	 DB $6D ; $2ACD: token -> native $12C7
+	 DB $1B ; $2ACE: LIT16 -> native $0050
+	 DW $D014 ; inline 16-bit operand
+	 DB $25 ; $2AD1: BYTE_FETCH -> native $00A4
+	 DB $03 ; $2AD2: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2ADF ; inline absolute thread address
+TERSE_THREAD_2AD5:
+	 DB $90 ; $2AD5: token -> native $047E
+	 DB $78 ; $2AD6: token -> native $24DA
+	 DB $03 ; $2AD7: ZERO_BRANCH -> native $01FC
+	 DW TERSE_THREAD_2AD5 ; inline absolute thread address
+	 DB $36 ; $2ADA: token -> native $1216
+	 DB $91 ; $2ADB: token -> native $26B6
+	 DB $46 ; $2ADC: BRANCH -> native $01F4
+	 DW TERSE_THREAD_2AE1 ; inline absolute thread address
+TERSE_THREAD_2ADF:
+	 DB $36 ; $2ADF: token -> native $1216
+	 DB $92 ; $2AE0: token -> native $275C
 
 ; $2AE1: EXIT of preceding TERSE definition.
+TERSE_THREAD_2AE1:
 	 DB $06 ; TERSE_EXIT
 
 ; $2AE2: original compiled TERSE game-control word.

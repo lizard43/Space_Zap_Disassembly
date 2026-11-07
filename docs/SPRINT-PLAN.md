@@ -11,7 +11,8 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [ ] Audit vector-referenced native routines; classify true entry points, shared internal branches, inline data, and code joins. Record meaningful, evidence-backed names.
 - [ ] Whole-ROM hard RE: resolve remaining numeric JP/CALL/branch targets to existing descriptive labels where the address is proven; recover raw executable Z80 and TERSE code, preserve real DB/DW data, annotate register/stack contracts, and maintain blank-line section formatting. Do not assign semantic names solely from reference frequency.
 - [ ] Establish stack effects, inline operands, control stack, RAM and I/O side effects for every actually used token. Update ASM and Forth-style dictionary together.
-- [ ] Finish mixed bytecode/native/data classification in the $21xx–$2Axx area, especially $28AA onward; decode operands and branch targets before assigning instructions.
+- [x] Decode the complete `$28AA–$2AE0` 567-byte colon program into 269 TERSE token instructions, including 13 four-target native dispatch tables, typed literal/branch operands, and validated internal branch targets.
+- [ ] Continue game-semantic classification of the recovered `$28AA` program and other `$21xx–$2Axx` code/data regions; identify called routines, RAM ownership and side effects from real execution.
 - [ ] Reconstruct game control: attract/start, credits, input, firing, object motion, collision, score, sound and interrupts.
 - [ ] Complete RAM address ownership and hardware port interaction map.
 - [ ] Assemble using original native Z80 sources and pass all four official MAME ROM SHA-1 checks.

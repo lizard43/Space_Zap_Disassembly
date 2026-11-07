@@ -20,7 +20,7 @@ not Z80 instruction targets.
 
 ## Indexed native dispatch: token `$3D`
 
-The native routine at `$023E` consumes an inline table-end/default continuation address and uses the popped 16-bit index to choose a native 16-bit execution address from the following table. Six previously misclassified `$27xx/$28xx` sequences now use explicit `DW` entries. A seventh record at `$2866` is reconstructed as a colon word with LIT16/BYTE_FETCH/INDEXED_DISPATCH/EXIT. Total updated range: **83 ROM bytes**, reconstructed byte for byte before commit.
+The native routine at `$023E` consumes an inline table-end/default continuation address and uses the popped 16-bit index to choose a native 16-bit execution address from the following table. Six previously misclassified `$27xx/$28xx` sequences now use explicit `DW` entries. A seventh record at `$2866` is reconstructed as a colon word with LIT16/BYTE_FETCH/INDEXED_DISPATCH/EXIT. The same mechanism occurs 13 more times in the `$28AA` colon program. Total updated range: **83 ROM bytes**, reconstructed byte for byte before commit.
 
 The seven jump tables each have four entries; `$2866` selects one of four RAM-address-return colon words. Native target addresses are not TERSE token indexes. Identifying the original source-level name and game meaning remains open.
 
@@ -192,6 +192,10 @@ The full original-source assembly test uses zmac v1.3 and
 compares all four generated ROM SHA-1 values in `build.sh`
 and `build.bat`.
 
-## Work still to classify
+## Recovered original $28AA colon program
 
-Remaining source-level semantics and control-flow ownership for the mixed `$28AA` onward region are tracked in [the active sprint plan](SPRINT-PLAN.md). This technical reference records recovered program boundaries and operands, not the chronological editing history.
+The original `$28AA–$2AE0` span is a single `RST $08` colon definition, now represented in `Space_Zap_Disassembly.asm` as `TERSE_COLON_28AA`. A byte-preserving parse yields **269 indexed token instructions**, **13 native indexed dispatch tables**, and **26 absolute TERSE branches**. The parsing consumes all 567 original bytes and every internal branch destination aligns with a token instruction; the fall-through at `$2AE1` is the following EXIT.
+
+The dispatch tables consist of an inline end/default pointer followed by four 16-bit native execution addresses. Inline byte/word operands for `LIT8`, `LIT16`, `ZERO_BRANCH`, `BRANCH`, `COMPARE_BRANCH_NE`, and `ADD_INLINE16` are typed separately from ordinary tokens. Table targets are native addresses and are not rewritten as byte-token indexes.
+
+This recovers the **encoding and control flow**, not the complete original source-level game semantics. The named instructions and branch labels make it possible to trace the program's RAM accesses and called word contracts. Additional classifications and hardware side effects remain P0 work tracked in [the sprint plan](SPRINT-PLAN.md).
