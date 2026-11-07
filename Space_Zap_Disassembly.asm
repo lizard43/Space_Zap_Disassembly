@@ -7423,25 +7423,13 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   c,$40
 	 ld   d,h
 	 ld   b,$11
-	 ld   b,b
-	 jr   nz,$30CB
-	 add  hl,sp
-	 jr   c,$30CD
-	 jr   nz,$30EC
-	 ld   c,c
-	 ld   b,h
-	 ld   d,a
-	 ld   b,c
-	 ld   e,c
-	 jr   nz,$30F3
-	 ld   b,(hl)
-	 ld   b,a
+; $3097  @ 1980 MIDWAY MFG
+TEXT_MIDWAY_COPYRIGHT:
+	 .DB "@ 1980 MIDWAY MFG"
 	 dec  b
-	 ld   d,e
-	 ld   d,b
-	 ld   b,c
-	 ld   b,e
-	 ld   b,l
+; $30A9  SPACE
+TEXT_SPACE_TITLE:
+	 .DB "SPACE"
 	 inc  bc
 	 ld   e,d
 	 ld   b,c
@@ -7488,81 +7476,32 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 cp   e
 	 cp   h
 	 ld   b,$0C
-	 ld   c,c
-	 ld   c,(hl)
-	 ld   d,e
-	 ld   b,l
-	 ld   d,d
-	 ld   d,h
-	 jr   nz,$3138
-	 ld   c,a
-	 ld   c,c
-	 ld   c,(hl)
-	 ld   d,e
+; $30ED  INSERT COINS
+TEXT_INSERT_COINS:
+	 .DB "INSERT COINS"
 	 add  hl,bc
-	 ld   b,c
-	 ld   b,h
-	 ld   b,h
-	 jr   nz,$3142
-	 ld   c,a
-	 ld   c,c
-	 ld   c,(hl)
-	 ld   d,e
+; $30FA  ADD COINS
+TEXT_ADD_COINS:
+	 .DB "ADD COINS"
 	 inc  c
-	 ld   b,(hl)
-	 ld   c,a
-	 ld   d,d
-	 jr   nz,$313B
-	 jr   nz,$315B
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
+; $3104  FOR 2 PLAYER
+TEXT_FOR_TWO_PLAYERS:
+	 .DB "FOR 2 PLAYER"
 	 ld   (bc),a
 	 ld   c,a
 	 ld   d,d
 	 dec  d
-	 ld   d,b
-	 ld   d,l
-	 ld   d,e
-	 ld   c,b
-	 jr   nz,$314B
-	 jr   nz,$316C
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$3177
-	 ld   c,a
-	 jr   nz,$3176
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
+; $3114  PUSH 1 PLAYER TO PLAY
+TEXT_PUSH_ONE_PLAYER:
+	 .DB "PUSH 1 PLAYER TO PLAY"
 	 rlca
-	 ld   b,h
-	 ld   b,l
-	 ld   d,b
-	 ld   c,a
-	 ld   d,e
-	 ld   c,c
-	 ld   d,h
+; $312A  DEPOSIT
+TEXT_DEPOSIT:
+	 .DB "DEPOSIT"
 	 rrca
-	 ld   b,c
-	 ld   b,h
-	 ld   b,h
-	 ld   c,c
-	 ld   d,h
-	 ld   c,c
-	 ld   c,a
-	 ld   c,(hl)
-	 ld   b,c
-	 ld   c,h
-	 jr   nz,$3181
-	 ld   c,a
-	 ld   c,c
-	 ld   c,(hl)
+; $3132  ADDITIONAL COIN
+TEXT_ADDITIONAL_COIN:
+	 .DB "ADDITIONAL COIN"
 	 rst  $08
 	 ld   c,(hl)
 	 inc  bc
@@ -7621,53 +7560,29 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  de
 	 ld   sp,$06BA
 	 ex   af,af'
-	 ld   c,b
-	 ld   c,c
-	 jr   nz,$31EF
-	 ld   b,e
-	 ld   c,a
-	 ld   d,d
-	 ld   b,l
+; $3198  HI SCORE
+TEXT_HI_SCORE:
+	 .DB "HI SCORE"
 	 ex   af,af'
-	 ld   d,b
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$31DA
+; $31A1  PLAYER 1
+TEXT_PLAYER_1:
+	 .DB "PLAYER 1"
 	 ex   af,af'
-	 ld   d,b
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$31E4
+; $31AA  PLAYER 2
+TEXT_PLAYER_2:
+	 .DB "PLAYER 2"
 	 rlca
-	 ld   b,e
-	 ld   d,d
-	 ld   b,l
-	 ld   b,h
-	 ld   c,c
-	 ld   d,h
-	 ld   d,e
+; $31B3  CREDITS
+TEXT_CREDITS:
+	 .DB "CREDITS"
 	 dec  b
-	 ld   b,d
-	 ld   b,c
-	 ld   d,e
-	 ld   b,l
-	 ld   d,e
+; $31BB  BASES
+TEXT_BASES:
+	 .DB "BASES"
 	 ld   a,(bc)
-	 ld   b,d
-	 ld   c,a
-	 ld   c,(hl)
-	 ld   d,l
-	 ld   d,e
-	 jr   nz,$320A
-	 ld   b,c
-	 ld   d,e
-	 ld   b,l
+; $31C1  BONUS BASE
+TEXT_BONUS_BASE:
+	 .DB "BONUS BASE"
 	 rst  $08
 	 inc  c
 	 dec  bc
@@ -7754,57 +7669,23 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   c,$02
 	 pop  bc
 	 ld   b,$10
-	 jr   nz,$3283
-	 jr   nz,$327C
-	 jr   nz,$3290
-	 jr   nz,$325B
-	 ld   c,b
-	 jr   nz,$3287
-	 jr   nz,$3287
-	 jr   nz,$328A
-	 jr   nz,$324F
-	 jr   nz,$328D
-	 ld   b,c
-	 ld   c,l
-	 ld   b,l
-	 jr   nz,$329A
-	 ld   d,(hl)
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$3266
-	 ld   d,b
-	 ld   d,l
-	 ld   d,e
-	 ld   c,b
-	 jr   nz,$3287
-	 jr   nz,$32A7
-	 ld   d,d
-	 jr   nz,$328D
-	 jr   nz,$32AD
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$32AA
-	 ld   c,a
-	 ld   d,d
+; $3233  High score and game-over announcement strings.
+TEXT_NEW_HIGH_SCORE:
+	 .DB " N E W  H I G H "
+	 .DB $0B ; separator byte
+TEXT_GAME_OVER:
+	 .DB " GAME OVER "
+; $3250  PUSH 1 OR 2 PLAYER FOR
+TEXT_PUSH_ONE_OR_TWO:
+	 .DB "PUSH 1 OR 2 PLAYER FOR"
 	 ld   a,(bc)
-	 ld   sp,$5453
-	 jr   nz,$32BC
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
+; $3267  1ST PLAYER
+TEXT_FIRST_PLAYER:
+	 .DB "1ST PLAYER"
 	 ld   a,(bc)
-	 ld   ($444E),a
-	 jr   nz,$32C7
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
+; $3272  2ND PLAYER
+TEXT_SECOND_PLAYER:
+	 .DB "2ND PLAYER"
 	 rst  $08
 	 dec  de
 	 ret  c
