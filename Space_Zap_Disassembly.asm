@@ -1,50 +1,85 @@
-;*****************************
-; Space Zap
-;*****************************
+;*******************************************************************************
+; SPACE ZAP (1980)
+;*******************************************************************************
+; Four-direction space-defense arcade game for Midway Astrocade hardware.
 ;
-; Sprite object record
-; --------------------
-;   +0  Horizontal hotspot offset
-;   +1  Vertical hotspot offset
-;   +2  Bitmap width in bytes
-;   +3  Bitmap height in rows
-;   +4  Packed 2bpp bitmap data
-;
-; Each bitmap byte stores four pixels, most-significant pair first. The shared
-; object draw path advances past the two hotspot bytes before reading the
-; width/height header.
-; Inline pixels use "." for value 0 and "1" through "3" for the color index.
-;
-	 .ORG 0000H
+; Developer : Dave Nutting Associates (DNA)
+; Publisher : Midway Manufacturing
+; CPU       : Z80
+; Software  : TERSE indexed-byte interpreter and native Z80 routines
+; RE version: v20261107-0024
+;*******************************************************************************
 
+	 ORG 0000H
+
+; Cabinet I/O registers; read/write functions differ at shared addresses.
+VIDEO_MODE_WRITE             EQU $08 ; Astrocade video mode output
+VIDEO_INTERCEPT_READ         EQU $08 ; intercept feedback on video register read
+VIDEO_PALETTE_0              EQU $00 ; first color-table register
+VIDEO_PALETTE_4              EQU $04 ; fifth color-table register
+VIDEO_FUNCTION_CONTROL       EQU $0C ; Magic function-generator control
+VIDEO_INTERRUPT_FEEDBACK     EQU $0D ; interrupt feedback/acknowledge
+VIDEO_INTERRUPT_ENABLE       EQU $0E ; interrupt enable and mode
+VIDEO_INTERRUPT_LINE         EQU $0F ; interrupt scanline
+VIDEO_EXPAND_COLORS          EQU $19 ; 2-color to 2bpp expansion colors
+PATTERN_SOURCE_LO            EQU $78 ; pattern source address low byte
+PATTERN_SOURCE_HI            EQU $79 ; pattern source address high byte
+PATTERN_MODE                 EQU $7A ; pattern mode/transfer control
+PATTERN_SKIP                 EQU $7B ; pattern skip value
+PATTERN_DEST_HI              EQU $7C ; pattern destination address high byte
+PATTERN_WIDTH                EQU $7D ; pattern copy width
+PATTERN_HEIGHT_START         EQU $7E ; pattern copy height and start
+SOUND_MASTER_FREQUENCY       EQU $10 ; sound register 0, master oscillator frequency
+SOUND_NOISE_VOLUME           EQU $17 ; sound register 7, noise volume
+IO_INPUT_0                   EQU $10 ; custom IO input latch 0 (read, not tone register)
+IO_INPUT_1                   EQU $11 ; custom IO input latch 1
+IO_INPUT_2                   EQU $12 ; custom IO input latch 2
+PROTECTED_RAM_UNLOCK         EQU $5B ; protected RAM write-enable ($A5 on Z80 high I/O address bus)
+BOOT_PORT_F8                 EQU $F8 ; startup I/O address
+BOOT_PORT_FA                 EQU $FA ; startup I/O address
+BOOT_PORT_FB                 EQU $FB ; startup I/O address
+BOOT_PORT_FF                 EQU $FF ; startup I/O address
+
+
+; Reset: disable maskable interrupts (DI), then enter TERSE_COLD_START.
+TERSE_RESET_VECTOR:
 	 nop
 	 nop
 	 di
-	 jp   $0015
+	 jp   TERSE_COLD_START
 	 nop
 	 nop
+
+; RST $08: save caller BC on IX; POP BC enters the new TERSE thread.
+TERSE_COLON_ENTRY:
 	 dec  ix
 	 ld   (ix+$00),b
 	 dec  ix
 	 ld   (ix+$00),c
 	 pop  bc
 	 jp   (iy)
+
+; Initialize video and cabinet I/O, TERSE stacks, and thread pointers.
+TERSE_COLD_START:
 	 ld   a,$01
-	 out  ($08),a
+	 out  (VIDEO_MODE_WRITE),a
 	 ld   a,$F0
-	 out  ($F8),a
+	 out  (BOOT_PORT_F8),a
 	 ld   a,$0F
-	 out  ($FA),a
-	 out  ($FB),a
+	 out  (BOOT_PORT_FA),a
+	 out  (BOOT_PORT_FB),a
 	 ld   a,$01
-	 out  ($FF),a
+	 out  (BOOT_PORT_FF),a
 	 ld   ix,$D800
 	 ld   sp,$D780
 	 ld   bc,$3CDC
-	 ld   iy,$0035
+	 ld   iy,TERSE_INDEXED_NEXT
+
+; NEXT: fetch an 8-bit token from BC; jump via the vector table at $3DEA.
+TERSE_INDEXED_NEXT:
 	 ld   a,(bc)
 	 inc  bc
-	 ld   de,$3DEA
+	 ld   de,TERSE_TOKEN_VECTORS
 	 ld   l,a
 	 ld   h,$00
 	 add  hl,hl
@@ -54,11 +89,17 @@
 	 ld   d,(hl)
 	 ex   de,hl
 	 jp   (hl)
+
+; EXIT: restore caller thread pointer BC from the IX return stack.
+TERSE_EXIT:
 	 ld   c,(ix+$00)
 	 inc  ix
 	 ld   b,(ix+$00)
 	 inc  ix
 	 jp   (iy)
+
+; LIT16: push the next little-endian 16-bit value from the BC thread.
+TERSE_LIT16:
 	 ld   a,(bc)
 	 inc  bc
 	 ld   l,a
@@ -67,6 +108,9 @@
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+
+; LIT8: push the next thread byte, zero-extended to 16 bits.
+TERSE_LIT8:
 	 ld   a,(bc)
 	 inc  bc
 	 ld   l,a
@@ -80,8 +124,12 @@
 	 inc  bc
 	 ld   h,a
 	 push hl
-	 jp   $0050
+	 jp   TERSE_LIT16
+
+; ( n -- n+offset ) Add the inline 16-bit thread value, wrapping.
+TERSE_ADD_INLINE16:
 	 pop  hl
+TERSE_ADD_INLINE_BODY:
 	 ld   a,(bc)
 	 inc  bc
 	 ld   e,a
@@ -91,92 +139,154 @@
 	 add  hl,de
 	 push hl
 	 jp   (iy)
+
+; ( n -- 2*n+offset ) Double the stack cell, then add an inline word.
+TERSE_DOUBLE_ADD_INLINE:
 	 pop  hl
 	 add  hl,hl
-	 jp   $006C
+	 jp   TERSE_ADD_INLINE_BODY
+
+; ( -- 0 ) Push zero.
+TERSE_ZERO:
 	 ld   hl,$0000
 	 push hl
 	 jp   (iy)
+
+; ( -- 1 ) Push one.
+TERSE_ONE:
 	 ld   hl,$0001
 	 push hl
 	 jp   (iy)
+
+; ( n -- n n ) Duplicate top data-stack cell.
+TERSE_DUP:
 	 pop  hl
 	 push hl
 	 push hl
 	 jp   (iy)
-	 pop  hl
-	 pop  de
-	 push de
-	 push hl
-	 push de
-	 push hl
-	 jp   (iy)
-	 pop  hl
-	 jp   (iy)
+
+; ( a b -- a b a b ) Duplicate two data-stack cells.
+TERSE_2DUP:
 	 pop  hl
 	 pop  de
+	 push de
+	 push hl
+	 push de
+	 push hl
+	 jp   (iy)
+
+; ( n -- ) Discard top data-stack cell.
+TERSE_DROP:
+	 pop  hl
+	 jp   (iy)
+
+; ( a b -- b a ) Exchange top two cells.
+TERSE_SWAP:
+	 pop  hl
+	 pop  de
 	 push hl
 	 push de
 	 jp   (iy)
+
+; ( addr -- value ) Load little-endian 16-bit word.
+TERSE_FETCH:
 	 pop  hl
 	 ld   e,(hl)
 	 inc  hl
 	 ld   d,(hl)
 	 push de
 	 jp   (iy)
+
+; ( addr -- byte ) Load zero-extended byte.
+TERSE_BYTE_FETCH:
 	 pop  hl
 	 ld   e,(hl)
 	 ld   d,$00
 	 push de
 	 jp   (iy)
+
+; ( value addr -- ) Store little-endian 16-bit word.
+TERSE_STORE:
 	 pop  hl
 	 pop  de
 	 ld   (hl),e
 	 inc  hl
 	 ld   (hl),d
 	 jp   (iy)
+
+; ( value addr -- ) Store low byte.
+TERSE_BYTE_STORE:
 	 pop  hl
 	 pop  de
 	 ld   (hl),e
 	 jp   (iy)
+
+; ( addr -- ) Clear the addressed 16-bit word.
+TERSE_ZERO_WORD_AT_ADDRESS:
 	 pop  hl
 	 ld   (hl),$00
 	 inc  hl
 	 ld   (hl),$00
 	 jp   (iy)
+
+; ( a b -- a+b ) Unsigned 16-bit addition, wrapping.
+TERSE_ADD:
 	 pop  de
 	 pop  hl
 	 add  hl,de
 	 push hl
 	 jp   (iy)
+
+; ( a b -- a-b ) 16-bit subtraction, wrapping.
+TERSE_SUBTRACT:
 	 pop  de
 	 pop  hl
 	 xor  a
 	 sbc  hl,de
 	 push hl
 	 jp   (iy)
+; ( n -- -n ) Negate a 16-bit cell.
+TERSE_NEGATE:
 	 pop  de
 	 ld   hl,$0000
 	 jp   $00C7
+
+; ( n -- n-1 ) Decrement word.
+TERSE_DECREMENT:
 	 pop  hl
 	 dec  hl
 	 push hl
 	 jp   (iy)
+
+; ( n -- n+1 ) Increment word.
+TERSE_INCREMENT:
 	 pop  hl
 	 inc  hl
 	 push hl
 	 jp   (iy)
+
+; ( signed-n -- signed-n/2 ) Arithmetic signed 16-bit shift right.
+TERSE_ARITH_SHIFT_RIGHT:
 	 pop  hl
 	 sra  h
 	 rr   l
 	 push hl
 	 jp   (iy)
+
+; ( addr -- ) Decrement the byte at addr.
+TERSE_DECREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 dec  (hl)
 	 jp   (iy)
+
+; ( addr -- ) Increment the byte at addr.
+TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 inc  (hl)
 	 jp   (iy)
+
+; ( a b -- flag ) Push 1 if the values are equal, otherwise 0.
+TERSE_EQUAL:
 	 pop  de
 	 pop  hl
 	 xor  a
@@ -186,6 +296,9 @@
 	 inc  hl
 	 push hl
 	 jp   (iy)
+
+; ( a b -- flag ) Unsigned greater-or-equal comparison.
+TERSE_UNSIGNED_GE:
 	 pop  de
 	 pop  hl
 	 xor  a
@@ -233,6 +346,9 @@
 	 push hl
 	 push hl
 	 jp   (iy)
+
+; ( a b -- a AND b ) 16-bit bitwise AND.
+TERSE_BITWISE_AND:
 	 pop  de
 	 pop  hl
 	 ld   a,l
@@ -243,6 +359,9 @@
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+
+; ( a b -- a OR b ) 16-bit bitwise OR.
+TERSE_BITWISE_OR:
 	 pop  de
 	 pop  hl
 	 ld   a,l
@@ -253,6 +372,9 @@
 	 ld   h,a
 	 push hl
 	 jp   (iy)
+
+; ( src dest count -- ) Copy count bytes with LDIR.
+TERSE_MEMORY_COPY:
 	 exx
 	 pop  bc
 	 pop  de
@@ -294,6 +416,9 @@
 	 ld   c,(ix+$04)
 	 ld   b,(ix+$05)
 	 jp   (iy)
+
+; ( -- index ) Push active counted-loop index from the IX frame.
+TERSE_LOOP_INDEX:
 	 ld   l,(ix+$00)
 	 ld   h,(ix+$01)
 	 push hl
@@ -304,6 +429,9 @@
 	 push hl
 	 push de
 	 jp   (iy)
+
+; ( value addr -- ) Add a 16-bit quantity into the addressed little-endian word.
+TERSE_ADD_TO_MEMORY_WORD:
 	 pop  hl
 	 pop  de
 	 ld   a,(hl)
@@ -314,12 +442,18 @@
 	 adc  a,d
 	 ld   (hl),a
 	 jp   (iy)
+
+; ( value port -- ) Write the low data byte through the variable I/O port in C.
+TERSE_PORT_OUT:
 	 exx
 	 pop  bc
 	 pop  hl
 	 out  (c),l
 	 exx
 	 jp   (iy)
+
+; ( port -- byte ) Read variable I/O port through C, returning zero-extended result.
+TERSE_PORT_IN:
 	 exx
 	 pop  bc
 	 in   l,(c)
@@ -327,12 +461,18 @@
 	 push hl
 	 exx
 	 jp   (iy)
+
+; ( a b c -- b c a ) Rotate the top three cells.
+TERSE_STACK_ROTATE:
 	 pop  de
 	 pop  hl
 	 ex   (sp),hl
 	 push de
 	 push hl
 	 jp   (iy)
+
+; ( index -- value ) Copy indexed stack cell (1-based).
+TERSE_STACK_PICK:
 	 pop  hl
 	 dec  hl
 	 add  hl,hl
@@ -342,6 +482,9 @@
 	 ld   d,(hl)
 	 push de
 	 jp   (iy)
+
+; Read a little-endian 16-bit inline branch target and replace the BC instruction pointer.
+TERSE_BRANCH_ABSOLUTE:
 	 ld   a,(bc)
 	 ld   e,a
 	 inc  bc
@@ -349,6 +492,9 @@
 	 ld   b,a
 	 ld   c,e
 	 jp   (iy)
+
+; ( flag -- ) Test zero and select inline branch target or skip its two-byte operand.
+TERSE_ZERO_BRANCH:
 	 pop  hl
 	 ld   a,h
 	 or   l
@@ -356,24 +502,40 @@
 	 inc  bc
 	 inc  bc
 	 jp   (iy)
-	 jp   $01F4
+	 jp   TERSE_BRANCH_ABSOLUTE
 	 ld   a,(ix+$00)
 	 ld   (ix+$02),a
 	 ld   a,(ix+$01)
 	 ld   (ix+$03),a
 	 jp   (iy)
+
+; $0217-$021F: first compact TERSE colon word.
+TERSE_SMALL_COLON_0217:
 	 rst  $08
-	 ld   bc,$0302
-	 ld   e,$02
-	 inc  b
-	 dec  b
-	 ld   b,$CF
-	 ld   bc,$0307
-	 daa
-	 ld   (bc),a
-	 inc  b
-	 dec  b
-	 ld   b,$E1
+	 DB $01 ; TERSE_2DUP
+	 DB $02 ; native $010C
+	 DB $03 ; TERSE_ZERO_BRANCH
+	 DW TERSE_SMALL_021E_DROP
+	 DB $04 ; TERSE_SWAP
+TERSE_SMALL_021E_DROP:
+	 DB $05 ; TERSE_DROP
+	 DB $06 ; TERSE_EXIT
+
+TERSE_SMALL_COLON_0220:
+	 rst  $08
+	 DB $01 ; TERSE_2DUP
+	 DB $07 ; native $0134
+	 DB $03 ; TERSE_ZERO_BRANCH
+	 DW TERSE_SMALL_0227_DROP
+	 DB $04 ; TERSE_SWAP
+TERSE_SMALL_0227_DROP:
+	 DB $05 ; TERSE_DROP
+	 DB $06 ; TERSE_EXIT
+
+; Compare two cells; branch on mismatch, retaining a.
+; Equal ( a b -- ); unequal ( a b -- a ).
+TERSE_COMPARE_BRANCH_NE:
+	 pop  hl
 	 pop  de
 	 or   a
 	 sbc  hl,de
@@ -389,6 +551,9 @@
 	 ld   c,l
 	 push de
 	 jp   (iy)
+
+; ( index -- ) Dispatch through inline native-address jump table.
+TERSE_INDEXED_DISPATCH:
 	 ld   a,(bc)
 	 ld   e,a
 	 inc  bc
@@ -413,16 +578,29 @@
 	 ld   h,a
 	 jp   (hl)
 	 jp   (iy)
+
+; $025E-$0269: three short threaded helper definitions.
+TERSE_SMALL_COLON_025E:
 	 rst  $08
-	 inc  b
-	 ex   af,af'
-	 ld   b,$CF
-	 add  hl,bc
-	 ld   a,(bc)
-	 ld   b,$CF
-	 dec  bc
-	 ld   a,(bc)
-	 ld   b,$F5
+	 DB $04 ; TERSE_SWAP
+	 DB $08 ; indexed native vector $08
+	 DB $06 ; TERSE_EXIT
+
+TERSE_SMALL_COLON_0262:
+	 rst  $08
+	 DB $09 ; native token $09
+	 DB $0A ; native token $0A
+	 DB $06 ; TERSE_EXIT
+
+TERSE_SMALL_COLON_0266:
+	 rst  $08
+	 DB $0B ; TERSE_ZERO
+	 DB $0A ; native token $0A
+	 DB $06 ; TERSE_EXIT
+
+; Two's-complement HL; restore AF before returning to native caller.
+NATIVE_NEGATE_HL:
+	 push af
 	 ld   a,h
 	 cpl
 	 ld   h,a
@@ -432,6 +610,9 @@
 	 inc  hl
 	 pop  af
 	 ret
+
+; Two's-complement DE while preserving AF.
+NATIVE_NEGATE_DE:
 	 push af
 	 ld   a,d
 	 cpl
@@ -442,16 +623,15 @@
 	 inc  de
 	 pop  af
 	 ret
-	 rst  $08
-	 inc  c
-	 dec  c
-	 ld   c,$04
-	 rrca
-	 inc  b
-	 ld   bc,$0E10
-	 ld   (bc),a
-	 rrca
-	 djnz $0292
+
+; Indexed token cells and one literal byte; no Z80 instruction stream.
+TERSE_COLON_027E:
+	 RST $08
+	 DB $0C,$0D,$0E,$04,$0F,$04,$01,$10,$0E,$02,$0F,$10,$06
+
+; Compare expected two-byte fields and update the active record under DI.
+; Preserves interrupt-enable state through saved AF; returns status in HL.
+NATIVE_ATOMIC_COMPARE_UPDATE:
 	 ld   a,i
 	 push af
 	 di
@@ -504,6 +684,10 @@
 	 jp   po,$02DE
 	 ei
 	 ret
+
+; Compare and update an indexed two-word record with interrupts masked.
+; Return status in HL; original interrupt-enable state restored.
+NATIVE_ATOMIC_RECORD_CHECK:
 	 ld   a,i
 	 push af
 	 di
@@ -554,27 +738,25 @@
 	 ret
 	 di
 	 add  a,$09
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $032E
-	 and  c
-	 ret  nc
-	 rst  $10
-	 ret  nc
-	 exx
-	 ret  nc
-	 rrca
-	 pop  de
-	 ld   de,$2FD1
-	 pop  de
-	 ld   sp,$4FD1
-	 pop  de
-	 ld   hl,$0336
+
+; Eight little-endian RAM addresses passed to the native record handlers.
+EVENT_RAM_ADDRESS_TABLE_0336:
+	 DW $D0A1,$D0D7,$D0D9,$D10F
+	 DW $D111,$D12F,$D131,$D14F
+
+; Select a RAM record and dispatch through the saved handler pointer.
+NATIVE_EVENT_RECORD_DISPATCH_0346:
+	 ld   hl,EVENT_RAM_ADDRESS_TABLE_0336
 	 ld   a,$01
+; Dispatch selector A through the record entry in HL.
+NATIVE_EVENT_DISPATCH_ENTRY_034B:
 	 push iy
 	 ld   ($D09E),a
 	 push iy
 	 pop  de
-	 call $028C
+	 call NATIVE_ATOMIC_COMPARE_UPDATE
 	 ld   a,l
 	 or   h
 	 jp   z,$035F
@@ -582,11 +764,17 @@
 	 jp   (hl)
 	 pop  iy
 	 ret
+
+; Increment record-2 counter $D093 and dispatch selector 2.
+NATIVE_EVENT_DISPATCH_RECORD_02:
 	 ld   hl,$D093
 	 inc  (hl)
 	 ld   hl,$033A
 	 ld   a,$02
-	 jp   $034B
+	 jp   NATIVE_EVENT_DISPATCH_ENTRY_034B
+
+; Limit active record count; update $D095 when accepted.
+NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 ld   a,(iy+$0a)
 	 cp   $01
 	 ret  nc
@@ -601,10 +789,10 @@
 	 jp   $0391
 	 ld   a,$03
 	 ld   hl,$033E
-	 jp   $034B
+	 jp   NATIVE_EVENT_DISPATCH_ENTRY_034B
 	 push bc
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 ei
 	 ld   a,($D097)
 	 or   a
@@ -618,7 +806,7 @@
 	 ld   ($D09A),ix
 	 ld   hl,$0336
 	 push iy
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 pop  iy
 	 ld   a,l
 	 or   h
@@ -635,7 +823,7 @@
 	 dec  ix
 	 ld   (ix+$00),c
 	 ld   a,($D08D)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 bit  0,(iy+$04)
 	 jp   z,$03F5
 	 ld   c,(iy+$00)
@@ -647,7 +835,7 @@
 	 pop  iy
 	 jp   (iy)
 	 jp   $0407
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 pop  iy
 	 jp   $0422
 	 ld   (de),a
@@ -672,7 +860,7 @@
 	 cpl
 	 bit  3,a
 	 jp   nz,$044F
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 ld   a,($D089)
 	 dec  a
 	 ld   (iy+$0b),a
@@ -685,7 +873,7 @@
 	 or   a
 	 sbc  hl,de
 	 jp   nz,$0470
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 pop  iy
 	 jp   $0422
 	 pop  iy
@@ -698,14 +886,14 @@
 	 ld   iy,($D098)
 	 ld   (iy+$02),c
 	 ld   (iy+$03),b
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 pop  iy
 	 jp   $0422
 	 push iy
 	 ld   iy,($D098)
 	 ld   (iy+$02),c
 	 ld   (iy+$03),b
-	 call $0362
+	 call NATIVE_EVENT_DISPATCH_RECORD_02
 	 pop  iy
 	 jp   $0422
 	 push iy
@@ -719,7 +907,7 @@
 	 push bc
 	 bit  3,(iy+$04)
 	 jp   z,$04D3
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 ld   a,($D089)
 	 dec  a
 	 ld   (iy+$0b),a
@@ -740,11 +928,11 @@
 	 push iy
 	 push ix
 	 ld   a,($D086)
-	 out  ($0F),a
+	 out  (VIDEO_INTERRUPT_LINE),a
 	 ld   a,$D0
 	 ld   i,a
 	 ld   a,$80
-	 out  ($0D),a
+	 out  (VIDEO_INTERRUPT_FEEDBACK),a
 	 ld   hl,$D089
 	 inc  (hl)
 	 ld   a,($D091)
@@ -762,7 +950,7 @@
 	 or   a
 	 jp   nz,$0520
 	 ld   hl,$033E
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 ld   a,l
 	 or   h
 	 jp   nz,$0547
@@ -776,12 +964,12 @@
 	 ld   h,(iy+$09)
 	 ld   l,(iy+$08)
 	 ld   a,($D08A)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 di
 	 jp   (hl)
 	 ei
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $0509
 	 di
 	 ld   a,($D090)
@@ -801,7 +989,7 @@
 	 cp   b
 	 jp   nc,$0578
 	 ld   hl,$033A
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 ld   a,l
 	 or   h
 	 jp   $057B
@@ -820,10 +1008,10 @@
 	 jp   $0598
 	 bit  0,(iy+$04)
 	 jp   z,$05A1
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 jp   $05C7
 	 ld   a,($D08C)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 ld   a,($D089)
 	 sub  (iy+$0b)
 	 jp   z,$05BE
@@ -834,10 +1022,10 @@
 	 di
 	 jp   (hl)
 	 jp   $05C1
-	 call $0362
+	 call NATIVE_EVENT_DISPATCH_RECORD_02
 	 ei
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $055A
 	 ld   a,$00
 	 ld   ($D090),a
@@ -860,7 +1048,7 @@
 	 ret
 	 di
 	 ld   a,$08
-	 out  ($0E),a
+	 out  (VIDEO_INTERRUPT_ENABLE),a
 	 im   2
 	 call $04D8
 	 di
@@ -878,11 +1066,11 @@
 	 push iy
 	 push ix
 	 ld   a,($D087)
-	 out  ($0F),a
+	 out  (VIDEO_INTERRUPT_LINE),a
 	 ld   a,$D0
 	 ld   i,a
 	 ld   a,$82
-	 out  ($0D),a
+	 out  (VIDEO_INTERRUPT_FEEDBACK),a
 	 ld   a,($D091)
 	 cp   $01
 	 jp   nz,$061A
@@ -903,7 +1091,7 @@
 	 or   a
 	 jp   nz,$0643
 	 ld   hl,$0342
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 ld   a,l
 	 or   h
 	 jp   nz,$066A
@@ -917,12 +1105,12 @@
 	 ld   h,(iy+$09)
 	 ld   l,(iy+$08)
 	 ld   a,($D08B)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 di
 	 jp   (hl)
 	 ei
 	 ld   a,($D08E)
-	 out  ($00),a
+	 out  (VIDEO_PALETTE_0),a
 	 jp   $062C
 	 di
 	 ld   a,$00
@@ -930,11 +1118,11 @@
 	 jp   $05D5
 	 push af
 	 ld   a,($D088)
-	 out  ($0F),a
+	 out  (VIDEO_INTERRUPT_LINE),a
 	 ld   a,$D0
 	 ld   i,a
 	 ld   a,$84
-	 out  ($0D),a
+	 out  (VIDEO_INTERRUPT_FEEDBACK),a
 	 ld   a,($D092)
 	 cp   $01
 	 jp   nz,$068E
@@ -948,11 +1136,8 @@
 	 pop  af
 	 ei
 	 ret
-;*******************************************************************************
-; MAGIC_DRAW_BITMAP
-;
+
 ; Configures and starts a Magic/DNA bitmap transfer.
-;
 ; Input:
 ;   B  XPAND value
 ;   C  Magic control and transform flags
@@ -960,45 +1145,47 @@
 ;   E  Bitmap width in bytes
 ;   HL Destination address
 ;   IX Source bitmap address
-;
 ; Bit 2 is cleared before the Magic register write. Bits 6 and 7 select the
 ; horizontal and vertical hardware transforms used by Space Zap.
-;*******************************************************************************
 MAGIC_DRAW_BITMAP:
 	 ld   a,b
-	 out  ($19),a
+	 out  (VIDEO_EXPAND_COLORS),a
 	 ld   a,c
 	 res  2,a
-	 out  ($0C),a
-	 ld   a,$24
+	 out  (VIDEO_FUNCTION_CONTROL),a
+	 ld   a,$24 ; base pattern-board transfer flags
 	 bit  7,c
-	 jp   z,$06AF
+	 jp   z,MAGIC_TEST_FLAG_6
 	 set  4,a
+MAGIC_TEST_FLAG_6:
 	 bit  6,c
-	 jp   z,$06B6
+	 jp   z,MAGIC_TEST_FLAG_3
 	 res  5,a
+MAGIC_TEST_FLAG_3:
 	 bit  3,c
-	 jp   z,$06BD
+	 jp   z,MAGIC_TEST_FLAG_2
 	 set  1,a
+MAGIC_TEST_FLAG_2:
 	 bit  2,c
-	 jp   z,$06C7
+	 jp   z,MAGIC_COMMIT_PATTERN_MODE
 	 inc  e
 	 res  2,a
 	 set  3,a
+MAGIC_COMMIT_PATTERN_MODE:
 	 ld   b,a
-	 out  ($7A),a
+	 out  (PATTERN_MODE),a ; set flip/rotate/transfer flags
 	 push hl
 	 push ix
 	 pop  hl
 	 ld   a,l
-	 out  ($78),a
+	 out  (PATTERN_SOURCE_LO),a
 	 ld   a,h
-	 out  ($79),a
+	 out  (PATTERN_SOURCE_HI),a
 	 pop  hl
 	 ld   a,l
-	 out  ($7B),a
+	 out  (PATTERN_SKIP),a
 	 ld   a,h
-	 out  ($7C),a
+	 out  (PATTERN_DEST_HI),a
 	 ld   h,e
 	 bit  3,c
 	 jp   z,$06E3
@@ -1021,19 +1208,16 @@ MAGIC_DRAW_BITMAP:
 	 jp   $0708
 	 ld   a,$50
 	 sub  h
-	 out  ($7B),a
+	 out  (PATTERN_SKIP),a
 	 ld   a,h
-	 out  ($7D),a
+	 out  (PATTERN_WIDTH),a
 	 ld   a,d
 	 dec  a
-	 out  ($7E),a
+	 out  (PATTERN_HEIGHT_START),a ; initiates the pattern transfer
 	 ret
-;*******************************************************************************
-; DRAW_SPRITE_FROM_HEADER
-;
+
 ; Reads the width and height at IX, advances IX to the packed bitmap, and enters
 ; MAGIC_DRAW_BITMAP. Object-record callers pass object address + 2.
-;*******************************************************************************
 DRAW_SPRITE_FROM_HEADER:
 	 ld   e,(ix+$00)
 	 inc  ix
@@ -1079,6 +1263,7 @@ DRAW_SPRITE_FROM_HEADER:
 	 or   e
 	 ld   c,a
 	 ret
+
 ; Draw the object referenced by the active actor state and preserve its render
 ; parameters for the corresponding erase/redraw operation.
 DRAW_ACTIVE_OBJECT:
@@ -1113,6 +1298,9 @@ REDRAW_SAVED_OBJECT:
 	 ld   h,(iy+$3b)
 	 ld   l,(iy+$3a)
 	 jp   DRAW_SPRITE_FROM_HEADER
+
+; Restore the saved object image, then check intercept and state flags.
+OBJECT_RESTORE_AND_INTERCEPT:
 	 bit  3,(iy+$24)
 	 jp   nz,$07B1
 	 ld   a,(iy+$37)
@@ -1123,17 +1311,20 @@ REDRAW_SAVED_OBJECT:
 	 res  3,(iy+$24)
 	 bit  1,(iy+$24)
 	 jp   nz,$07D5
-	 in   a,($08)
+	 in   a,(VIDEO_INTERCEPT_READ)
 	 call $0755
 	 bit  0,(iy+$0f)
 	 jp   z,$07D2
-	 in   a,($08)
+	 in   a,(VIDEO_INTERCEPT_READ)
 	 and  a
 	 jp   z,$07D2
 	 set  1,(iy+$11)
 	 jp   $07D9
 	 res  1,(iy+$24)
 	 ret
+
+; Derive bitmap position and pixel alignment from IY object state.
+OBJECT_COMPUTE_DRAW_POSITION:
 	 sla  l
 	 rl   h
 	 sla  l
@@ -1204,6 +1395,9 @@ REDRAW_SAVED_OBJECT:
 	 ld   (iy+$39),h
 	 ld   (iy+$38),l
 	 ret
+
+; Advance object counters and evaluate position/state transitions.
+OBJECT_ADVANCE_STATE:
 	 ld   a,(iy+$0d)
 	 sub  b
 	 ld   (iy+$0d),a
@@ -1234,7 +1428,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   h,(iy+$2f)
 	 ld   l,(iy+$2e)
 	 bit  7,h
-	 call nz,$026A
+	 call nz,NATIVE_NEGATE_HL
 	 bit  7,d
 	 call nz,$0274
 	 or   a
@@ -1273,15 +1467,18 @@ REDRAW_SAVED_OBJECT:
 	 ld   (iy+$1d),d
 	 ld   (iy+$1c),e
 	 jp   z,$08F3
-	 call $07DA
-	 call $036E
+	 call OBJECT_COMPUTE_DRAW_POSITION
+	 call NATIVE_EVENT_RECORD_COUNT_LIMIT
 	 ld   a,(iy+$11)
 	 and  a
 	 jp   z,$0905
 	 ld   (iy+$0f),$00
 	 ld   (iy+$10),$00
-	 jp   $0346
-	 jp   $0362
+	 jp   NATIVE_EVENT_RECORD_DISPATCH_0346
+	 jp   NATIVE_EVENT_DISPATCH_RECORD_02
+
+; Compare object motion bounds using main and alternate register banks.
+OBJECT_COMPARE_MOTION_BOUNDS:
 	 push bc
 	 ex   af,af'
 	 ld   a,b
@@ -1344,6 +1541,9 @@ REDRAW_SAVED_OBJECT:
 	 inc  a
 	 set  2,(iy+$11)
 	 ret
+
+; Compare active object boundary fields and set collision/state flags.
+OBJECT_CHECK_BOUNDARIES:
 	 ex   af,af'
 	 push hl
 	 push de
@@ -1753,7 +1953,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   b,$00
 	 ld   c,(iy+$0c)
 	 cp   c
-	 jp   c,$0362
+	 jp   c,NATIVE_EVENT_DISPATCH_RECORD_02
 	 sub  c
 	 inc  b
 	 cp   c
@@ -1775,14 +1975,14 @@ REDRAW_SAVED_OBJECT:
 	 jp   z,$0CC9
 	 call $0C5A
 	 bit  3,a
-	 call nz,$0978
+	 call nz,OBJECT_CHECK_BOUNDARIES
 	 bit  2,a
 	 call nz,$0A4A
 	 bit  0,(iy+$25)
 	 call nz,$09F5
 	 bit  6,a
 	 call nz,$0951
-	 jp   $0852
+	 jp   OBJECT_ADVANCE_STATE
 	 push iy
 	 ld   iy,($D098)
 	 ld   hl,$0C93
@@ -1892,9 +2092,9 @@ REDRAW_SAVED_OBJECT:
 	 ld   e,$01
 	 ret
 	 ld   a,c
-	 out  ($0C),a
+	 out  (VIDEO_FUNCTION_CONTROL),a
 	 ld   a,b
-	 out  ($19),a
+	 out  (VIDEO_EXPAND_COLORS),a
 	 push bc
 	 push ix
 	 pop  bc
@@ -2130,7 +2330,7 @@ REDRAW_SAVED_OBJECT:
 	 sla  e
 	 rl   d
 	 ret
-	 call $026A
+	 call NATIVE_NEGATE_HL
 	 ld   de,$0063
 	 add  hl,de
 	 xor  a
@@ -2159,7 +2359,7 @@ REDRAW_SAVED_OBJECT:
 	 or   a
 	 ld   de,$0063
 	 sbc  hl,de
-	 call $026A
+	 call NATIVE_NEGATE_HL
 	 ret
 	 ld   hl,($D098)
 	 ld   de,$000F
@@ -2604,8 +2804,8 @@ REDRAW_SAVED_OBJECT:
 	 call $1279
 	 push hl
 	 jp   (iy)
-	 call $0346
-	 jp   $036E
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
+	 jp   NATIVE_EVENT_RECORD_COUNT_LIMIT
 	 push iy
 	 push bc
 	 ld   iy,($D098)
@@ -2625,7 +2825,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   e,(iy+$1c)
 	 ld   h,(iy+$1f)
 	 ld   l,(iy+$1e)
-	 call $07DA
+	 call OBJECT_COMPUTE_DRAW_POSITION
 	 call $0755
 	 pop  af
 	 jp   po,$12FF
@@ -2640,471 +2840,599 @@ REDRAW_SAVED_OBJECT:
 	 pop  de
 	 ld   (hl),e
 	 jp   (iy)
-	 rst  $08
-	 dec  de
-	 ld   l,$03
-	 dec  de
-	 sbc  a,a
-	 ret  nc
-	 djnz $1335
-	 sbc  a,b
-	 ret  nc
-	 inc  e
-	 dec  de
-	 ret  c
-	 inc  b
-	 dec  de
-	 add  a,h
-	 ret  nc
-	 djnz $1333
-	 ld   h,h
-	 dec  de
-	 adc  a,b
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 sub  c
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  d
-	 ret  nc
-	 dec  e
-	 dec  de
-	 jp   p,$1B05
-	 add  a,b
-	 ret  nc
-	 djnz $1348
-	 ret  z
-	 dec  de
-	 add  a,(hl)
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 sub  b
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  e
-	 ret  nc
-	 dec  e
-	 dec  de
-	 ld   (hl),e
-	 ld   b,$1B
-	 add  a,d
-	 ret  nc
-	 djnz $135D
-	 ld   ($871B),a
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 sub  l
-	 ret  nc
-	 dec  e
-	 ld   c,$19
-	 dec  de
-	 adc  a,a
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 adc  a,c
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  (hl)
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  a
-	 ret  nc
-	 dec  e
-	 dec  de
-	 ld   (hl),$03
-	 ld   e,$1B
-	 ld   a,($1E03)
-	 dec  de
-	 ld   a,$03
-	 ld   e,$1B
-	 ld   b,d
-	 inc  bc
-	 ld   e,$0E
-	 jr   z,$138B
-	 add  hl,bc
-	 rra
-	 add  hl,bc
-	 ld   c,$08
-	 rra
-	 ld   c,$4A
-	 dec  de
-	 adc  a,l
-	 ret  nc
-	 ex   af,af'
-	 ld   c,$F5
-	 dec  de
-	 adc  a,d
-	 ret  nc
-	 ex   af,af'
-	 ld   c,$07
-	 dec  de
-	 adc  a,e
-	 ret  nc
-	 ex   af,af'
-	 ld   c,$94
-	 dec  de
-	 adc  a,h
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 adc  a,(hl)
-	 ret  nc
-	 dec  e
-	 ld   c,$C8
-	 ld   c,$0A
-	 rra
-	 ld   c,$70
-	 ld   c,$04
-	 rra
-	 ld   c,$53
-	 ld   c,$05
-	 rra
-	 ld   c,$E6
-	 ld   c,$06
-	 rra
-	 ld   c,$6F
-	 ld   c,$07
-	 rra
-	 jr   nz,$13C0
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 jr   $1408
-	 jr   $13EA
-	 jr   $13EC
-	 jr   $13EE
-	 inc  a
-	 inc  a
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   b,$3E
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   b,$1C
-	 ld   e,$06
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   b,$06
-	 ld   b,$06
-	 ld   a,h
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   b,$66
-	 ld   a,(hl)
-	 inc  a
-	 inc  a
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   b,$0E
-	 inc  c
-	 inc  e
-	 jr   $144A
-	 jr   nc,$1444
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,$06
-	 ld   b,$3E
-	 inc  a
-	 inc  a
-	 ld   b,d
-	 sbc  a,c
-	 and  l
-	 and  c
-	 and  c
-	 and  l
-	 sbc  a,c
-	 ld   b,d
-	 inc  a
-	 jr   $1470
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   a,h
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   l,(hl)
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 inc  a
-	 jr   $149E
-	 jr   $14A0
-	 jr   $14A2
-	 inc  a
-	 inc  a
-	 ld   b,$06
-	 ld   b,$06
-	 ld   b,$06
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   l,(hl)
-	 ld   a,h
-	 ld   a,b
-	 ld   a,b
-	 ld   l,h
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 jp   $E7E7
-	 in   a,($DB)
-	 jp   $C3C3
-	 jp   $66C3
-	 ld   h,(hl)
-	 halt
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,h
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 ld   h,b
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   l,(hl)
-	 ld   h,h
-	 ld   a,($7E7C)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 ld   a,h
-	 ld   l,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,b
-	 ld   a,h
-	 ld   a,$06
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 jr   $150C
-	 jr   $150E
-	 jr   $1510
-	 jr   $1512
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 inc  a
-	 jr   $1526
-	 jp   $C3C3
-	 in   a,($DB)
-	 in   a,($FF)
-	 rst  $20
-	 jp   $66C3
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 jr   $1536
-	 inc  a
-	 ld   a,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   h,(hl)
-	 ld   a,(hl)
-	 inc  a
-	 jr   $1540
-	 jr   $1542
-	 jr   $1544
-	 ld   a,(hl)
-	 ld   a,(hl)
-	 ld   b,$0E
-	 inc  e
-	 jr   c,$15A3
-	 ld   h,b
-	 ld   a,(hl)
-	 ld   a,(hl)
+
+; Compiled TERSE program; branch and literal operands follow inline.
+TERSE_COLON_1311:
+	 RST $08
+TERSE_THREAD_1312:
+	 DB $1B ; LIT16
+	 DW $032E
+	 DB $1B ; LIT16
+	 DW $D09F
+	 DB $10 ; STORE
+	 DB $1B ; LIT16
+	 DW $D098
+	 DB $1C ; ZERO_WORD_AT_ADDRESS
+	 DB $1B ; LIT16
+	 DW $04D8
+	 DB $1B ; LIT16
+	 DW $D084
+	 DB $10 ; STORE
+	 DB $0E ; LIT8
+	 DB $64
+	 DB $1B ; LIT16
+	 DW $D088
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D091
+	 DB $1D ; TOKEN_$1D
+	 DB $1B ; LIT16
+	 DW $D092
+	 DB $1D ; TOKEN_$1D
+	 DB $1B ; LIT16
+	 DW $05F2
+	 DB $1B ; LIT16
+	 DW $D080
+	 DB $10 ; STORE
+	 DB $0E ; LIT8
+	 DB $C8
+	 DB $1B ; LIT16
+	 DW $D086
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D090
+	 DB $1D ; TOKEN_$1D
+	 DB $1B ; LIT16
+	 DW $D093
+	 DB $1D ; TOKEN_$1D
+	 DB $1B ; LIT16
+	 DW $0673
+	 DB $1B ; LIT16
+	 DW $D082
+	 DB $10 ; STORE
+	 DB $0E ; LIT8
+	 DB $32
+	 DB $1B ; LIT16
+	 DW $D087
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D095
+	 DB $1D ; TOKEN_$1D
+	 DB $0E ; LIT8
+	 DB $19
+	 DB $1B ; LIT16
+	 DW $D08F
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D089
+	 DB $1D ; TOKEN_$1D
+	 DB $1B ; LIT16
+	 DW $D096
+	 DB $1D ; TOKEN_$1D
+	 DB $1B ; LIT16
+	 DW $D097
+	 DB $1D ; TOKEN_$1D
+	 DB $1B ; LIT16
+	 DW $0336
+	 DB $1E ; TOKEN_$1E
+	 DB $1B ; LIT16
+	 DW $033A
+	 DB $1E ; TOKEN_$1E
+	 DB $1B ; LIT16
+	 DW $033E
+	 DB $1E ; TOKEN_$1E
+	 DB $1B ; LIT16
+	 DW $0342
+	 DB $1E ; TOKEN_$1E
+	 DB $0E ; LIT8
+	 DB $28
+	 DB $0E ; LIT8
+	 DB $09
+	 DB $1F ; PORT_OUT
+	 DB $09 ; ONE
+	 DB $0E ; LIT8
+	 DB $08
+	 DB $1F ; PORT_OUT
+	 DB $0E ; LIT8
+	 DB $4A
+	 DB $1B ; LIT16
+	 DW $D08D
+	 DB $08 ; BYTE_STORE
+	 DB $0E ; LIT8
+	 DB $F5
+	 DB $1B ; LIT16
+	 DW $D08A
+	 DB $08 ; BYTE_STORE
+	 DB $0E ; LIT8
+	 DB $07
+	 DB $1B ; LIT16
+	 DW $D08B
+	 DB $08 ; BYTE_STORE
+	 DB $0E ; LIT8
+	 DB $94
+	 DB $1B ; LIT16
+	 DW $D08C
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D08E
+	 DB $1D ; TOKEN_$1D
+	 DB $0E ; LIT8
+	 DB $C8
+	 DB $0E ; LIT8
+	 DB $0A
+	 DB $1F ; PORT_OUT
+	 DB $0E ; LIT8
+	 DB $70
+	 DB $0E ; LIT8
+	 DB $04
+	 DB $1F ; PORT_OUT
+	 DB $0E ; LIT8
+	 DB $53
+	 DB $0E ; LIT8
+	 DB $05
+	 DB $1F ; PORT_OUT
+	 DB $0E ; LIT8
+	 DB $E6
+	 DB $0E ; LIT8
+	 DB $06
+	 DB $1F ; PORT_OUT
+	 DB $0E ; LIT8
+	 DB $6F
+	 DB $0E ; LIT8
+	 DB $07
+	 DB $1F ; PORT_OUT
+	 DB $20 ; TOKEN_$20
+	 DB $06 ; EXIT
+TERSE_FONT_PADDING:
+	 DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+; $13C4-$1535: 8x10 monochrome character bitmaps.
+; Each glyph consists of ten rows; bit 7 is the leftmost pixel.
+SCREEN_FONT_8X10:
+; $13C4  0  (8 x 10)
+FONT_DIGIT_0:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $13CE  1  (8 x 10)
+FONT_DIGIT_1:
+	 DB $18 ; ...##...
+	 DB $38 ; ..###...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $3C ; ..####..
+	 DB $3C ; ..####..
+; $13D8  2  (8 x 10)
+FONT_DIGIT_2:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $06 ; .....##.
+	 DB $3E ; ..#####.
+	 DB $7C ; .#####..
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+; $13E2  3  (8 x 10)
+FONT_DIGIT_3:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $06 ; .....##.
+	 DB $1C ; ...###..
+	 DB $1E ; ...####.
+	 DB $06 ; .....##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $13EC  4  (8 x 10)
+FONT_DIGIT_4:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+; $13F6  5  (8 x 10)
+FONT_DIGIT_5:
+	 DB $7C ; .#####..
+	 DB $7C ; .#####..
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $7C ; .#####..
+	 DB $7E ; .######.
+	 DB $06 ; .....##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $1400  6  (8 x 10)
+FONT_DIGIT_6:
+	 DB $3C ; ..####..
+	 DB $7C ; .#####..
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $7C ; .#####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $140A  7  (8 x 10)
+FONT_DIGIT_7:
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $06 ; .....##.
+	 DB $0E ; ....###.
+	 DB $0C ; ....##..
+	 DB $1C ; ...###..
+	 DB $18 ; ...##...
+	 DB $38 ; ..###...
+	 DB $30 ; ..##....
+	 DB $30 ; ..##....
+; $1414  8  (8 x 10)
+FONT_DIGIT_8:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $141E  9  (8 x 10)
+FONT_DIGIT_9:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3E ; ..#####.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $3E ; ..#####.
+	 DB $3C ; ..####..
+; $1428  @  (8 x 10)
+FONT_SYMBOL_AT:
+	 DB $3C ; ..####..
+	 DB $42 ; .#....#.
+	 DB $99 ; #..##..#
+	 DB $A5 ; #.#..#.#
+	 DB $A1 ; #.#....#
+	 DB $A1 ; #.#....#
+	 DB $A5 ; #.#..#.#
+	 DB $99 ; #..##..#
+	 DB $42 ; .#....#.
+	 DB $3C ; ..####..
+; $1432  A  (8 x 10)
+FONT_LETTER_A:
+	 DB $18 ; ...##...
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+; $143C  B  (8 x 10)
+FONT_LETTER_B:
+	 DB $7C ; .#####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7C ; .#####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $7C ; .#####..
+; $1446  C  (8 x 10)
+FONT_LETTER_C:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $1450  D  (8 x 10)
+FONT_LETTER_D:
+	 DB $7C ; .#####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $7C ; .#####..
+; $145A  E  (8 x 10)
+FONT_LETTER_E:
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $7C ; .#####..
+	 DB $7C ; .#####..
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+; $1464  F  (8 x 10)
+FONT_LETTER_F:
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $7C ; .#####..
+	 DB $7C ; .#####..
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+; $146E  G  (8 x 10)
+FONT_LETTER_G:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $6E ; .##.###.
+	 DB $6E ; .##.###.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $1478  H  (8 x 10)
+FONT_LETTER_H:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+; $1482  I  (8 x 10)
+FONT_LETTER_I:
+	 DB $3C ; ..####..
+	 DB $3C ; ..####..
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $3C ; ..####..
+	 DB $3C ; ..####..
+; $148C  J  (8 x 10)
+FONT_LETTER_J:
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $06 ; .....##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $1496  K  (8 x 10)
+FONT_LETTER_K:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $6E ; .##.###.
+	 DB $7C ; .#####..
+	 DB $78 ; .####...
+	 DB $78 ; .####...
+	 DB $6C ; .##.##..
+	 DB $6E ; .##.###.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+; $14A0  L  (8 x 10)
+FONT_LETTER_L:
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+; $14AA  M  (8 x 10)
+FONT_LETTER_M:
+	 DB $C3 ; ##....##
+	 DB $E7 ; ###..###
+	 DB $E7 ; ###..###
+	 DB $DB ; ##.##.##
+	 DB $DB ; ##.##.##
+	 DB $C3 ; ##....##
+	 DB $C3 ; ##....##
+	 DB $C3 ; ##....##
+	 DB $C3 ; ##....##
+	 DB $C3 ; ##....##
+; $14B4  N  (8 x 10)
+FONT_LETTER_N:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $76 ; .###.##.
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $6E ; .##.###.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+; $14BE  O  (8 x 10)
+FONT_LETTER_O:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $14C8  P  (8 x 10)
+FONT_LETTER_P:
+	 DB $7C ; .#####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $7C ; .#####..
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+	 DB $60 ; .##.....
+; $14D2  Q  (8 x 10)
+FONT_LETTER_Q:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $6E ; .##.###.
+	 DB $64 ; .##..#..
+	 DB $3A ; ..###.#.
+; $14DC  R  (8 x 10)
+FONT_LETTER_R:
+	 DB $7C ; .#####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $7C ; .#####..
+	 DB $6E ; .##.###.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+; $14E6  S  (8 x 10)
+FONT_LETTER_S:
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $60 ; .##.....
+	 DB $7C ; .#####..
+	 DB $3E ; ..#####.
+	 DB $06 ; .....##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $14F0  T  (8 x 10)
+FONT_LETTER_T:
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+; $14FA  U  (8 x 10)
+FONT_LETTER_U:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+; $1504  V  (8 x 10)
+FONT_LETTER_V:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+	 DB $3C ; ..####..
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+; $150E  W  (8 x 10)
+FONT_LETTER_W:
+	 DB $C3 ; ##....##
+	 DB $C3 ; ##....##
+	 DB $C3 ; ##....##
+	 DB $DB ; ##.##.##
+	 DB $DB ; ##.##.##
+	 DB $DB ; ##.##.##
+	 DB $FF ; ########
+	 DB $E7 ; ###..###
+	 DB $C3 ; ##....##
+	 DB $C3 ; ##....##
+; $1518  X  (8 x 10)
+FONT_LETTER_X:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $3C ; ..####..
+	 DB $7E ; .######.
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+; $1522  Y  (8 x 10)
+FONT_LETTER_Y:
+	 DB $66 ; .##..##.
+	 DB $66 ; .##..##.
+	 DB $7E ; .######.
+	 DB $3C ; ..####..
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+	 DB $18 ; ...##...
+; $152C  Z  (8 x 10)
+FONT_LETTER_Z:
+	 DB $7E ; .######.
+	 DB $7E ; .######.
+	 DB $06 ; .....##.
+	 DB $0E ; ....###.
+	 DB $1C ; ...###..
+	 DB $38 ; ..###...
+	 DB $70 ; .###....
+	 DB $60 ; .##.....
+	 DB $7E ; .######.
+	 DB $7E ; .######.
 	 sbc  a,(hl)
 	 push ix
 	 push iy
@@ -3318,865 +3646,817 @@ REDRAW_SAVED_OBJECT:
 	 xor  a
 	 jp   nz,$1695
 	 jp   (iy)
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_1
-;
+
+; SPRITE OBJECT RECORDS - PACKED 2BPP
+;   +0  Horizontal hotspot offset
+;   +1  Vertical hotspot offset
+;   +2  Bitmap width in bytes
+;   +3  Bitmap height in rows
+;   +4  Packed 2bpp bitmap data
+; Each bitmap byte stores four pixels, most-significant pair first. The shared
+; object draw path advances past the two hotspot bytes before reading the
+; width/height header.
+; Inline pixels use "." for value 0 and "1" through "3" for the color index.
 ; Alien ship destruction animation, frame 1.
-; Object record: $16AE; bitmap header: $16B0.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_1:
-        .DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+        DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_1_HEADER:
-        .DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
-        .DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$05,$40,$00,$00 ; . . . . . . 1 1 1 . . . . . . . . . . .
-        .DB      $00,$24,$78,$00,$00 ; . . . . . 2 1 . 1 3 2 . . . . . . . . .
-        .DB      $00,$15,$58,$00,$00 ; . . . . . 1 1 1 1 1 2 . . . . . . . . .
-        .DB      $00,$27,$E8,$00,$00 ; . . . . . 2 1 3 3 2 2 . . . . . . . . .
-        .DB      $00,$64,$90,$00,$00 ; . . . . 1 2 1 . 2 1 . . . . . . . . . .
-        .DB      $00,$46,$18,$00,$00 ; . . . . 1 . 1 2 . 1 2 . . . . . . . . .
-        .DB      $00,$08,$00,$00,$00 ; . . . . . . 2 . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_2
-;
+        DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
+        DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$05,$40,$00,$00 ; . . . . . . 1 1 1 . . . . . . . . . . .
+        DB      $00,$24,$78,$00,$00 ; . . . . . 2 1 . 1 3 2 . . . . . . . . .
+        DB      $00,$15,$58,$00,$00 ; . . . . . 1 1 1 1 1 2 . . . . . . . . .
+        DB      $00,$27,$E8,$00,$00 ; . . . . . 2 1 3 3 2 2 . . . . . . . . .
+        DB      $00,$64,$90,$00,$00 ; . . . . 1 2 1 . 2 1 . . . . . . . . . .
+        DB      $00,$46,$18,$00,$00 ; . . . . 1 . 1 2 . 1 2 . . . . . . . . .
+        DB      $00,$08,$00,$00,$00 ; . . . . . . 2 . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+
 ; Alien ship destruction animation, frame 2.
-; Object record: $16E4; bitmap header: $16E6.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_2:
-        .DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+        DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_2_HEADER:
-        .DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
-        .DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$81,$0C,$00,$00 ; . . . . 2 . . 1 . . 3 . . . . . . . . .
-        .DB      $00,$41,$10,$E0,$00 ; . . . . 1 . . 1 . 1 . . 3 2 . . . . . .
-        .DB      $00,$00,$00,$18,$00 ; . . . . . . . . . . . . . 1 2 . . . . .
-        .DB      $0F,$70,$21,$F8,$00 ; . . 3 3 1 3 . . . 2 . 1 3 3 2 . . . . .
-        .DB      $00,$0E,$10,$33,$00 ; . . . . . . 3 2 . 1 . . . 3 . 3 . . . .
-        .DB      $01,$F3,$0C,$C7,$00 ; . . . 1 3 3 . 3 . . 3 . 3 . 1 3 . . . .
-        .DB      $0C,$43,$1C,$F0,$00 ; . . 3 . 1 . . 3 . 1 3 . 3 3 . . . . . .
-        .DB      $30,$82,$0E,$30,$00 ; . 3 . . 2 . . 2 . . 3 2 . 3 . . . . . .
-        .DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_3
-;
+        DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
+        DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$81,$0C,$00,$00 ; . . . . 2 . . 1 . . 3 . . . . . . . . .
+        DB      $00,$41,$10,$E0,$00 ; . . . . 1 . . 1 . 1 . . 3 2 . . . . . .
+        DB      $00,$00,$00,$18,$00 ; . . . . . . . . . . . . . 1 2 . . . . .
+        DB      $0F,$70,$21,$F8,$00 ; . . 3 3 1 3 . . . 2 . 1 3 3 2 . . . . .
+        DB      $00,$0E,$10,$33,$00 ; . . . . . . 3 2 . 1 . . . 3 . 3 . . . .
+        DB      $01,$F3,$0C,$C7,$00 ; . . . 1 3 3 . 3 . . 3 . 3 . 1 3 . . . .
+        DB      $0C,$43,$1C,$F0,$00 ; . . 3 . 1 . . 3 . 1 3 . 3 3 . . . . . .
+        DB      $30,$82,$0E,$30,$00 ; . 3 . . 2 . . 2 . . 3 2 . 3 . . . . . .
+        DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+
 ; Alien ship destruction animation, frame 3.
-; Object record: $171A; bitmap header: $171C.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_3:
-        .DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+        DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_3_HEADER:
-        .DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
-        .DB      $00,$80,$02,$00,$00 ; . . . . 2 . . . . . . 2 . . . . . . . .
-        .DB      $00,$01,$00,$02,$00 ; . . . . . . . 1 . . . . . . . 2 . . . .
-        .DB      $00,$40,$10,$10,$00 ; . . . . 1 . . . . 1 . . . 1 . . . . . .
-        .DB      $00,$04,$04,$00,$00 ; . . . . . . 1 . . . 1 . . . . . . . . .
-        .DB      $90,$02,$01,$20,$08 ; 2 1 . . . . . 2 . . . 1 . 2 . . . . 2 .
-        .DB      $00,$40,$10,$24,$00 ; . . . . 1 . . . . 1 . . . 2 1 . . . . .
-        .DB      $01,$10,$08,$01,$00 ; . . . 1 . 1 . . . . 2 . . . . 1 . . . .
-        .DB      $20,$04,$08,$08,$00 ; . 2 . . . . 1 . . . 2 . . . 2 . . . . .
-        .DB      $08,$02,$00,$04,$00 ; . . 2 . . . . 2 . . . . . . 1 . . . . .
-        .DB      $04,$02,$00,$00,$10 ; . . 1 . . . . 2 . . . . . . . . . 1 . .
+        DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
+        DB      $00,$80,$02,$00,$00 ; . . . . 2 . . . . . . 2 . . . . . . . .
+        DB      $00,$01,$00,$02,$00 ; . . . . . . . 1 . . . . . . . 2 . . . .
+        DB      $00,$40,$10,$10,$00 ; . . . . 1 . . . . 1 . . . 1 . . . . . .
+        DB      $00,$04,$04,$00,$00 ; . . . . . . 1 . . . 1 . . . . . . . . .
+        DB      $90,$02,$01,$20,$08 ; 2 1 . . . . . 2 . . . 1 . 2 . . . . 2 .
+        DB      $00,$40,$10,$24,$00 ; . . . . 1 . . . . 1 . . . 2 1 . . . . .
+        DB      $01,$10,$08,$01,$00 ; . . . 1 . 1 . . . . 2 . . . . 1 . . . .
+        DB      $20,$04,$08,$08,$00 ; . 2 . . . . 1 . . . 2 . . . 2 . . . . .
+        DB      $08,$02,$00,$04,$00 ; . . 2 . . . . 2 . . . . . . 1 . . . . .
+        DB      $04,$02,$00,$00,$10 ; . . 1 . . . . 2 . . . . . . . . . 1 . .
  
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_4
-;
 ; Alien ship destruction animation, frame 4.
-; Object record: $1750; bitmap header: $1752.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_4:
-        .DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+        DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_4_HEADER:
-        .DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
-        .DB      $00,$02,$00,$00,$08 ; . . . . . . . 2 . . . . . . . . . . 2 .
-        .DB      $02,$00,$00,$00,$00 ; . . . 2 . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$04,$00,$00 ; . . . . . . . . . . 1 . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
-        .DB      $08,$00,$00,$01,$00 ; . . 2 . . . . . . . . . . . . 1 . . . .
-        .DB      $00,$04,$00,$00,$00 ; . . . . . . 1 . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$40,$01,$00 ; . . . . . . . . 1 . . . . . . 1 . . . .
-        .DB      $00,$10,$00,$00,$00 ; . . . . . 1 . . . . . . . . . . . . . .
-        .DB      $80,$00,$00,$80,$00 ; 2 . . . . . . . . . . . 2 . . . . . . .
-;*******************************************************************************
-; BLANK
-;
+        DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
+        DB      $00,$02,$00,$00,$08 ; . . . . . . . 2 . . . . . . . . . . 2 .
+        DB      $02,$00,$00,$00,$00 ; . . . 2 . . . . . . . . . . . . . . . .
+        DB      $00,$00,$04,$00,$00 ; . . . . . . . . . . 1 . . . . . . . . .
+        DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+        DB      $08,$00,$00,$01,$00 ; . . 2 . . . . . . . . . . . . 1 . . . .
+        DB      $00,$04,$00,$00,$00 ; . . . . . . 1 . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$40,$01,$00 ; . . . . . . . . 1 . . . . . . 1 . . . .
+        DB      $00,$10,$00,$00,$00 ; . . . . . 1 . . . . . . . . . . . . . .
+        DB      $80,$00,$00,$80,$00 ; 2 . . . . . . . . . . . 2 . . . . . . .
+
 ; Blank replacement object used to remove an animated frame.
-; Object record: $1786; bitmap header: $1788.
 ; Hotspot offsets: X = 0, Y = 0.
 ; Bitmap: 4 x 1 pixels, 1 byte per row.
-;*******************************************************************************
 BLANK:
-        .DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+        DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+
 BLANK_HEADER:
-        .DB      $01,$01 ; Bitmap size: 1 byte/row, 1 row
-        .DB      $00 ; . . . .
+        DB      $01,$01 ; Bitmap size: 1 byte/row, 1 row
+        DB      $00 ; . . . .
+
 ; Alien ship destruction-frame sequence. Each entry is a control byte
 ; followed by a pointer to a complete sprite object record.
 ALIEN_SHIP_DESTROY_SEQUENCE:
-        .DB      $09
-        .DW      ALIEN_SHIP_DESTROY_1
-        .DB      $08
-        .DW      ALIEN_SHIP_DESTROY_2
-        .DB      $06
-        .DW      ALIEN_SHIP_DESTROY_3
-        .DB      $06
-        .DW      ALIEN_SHIP_DESTROY_4
-        .DB      $FF
-        .DW      BLANK
-        .DB      $00
-        .DW      ALIEN_SHIP_DESTROY_SEQUENCE
-;*******************************************************************************
-; ALIEN_SHIP_VERTICAL
-;
+        DB      $09
+        DW      ALIEN_SHIP_DESTROY_1
+        DB      $08
+        DW      ALIEN_SHIP_DESTROY_2
+        DB      $06
+        DW      ALIEN_SHIP_DESTROY_3
+        DB      $06
+        DW      ALIEN_SHIP_DESTROY_4
+        DB      $FF
+        DW      BLANK
+        DB      $00
+        DW      ALIEN_SHIP_DESTROY_SEQUENCE
+
 ; Alien ship oriented for vertical approaches.
-; Object record: $179D; bitmap header: $179F.
 ; Hotspot offsets: X = 8, Y = 6.
 ; Bitmap: 8 x 12 pixels, 2 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_VERTICAL:
-        .DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
+        DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
+
 ALIEN_SHIP_VERTICAL_HEADER:
-        .DB      $02,$0C ; Bitmap size: 2 bytes/row, 12 rows
-        .DB      $40,$00 ; 1 . . . . . . .
-        .DB      $30,$00 ; . 3 . . . . . .
-        .DB      $1A,$00 ; . 1 2 2 . . . .
-        .DB      $0E,$00 ; . . 3 2 . . . .
-        .DB      $3A,$00 ; . 3 2 2 . . . .
-        .DB      $FE,$00 ; 3 3 3 2 . . . .
-        .DB      $FE,$00 ; 3 3 3 2 . . . .
-        .DB      $3A,$00 ; . 3 2 2 . . . .
-        .DB      $0E,$00 ; . . 3 2 . . . .
-        .DB      $1A,$00 ; . 1 2 2 . . . .
-        .DB      $30,$00 ; . 3 . . . . . .
-        .DB      $40,$00 ; 1 . . . . . . .
-;*******************************************************************************
-; ALIEN_SHIP_HORIZONTAL
-;
+        DB      $02,$0C ; Bitmap size: 2 bytes/row, 12 rows
+        DB      $40,$00 ; 1 . . . . . . .
+        DB      $30,$00 ; . 3 . . . . . .
+        DB      $1A,$00 ; . 1 2 2 . . . .
+        DB      $0E,$00 ; . . 3 2 . . . .
+        DB      $3A,$00 ; . 3 2 2 . . . .
+        DB      $FE,$00 ; 3 3 3 2 . . . .
+        DB      $FE,$00 ; 3 3 3 2 . . . .
+        DB      $3A,$00 ; . 3 2 2 . . . .
+        DB      $0E,$00 ; . . 3 2 . . . .
+        DB      $1A,$00 ; . 1 2 2 . . . .
+        DB      $30,$00 ; . 3 . . . . . .
+        DB      $40,$00 ; 1 . . . . . . .
+
 ; Alien ship oriented for horizontal approaches.
-; Object record: $17B9; bitmap header: $17BB.
 ; Hotspot offsets: X = 7, Y = 8.
 ; Bitmap: 12 x 7 pixels, 3 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_HORIZONTAL:
-        .DB      $07,$08 ; Hotspot offsets: X = 7, Y = 8
+        DB      $07,$08 ; Hotspot offsets: X = 7, Y = 8
+
 ALIEN_SHIP_HORIZONTAL_HEADER:
-        .DB      $03,$07 ; Bitmap size: 3 bytes/row, 7 rows
-        .DB      $03,$00,$00 ; . . . 3 . . . . . . . .
-        .DB      $83,$04,$00 ; 2 . . 3 . . 1 . . . . .
-        .DB      $4F,$C8,$00 ; 1 . 3 3 3 . 2 . . . . .
-        .DB      $6F,$D8,$00 ; 1 2 3 3 3 1 2 . . . . .
-        .DB      $3F,$F0,$00 ; . 3 3 3 3 3 . . . . . .
-        .DB      $17,$A0,$00 ; . 1 1 3 2 2 . . . . . .
-        .DB      $3F,$F0,$00 ; . 3 3 3 3 3 . . . . . .
+        DB      $03,$07 ; Bitmap size: 3 bytes/row, 7 rows
+        DB      $03,$00,$00 ; . . . 3 . . . . . . . .
+        DB      $83,$04,$00 ; 2 . . 3 . . 1 . . . . .
+        DB      $4F,$C8,$00 ; 1 . 3 3 3 . 2 . . . . .
+        DB      $6F,$D8,$00 ; 1 2 3 3 3 1 2 . . . . .
+        DB      $3F,$F0,$00 ; . 3 3 3 3 3 . . . . . .
+        DB      $17,$A0,$00 ; . 1 1 3 2 2 . . . . . .
+        DB      $3F,$F0,$00 ; . 3 3 3 3 3 . . . . . .
 	 nop
 	 ld   bc,$021D
 	 rst  $38
 	 ld   bc,$0100
 	 jr   c,$17CC
-;*******************************************************************************
-; LASER_BASE_BODY
-;
+
 ; Intact center laser-base body.
-; Object record: $17DC; bitmap header: $17DE.
 ; Hotspot offsets: X = 0, Y = 0.
 ; Bitmap: 24 x 21 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_BODY:
-        .DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+        DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+
 LASER_BASE_BODY_HEADER:
-        .DB      $06,$15 ; Bitmap size: 6 bytes/row, 21 rows
-        .DB      $55,$55,$55,$5A,$40,$00 ; 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 1 . . . . . . .
-        .DB      $5F,$FD,$FF,$5A,$40,$00 ; 1 1 3 3 3 3 3 1 3 3 3 3 1 1 2 2 1 . . . . . . .
-        .DB      $77,$FF,$7F,$DA,$40,$00 ; 1 3 1 3 3 3 3 3 1 3 3 3 3 1 2 2 1 . . . . . . .
-        .DB      $7D,$FF,$DF,$DA,$40,$00 ; 1 3 3 1 3 3 3 3 3 1 3 3 3 1 2 2 1 . . . . . . .
-        .DB      $7F,$7F,$FF,$DA,$40,$00 ; 1 3 3 3 1 3 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
-        .DB      $7F,$DF,$FF,$DA,$40,$00 ; 1 3 3 3 3 1 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
-        .DB      $7F,$FF,$FF,$DA,$40,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
-        .DB      $7F,$FF,$FF,$DA,$40,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
-        .DB      $7F,$FF,$FF,$DA,$50,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 1 1 . . . . . .
-        .DB      $7F,$FF,$FF,$DA,$94,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 2 1 1 . . . . .
-        .DB      $7F,$FF,$FF,$D6,$A5,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 2 2 1 1 . . . .
-        .DB      $7F,$FF,$FF,$55,$A9,$40 ; 1 3 3 3 3 3 3 3 3 3 3 3 1 1 1 1 2 2 2 1 1 . . .
-        .DB      $57,$FF,$FD,$D5,$6A,$40 ; 1 1 1 3 3 3 3 3 3 3 3 1 3 1 1 1 1 2 2 2 1 . . .
-        .DB      $55,$55,$55,$75,$5A,$40 ; 1 1 1 1 1 1 1 1 1 1 1 1 1 3 1 1 1 1 2 2 1 . . .
-        .DB      $AA,$AA,$A5,$5D,$5A,$40 ; 2 2 2 2 2 2 2 2 2 2 1 1 1 1 3 1 1 1 2 2 1 . . .
-        .DB      $AA,$AA,$A9,$57,$5A,$40 ; 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 3 1 1 2 2 1 . . .
-        .DB      $55,$55,$6A,$55,$DA,$40 ; 1 1 1 1 1 1 1 1 1 2 2 2 1 1 1 1 3 1 2 2 1 . . .
-        .DB      $00,$00,$5A,$95,$5A,$40 ; . . . . . . . . 1 1 2 2 2 1 1 1 1 1 2 2 1 . . .
-        .DB      $00,$00,$16,$AA,$AA,$40 ; . . . . . . . . . 1 1 2 2 2 2 2 2 2 2 2 1 . . .
-        .DB      $00,$00,$05,$AA,$AA,$40 ; . . . . . . . . . . 1 1 2 2 2 2 2 2 2 2 1 . . .
-        .DB      $00,$00,$01,$55,$55,$40 ; . . . . . . . . . . . 1 1 1 1 1 1 1 1 1 1 . . .
-;*******************************************************************************
-; LASER_BASE_BODY_DESTROY
-;
+        DB      $06,$15 ; Bitmap size: 6 bytes/row, 21 rows
+        DB      $55,$55,$55,$5A,$40,$00 ; 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 1 . . . . . . .
+        DB      $5F,$FD,$FF,$5A,$40,$00 ; 1 1 3 3 3 3 3 1 3 3 3 3 1 1 2 2 1 . . . . . . .
+        DB      $77,$FF,$7F,$DA,$40,$00 ; 1 3 1 3 3 3 3 3 1 3 3 3 3 1 2 2 1 . . . . . . .
+        DB      $7D,$FF,$DF,$DA,$40,$00 ; 1 3 3 1 3 3 3 3 3 1 3 3 3 1 2 2 1 . . . . . . .
+        DB      $7F,$7F,$FF,$DA,$40,$00 ; 1 3 3 3 1 3 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
+        DB      $7F,$DF,$FF,$DA,$40,$00 ; 1 3 3 3 3 1 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
+        DB      $7F,$FF,$FF,$DA,$40,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
+        DB      $7F,$FF,$FF,$DA,$40,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 1 . . . . . . .
+        DB      $7F,$FF,$FF,$DA,$50,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 1 1 . . . . . .
+        DB      $7F,$FF,$FF,$DA,$94,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 2 2 2 1 1 . . . . .
+        DB      $7F,$FF,$FF,$D6,$A5,$00 ; 1 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 2 2 1 1 . . . .
+        DB      $7F,$FF,$FF,$55,$A9,$40 ; 1 3 3 3 3 3 3 3 3 3 3 3 1 1 1 1 2 2 2 1 1 . . .
+        DB      $57,$FF,$FD,$D5,$6A,$40 ; 1 1 1 3 3 3 3 3 3 3 3 1 3 1 1 1 1 2 2 2 1 . . .
+        DB      $55,$55,$55,$75,$5A,$40 ; 1 1 1 1 1 1 1 1 1 1 1 1 1 3 1 1 1 1 2 2 1 . . .
+        DB      $AA,$AA,$A5,$5D,$5A,$40 ; 2 2 2 2 2 2 2 2 2 2 1 1 1 1 3 1 1 1 2 2 1 . . .
+        DB      $AA,$AA,$A9,$57,$5A,$40 ; 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 3 1 1 2 2 1 . . .
+        DB      $55,$55,$6A,$55,$DA,$40 ; 1 1 1 1 1 1 1 1 1 2 2 2 1 1 1 1 3 1 2 2 1 . . .
+        DB      $00,$00,$5A,$95,$5A,$40 ; . . . . . . . . 1 1 2 2 2 1 1 1 1 1 2 2 1 . . .
+        DB      $00,$00,$16,$AA,$AA,$40 ; . . . . . . . . . 1 1 2 2 2 2 2 2 2 2 2 1 . . .
+        DB      $00,$00,$05,$AA,$AA,$40 ; . . . . . . . . . . 1 1 2 2 2 2 2 2 2 2 1 . . .
+        DB      $00,$00,$01,$55,$55,$40 ; . . . . . . . . . . . 1 1 1 1 1 1 1 1 1 1 . . .
+
 ; Damaged center laser-base body.
-; Object record: $185E; bitmap header: $1860.
 ; Hotspot offsets: X = 0, Y = 0.
 ; Bitmap: 24 x 21 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_BODY_DESTROY:
-        .DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+        DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+
 LASER_BASE_BODY_DESTROY_HEADER:
-        .DB      $06,$15 ; Bitmap size: 6 bytes/row, 21 rows
-        .DB      $00,$00,$00,$08,$D0,$00 ; . . . . . . . . . . . . . . 2 . 3 1 . . . . . .
-        .DB      $00,$00,$00,$04,$20,$C0 ; . . . . . . . . . . . . . . 1 . . 2 . . 3 . . .
-        .DB      $00,$00,$00,$43,$20,$00 ; . . . . . . . . . . . . 1 . . 3 . 2 . . . . . .
-        .DB      $00,$00,$00,$04,$00,$00 ; . . . . . . . . . . . . . . 1 . . . . . . . . .
-        .DB      $00,$00,$00,$23,$00,$00 ; . . . . . . . . . . . . . 2 . 3 . . . . . . . .
-        .DB      $00,$00,$00,$20,$C0,$00 ; . . . . . . . . . . . . . 2 . . 3 . . . . . . .
-        .DB      $00,$00,$08,$0C,$F0,$00 ; . . . . . . . . . . 2 . . . 3 . 3 3 . . . . . .
-        .DB      $00,$08,$0C,$30,$40,$40 ; . . . . . . 2 . . . 3 . . 3 . . 1 . . . 1 . . .
-        .DB      $00,$00,$0D,$23,$01,$00 ; . . . . . . . . . . 3 1 . 2 . 3 . . . 1 . . . .
-        .DB      $00,$00,$00,$C2,$01,$00 ; . . . . . . . . . . . . 3 . . 2 . . . 1 . . . .
-        .DB      $00,$00,$0C,$20,$40,$40 ; . . . . . . . . . . 3 . . 2 . . 1 . . . 1 . . .
-        .DB      $00,$0C,$20,$50,$FD,$00 ; . . . . . . 3 . . 2 . . 1 1 . . 3 3 3 1 . . . .
-        .DB      $00,$00,$01,$10,$63,$40 ; . . . . . . . . . . . 1 . 1 . . 1 2 . 3 1 . . .
-        .DB      $00,$B2,$9C,$8A,$8A,$00 ; . . . . 2 3 . 2 2 1 3 . 2 . 2 2 2 . 2 2 . . . .
-        .DB      $00,$E0,$50,$20,$20,$00 ; . . . . 3 2 . . 1 1 . . . 2 . . . 2 . . . . . .
-        .DB      $23,$C8,$7C,$20,$00,$00 ; . 2 . 3 3 . 2 . 1 3 3 . . 2 . . . . . . . . . .
-        .DB      $67,$CB,$30,$0C,$00,$00 ; 1 2 1 3 3 . 2 3 . 3 . . . . 3 . . . . . . . . .
-        .DB      $31,$01,$50,$00,$00,$00 ; . 3 . 1 . . . 1 1 1 . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$40,$00,$00,$00,$00 ; . . . . 1 . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-;*******************************************************************************
-; LASER_TURRET_VERTICAL
-;
+        DB      $06,$15 ; Bitmap size: 6 bytes/row, 21 rows
+        DB      $00,$00,$00,$08,$D0,$00 ; . . . . . . . . . . . . . . 2 . 3 1 . . . . . .
+        DB      $00,$00,$00,$04,$20,$C0 ; . . . . . . . . . . . . . . 1 . . 2 . . 3 . . .
+        DB      $00,$00,$00,$43,$20,$00 ; . . . . . . . . . . . . 1 . . 3 . 2 . . . . . .
+        DB      $00,$00,$00,$04,$00,$00 ; . . . . . . . . . . . . . . 1 . . . . . . . . .
+        DB      $00,$00,$00,$23,$00,$00 ; . . . . . . . . . . . . . 2 . 3 . . . . . . . .
+        DB      $00,$00,$00,$20,$C0,$00 ; . . . . . . . . . . . . . 2 . . 3 . . . . . . .
+        DB      $00,$00,$08,$0C,$F0,$00 ; . . . . . . . . . . 2 . . . 3 . 3 3 . . . . . .
+        DB      $00,$08,$0C,$30,$40,$40 ; . . . . . . 2 . . . 3 . . 3 . . 1 . . . 1 . . .
+        DB      $00,$00,$0D,$23,$01,$00 ; . . . . . . . . . . 3 1 . 2 . 3 . . . 1 . . . .
+        DB      $00,$00,$00,$C2,$01,$00 ; . . . . . . . . . . . . 3 . . 2 . . . 1 . . . .
+        DB      $00,$00,$0C,$20,$40,$40 ; . . . . . . . . . . 3 . . 2 . . 1 . . . 1 . . .
+        DB      $00,$0C,$20,$50,$FD,$00 ; . . . . . . 3 . . 2 . . 1 1 . . 3 3 3 1 . . . .
+        DB      $00,$00,$01,$10,$63,$40 ; . . . . . . . . . . . 1 . 1 . . 1 2 . 3 1 . . .
+        DB      $00,$B2,$9C,$8A,$8A,$00 ; . . . . 2 3 . 2 2 1 3 . 2 . 2 2 2 . 2 2 . . . .
+        DB      $00,$E0,$50,$20,$20,$00 ; . . . . 3 2 . . 1 1 . . . 2 . . . 2 . . . . . .
+        DB      $23,$C8,$7C,$20,$00,$00 ; . 2 . 3 3 . 2 . 1 3 3 . . 2 . . . . . . . . . .
+        DB      $67,$CB,$30,$0C,$00,$00 ; 1 2 1 3 3 . 2 3 . 3 . . . . 3 . . . . . . . . .
+        DB      $31,$01,$50,$00,$00,$00 ; . 3 . 1 . . . 1 1 1 . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$40,$00,$00,$00,$00 ; . . . . 1 . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+
 ; Laser turret oriented vertically.
-; Object record: $18E0; bitmap header: $18E2.
 ; Hotspot offsets: X = 7, Y = 9.
 ; Bitmap: 20 x 19 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_VERTICAL:
-        .DB      $07,$09 ; Hotspot offsets: X = 7, Y = 9
+        DB      $07,$09 ; Hotspot offsets: X = 7, Y = 9
+
 LASER_TURRET_VERTICAL_HEADER:
-        .DB      $05,$13 ; Bitmap size: 5 bytes/row, 19 rows
-        .DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
-        .DB      $00,$3F,$C0,$00,$00 ; . . . . . 3 3 3 3 . . . . . . . . . . .
-        .DB      $00,$30,$C0,$00,$00 ; . . . . . 3 . . 3 . . . . . . . . . . .
-        .DB      $00,$3F,$C0,$00,$00 ; . . . . . 3 3 3 3 . . . . . . . . . . .
-        .DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
-        .DB      $02,$0F,$08,$00,$00 ; . . . 2 . . 3 3 . . 2 . . . . . . . . .
-        .DB      $0A,$0F,$0A,$00,$00 ; . . 2 2 . . 3 3 . . 2 2 . . . . . . . .
-        .DB      $0A,$0F,$0A,$00,$00 ; . . 2 2 . . 3 3 . . 2 2 . . . . . . . .
-        .DB      $2B,$FF,$FE,$80,$00 ; . 2 2 3 3 3 3 3 3 3 3 2 2 . . . . . . .
-        .DB      $2F,$FF,$FF,$80,$00 ; . 2 3 3 3 3 3 3 3 3 3 3 2 . . . . . . .
-        .DB      $AF,$FF,$FF,$A0,$00 ; 2 2 3 3 3 3 3 3 3 3 3 3 2 2 . . . . . .
-        .DB      $BF,$F5,$FF,$E0,$00 ; 2 3 3 3 3 3 1 1 3 3 3 3 3 2 . . . . . .
-        .DB      $B7,$F5,$FD,$E0,$00 ; 2 3 1 3 3 3 1 1 3 3 3 1 3 2 . . . . . .
-        .DB      $BB,$F5,$FD,$60,$00 ; 2 3 2 3 3 3 1 1 3 3 3 1 1 2 . . . . . .
-        .DB      $85,$F5,$F5,$20,$00 ; 2 . 1 1 3 3 1 1 3 3 1 1 . 2 . . . . . .
-        .DB      $85,$55,$55,$20,$00 ; 2 . 1 1 1 1 1 1 1 1 1 1 . 2 . . . . . .
-        .DB      $81,$55,$54,$20,$00 ; 2 . . 1 1 1 1 1 1 1 1 . . 2 . . . . . .
-        .DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
-        .DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
-;*******************************************************************************
-; LASER_TURRET_VERTICAL_FIRE
-;
+        DB      $05,$13 ; Bitmap size: 5 bytes/row, 19 rows
+        DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
+        DB      $00,$3F,$C0,$00,$00 ; . . . . . 3 3 3 3 . . . . . . . . . . .
+        DB      $00,$30,$C0,$00,$00 ; . . . . . 3 . . 3 . . . . . . . . . . .
+        DB      $00,$3F,$C0,$00,$00 ; . . . . . 3 3 3 3 . . . . . . . . . . .
+        DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
+        DB      $02,$0F,$08,$00,$00 ; . . . 2 . . 3 3 . . 2 . . . . . . . . .
+        DB      $0A,$0F,$0A,$00,$00 ; . . 2 2 . . 3 3 . . 2 2 . . . . . . . .
+        DB      $0A,$0F,$0A,$00,$00 ; . . 2 2 . . 3 3 . . 2 2 . . . . . . . .
+        DB      $2B,$FF,$FE,$80,$00 ; . 2 2 3 3 3 3 3 3 3 3 2 2 . . . . . . .
+        DB      $2F,$FF,$FF,$80,$00 ; . 2 3 3 3 3 3 3 3 3 3 3 2 . . . . . . .
+        DB      $AF,$FF,$FF,$A0,$00 ; 2 2 3 3 3 3 3 3 3 3 3 3 2 2 . . . . . .
+        DB      $BF,$F5,$FF,$E0,$00 ; 2 3 3 3 3 3 1 1 3 3 3 3 3 2 . . . . . .
+        DB      $B7,$F5,$FD,$E0,$00 ; 2 3 1 3 3 3 1 1 3 3 3 1 3 2 . . . . . .
+        DB      $BB,$F5,$FD,$60,$00 ; 2 3 2 3 3 3 1 1 3 3 3 1 1 2 . . . . . .
+        DB      $85,$F5,$F5,$20,$00 ; 2 . 1 1 3 3 1 1 3 3 1 1 . 2 . . . . . .
+        DB      $85,$55,$55,$20,$00 ; 2 . 1 1 1 1 1 1 1 1 1 1 . 2 . . . . . .
+        DB      $81,$55,$54,$20,$00 ; 2 . . 1 1 1 1 1 1 1 1 . . 2 . . . . . .
+        DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
+        DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
+
 ; Vertical laser-turret firing frame.
-; Object record: $1943; bitmap header: $1945.
 ; Hotspot offsets: X = 7, Y = 4.
 ; Bitmap: 20 x 16 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_VERTICAL_FIRE:
-        .DB      $07,$04 ; Hotspot offsets: X = 7, Y = 4
+        DB      $07,$04 ; Hotspot offsets: X = 7, Y = 4
+
 LASER_TURRET_VERTICAL_FIRE_HEADER:
-        .DB      $05,$10 ; Bitmap size: 5 bytes/row, 16 rows
-        .DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
-        .DB      $00,$3F,$C0,$00,$00 ; . . . . . 3 3 3 3 . . . . . . . . . . .
-        .DB      $02,$30,$C8,$00,$00 ; . . . 2 . 3 . . 3 . 2 . . . . . . . . .
-        .DB      $0A,$3F,$CA,$00,$00 ; . . 2 2 . 3 3 3 3 . 2 2 . . . . . . . .
-        .DB      $0A,$0F,$0A,$00,$00 ; . . 2 2 . . 3 3 . . 2 2 . . . . . . . .
-        .DB      $2B,$FF,$FE,$80,$00 ; . 2 2 3 3 3 3 3 3 3 3 2 2 . . . . . . .
-        .DB      $2F,$FF,$FF,$80,$00 ; . 2 3 3 3 3 3 3 3 3 3 3 2 . . . . . . .
-        .DB      $AF,$FF,$FF,$A0,$00 ; 2 2 3 3 3 3 3 3 3 3 3 3 2 2 . . . . . .
-        .DB      $BF,$F5,$FF,$E0,$00 ; 2 3 3 3 3 3 1 1 3 3 3 3 3 2 . . . . . .
-        .DB      $B7,$F5,$FD,$E0,$00 ; 2 3 1 3 3 3 1 1 3 3 3 1 3 2 . . . . . .
-        .DB      $BB,$F5,$FD,$60,$00 ; 2 3 2 3 3 3 1 1 3 3 3 1 1 2 . . . . . .
-        .DB      $85,$F5,$F5,$20,$00 ; 2 . 1 1 3 3 1 1 3 3 1 1 . 2 . . . . . .
-        .DB      $85,$55,$55,$20,$00 ; 2 . 1 1 1 1 1 1 1 1 1 1 . 2 . . . . . .
-        .DB      $81,$55,$54,$20,$00 ; 2 . . 1 1 1 1 1 1 1 1 . . 2 . . . . . .
-        .DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
-        .DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
-;*******************************************************************************
-; LASER_TURRET_HORIZONTAL
-;
+        DB      $05,$10 ; Bitmap size: 5 bytes/row, 16 rows
+        DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
+        DB      $00,$3F,$C0,$00,$00 ; . . . . . 3 3 3 3 . . . . . . . . . . .
+        DB      $02,$30,$C8,$00,$00 ; . . . 2 . 3 . . 3 . 2 . . . . . . . . .
+        DB      $0A,$3F,$CA,$00,$00 ; . . 2 2 . 3 3 3 3 . 2 2 . . . . . . . .
+        DB      $0A,$0F,$0A,$00,$00 ; . . 2 2 . . 3 3 . . 2 2 . . . . . . . .
+        DB      $2B,$FF,$FE,$80,$00 ; . 2 2 3 3 3 3 3 3 3 3 2 2 . . . . . . .
+        DB      $2F,$FF,$FF,$80,$00 ; . 2 3 3 3 3 3 3 3 3 3 3 2 . . . . . . .
+        DB      $AF,$FF,$FF,$A0,$00 ; 2 2 3 3 3 3 3 3 3 3 3 3 2 2 . . . . . .
+        DB      $BF,$F5,$FF,$E0,$00 ; 2 3 3 3 3 3 1 1 3 3 3 3 3 2 . . . . . .
+        DB      $B7,$F5,$FD,$E0,$00 ; 2 3 1 3 3 3 1 1 3 3 3 1 3 2 . . . . . .
+        DB      $BB,$F5,$FD,$60,$00 ; 2 3 2 3 3 3 1 1 3 3 3 1 1 2 . . . . . .
+        DB      $85,$F5,$F5,$20,$00 ; 2 . 1 1 3 3 1 1 3 3 1 1 . 2 . . . . . .
+        DB      $85,$55,$55,$20,$00 ; 2 . 1 1 1 1 1 1 1 1 1 1 . 2 . . . . . .
+        DB      $81,$55,$54,$20,$00 ; 2 . . 1 1 1 1 1 1 1 1 . . 2 . . . . . .
+        DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
+        DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
+
 ; Laser turret oriented horizontally.
-; Object record: $1997; bitmap header: $1999.
 ; Hotspot offsets: X = 7, Y = 7.
 ; Bitmap: 20 x 14 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_HORIZONTAL:
-        .DB      $07,$07 ; Hotspot offsets: X = 7, Y = 7
+        DB      $07,$07 ; Hotspot offsets: X = 7, Y = 7
+
 LASER_TURRET_HORIZONTAL_HEADER:
-        .DB      $05,$0E ; Bitmap size: 5 bytes/row, 14 rows
-        .DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
-        .DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
-        .DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
-        .DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
-        .DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
-        .DB      $3F,$00,$FF,$D4,$00 ; . 3 3 3 . . . . 3 3 3 3 3 1 1 . . . . .
-        .DB      $F3,$FF,$FD,$55,$00 ; 3 3 . 3 3 3 3 3 3 3 3 1 1 1 1 1 . . . .
-        .DB      $F3,$FF,$FD,$55,$00 ; 3 3 . 3 3 3 3 3 3 3 3 1 1 1 1 1 . . . .
-        .DB      $3F,$00,$FF,$D4,$00 ; . 3 3 3 . . . . 3 3 3 3 3 1 1 . . . . .
-        .DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
-        .DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
-        .DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
-        .DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
-        .DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
-;*******************************************************************************
-; LASER_TURRET_HORIZONTAL_FIRE
-;
+        DB      $05,$0E ; Bitmap size: 5 bytes/row, 14 rows
+        DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
+        DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
+        DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
+        DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
+        DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
+        DB      $3F,$00,$FF,$D4,$00 ; . 3 3 3 . . . . 3 3 3 3 3 1 1 . . . . .
+        DB      $F3,$FF,$FD,$55,$00 ; 3 3 . 3 3 3 3 3 3 3 3 1 1 1 1 1 . . . .
+        DB      $F3,$FF,$FD,$55,$00 ; 3 3 . 3 3 3 3 3 3 3 3 1 1 1 1 1 . . . .
+        DB      $3F,$00,$FF,$D4,$00 ; . 3 3 3 . . . . 3 3 3 3 3 1 1 . . . . .
+        DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
+        DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
+        DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
+        DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
+        DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
+
 ; Horizontal laser-turret firing frame.
-; Object record: $19E1; bitmap header: $19E3.
 ; Hotspot offsets: X = 5, Y = 7.
 ; Bitmap: 20 x 14 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_HORIZONTAL_FIRE:
-        .DB      $05,$07 ; Hotspot offsets: X = 5, Y = 7
+        DB      $05,$07 ; Hotspot offsets: X = 5, Y = 7
+
 LASER_TURRET_HORIZONTAL_FIRE_HEADER:
-        .DB      $05,$0E ; Bitmap size: 5 bytes/row, 14 rows
-        .DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
-        .DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
-        .DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
-        .DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
-        .DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
-        .DB      $00,$FC,$FF,$D4,$00 ; . . . . 3 3 3 . 3 3 3 3 3 1 1 . . . . .
-        .DB      $03,$CF,$FD,$55,$00 ; . . . 3 3 . 3 3 3 3 3 1 1 1 1 1 . . . .
-        .DB      $03,$CF,$FD,$55,$00 ; . . . 3 3 . 3 3 3 3 3 1 1 1 1 1 . . . .
-        .DB      $00,$FC,$FF,$D4,$00 ; . . . . 3 3 3 . 3 3 3 3 3 1 1 . . . . .
-        .DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
-        .DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
-        .DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
-        .DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
-        .DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
+        DB      $05,$0E ; Bitmap size: 5 bytes/row, 14 rows
+        DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
+        DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
+        DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
+        DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
+        DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
+        DB      $00,$FC,$FF,$D4,$00 ; . . . . 3 3 3 . 3 3 3 3 3 1 1 . . . . .
+        DB      $03,$CF,$FD,$55,$00 ; . . . 3 3 . 3 3 3 3 3 1 1 1 1 1 . . . .
+        DB      $03,$CF,$FD,$55,$00 ; . . . 3 3 . 3 3 3 3 3 1 1 1 1 1 . . . .
+        DB      $00,$FC,$FF,$D4,$00 ; . . . . 3 3 3 . 3 3 3 3 3 1 1 . . . . .
+        DB      $00,$00,$FF,$D4,$00 ; . . . . . . . . 3 3 3 3 3 1 1 . . . . .
+        DB      $00,$2A,$FF,$D0,$00 ; . . . . . 2 2 2 3 3 3 3 3 1 . . . . . .
+        DB      $00,$0A,$3F,$50,$00 ; . . . . . . 2 2 . 3 3 3 1 1 . . . . . .
+        DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
+        DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
+
 ; Laser-turret frame sequences. Control bytes precede object-record pointers;
 ; $00 terminates each list by pointing back to its first entry.
 LASER_TURRET_VERTICAL_IDLE_SEQUENCE:
-        .DB      $FF
-        .DW      LASER_TURRET_VERTICAL
-        .DB      $00
-        .DW      LASER_TURRET_VERTICAL_IDLE_SEQUENCE
+        DB      $FF
+        DW      LASER_TURRET_VERTICAL
+        DB      $00
+        DW      LASER_TURRET_VERTICAL_IDLE_SEQUENCE
+
 LASER_TURRET_HORIZONTAL_IDLE_SEQUENCE:
-        .DB      $FF
-        .DW      LASER_TURRET_HORIZONTAL
-        .DB      $00
-        .DW      LASER_TURRET_HORIZONTAL_IDLE_SEQUENCE
+        DB      $FF
+        DW      LASER_TURRET_HORIZONTAL
+        DB      $00
+        DW      LASER_TURRET_HORIZONTAL_IDLE_SEQUENCE
+
 LASER_TURRET_VERTICAL_FIRE_SEQUENCE:
-        .DB      $0E
-        .DW      LASER_TURRET_VERTICAL_FIRE
-        .DB      $FF
-        .DW      LASER_TURRET_VERTICAL
-        .DB      $00
-        .DW      LASER_TURRET_VERTICAL_FIRE_SEQUENCE
+        DB      $0E
+        DW      LASER_TURRET_VERTICAL_FIRE
+        DB      $FF
+        DW      LASER_TURRET_VERTICAL
+        DB      $00
+        DW      LASER_TURRET_VERTICAL_FIRE_SEQUENCE
+
 LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE:
-        .DB      $0E
-        .DW      LASER_TURRET_HORIZONTAL_FIRE
-        .DB      $FF
-        .DW      LASER_TURRET_HORIZONTAL
-        .DB      $00
-        .DW      LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE
-;*******************************************************************************
-; SPACE_MINE_1
-;
+        DB      $0E
+        DW      LASER_TURRET_HORIZONTAL_FIRE
+        DB      $FF
+        DW      LASER_TURRET_HORIZONTAL
+        DB      $00
+        DW      LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE
+
 ; Incoming space mine, growth stage 1.
-; Object record: $1A49; bitmap header: $1A4B.
 ; Hotspot offsets: X = 2, Y = 2.
 ; Bitmap: 8 x 4 pixels, 2 bytes per row.
-;*******************************************************************************
 SPACE_MINE_1:
-        .DB      $02,$02 ; Hotspot offsets: X = 2, Y = 2
+        DB      $02,$02 ; Hotspot offsets: X = 2, Y = 2
+
 SPACE_MINE_1_HEADER:
-        .DB      $02,$04 ; Bitmap size: 2 bytes/row, 4 rows
-        .DB      $14,$00 ; . 1 1 . . . . .
-        .DB      $DD,$00 ; 3 1 3 1 . . . .
-        .DB      $77,$00 ; 1 3 1 3 . . . .
-        .DB      $1C,$00 ; . 1 3 . . . . .
-;*******************************************************************************
-; SPACE_MINE_2
-;
+        DB      $02,$04 ; Bitmap size: 2 bytes/row, 4 rows
+        DB      $14,$00 ; . 1 1 . . . . .
+        DB      $DD,$00 ; 3 1 3 1 . . . .
+        DB      $77,$00 ; 1 3 1 3 . . . .
+        DB      $1C,$00 ; . 1 3 . . . . .
+
 ; Incoming space mine, growth stage 2.
-; Object record: $1A55; bitmap header: $1A57.
 ; Hotspot offsets: X = 3, Y = 3.
 ; Bitmap: 12 x 6 pixels, 3 bytes per row.
-;*******************************************************************************
 SPACE_MINE_2:
-        .DB      $03,$03 ; Hotspot offsets: X = 3, Y = 3
+        DB      $03,$03 ; Hotspot offsets: X = 3, Y = 3
+
 SPACE_MINE_2_HEADER:
-        .DB      $03,$06 ; Bitmap size: 3 bytes/row, 6 rows
-        .DB      $07,$00,$00 ; . . 1 3 . . . . . . . .
-        .DB      $37,$C0,$00 ; . 3 1 3 3 . . . . . . .
-        .DB      $D5,$50,$00 ; 3 1 1 1 1 1 . . . . . .
-        .DB      $77,$D0,$00 ; 1 3 1 3 3 1 . . . . . .
-        .DB      $3D,$40,$00 ; . 3 3 1 1 . . . . . . .
-        .DB      $0D,$00,$00 ; . . 3 1 . . . . . . . .
-;*******************************************************************************
-; SPACE_MINE_3
-;
+        DB      $03,$06 ; Bitmap size: 3 bytes/row, 6 rows
+        DB      $07,$00,$00 ; . . 1 3 . . . . . . . .
+        DB      $37,$C0,$00 ; . 3 1 3 3 . . . . . . .
+        DB      $D5,$50,$00 ; 3 1 1 1 1 1 . . . . . .
+        DB      $77,$D0,$00 ; 1 3 1 3 3 1 . . . . . .
+        DB      $3D,$40,$00 ; . 3 3 1 1 . . . . . . .
+        DB      $0D,$00,$00 ; . . 3 1 . . . . . . . .
+
 ; Incoming space mine, growth stage 3.
-; Object record: $1A6B; bitmap header: $1A6D.
 ; Hotspot offsets: X = 4, Y = 4.
 ; Bitmap: 12 x 8 pixels, 3 bytes per row.
-;*******************************************************************************
 SPACE_MINE_3:
-        .DB      $04,$04 ; Hotspot offsets: X = 4, Y = 4
+        DB      $04,$04 ; Hotspot offsets: X = 4, Y = 4
+
 SPACE_MINE_3_HEADER:
-        .DB      $03,$08 ; Bitmap size: 3 bytes/row, 8 rows
-        .DB      $03,$C0,$00 ; . . . 3 3 . . . . . . .
-        .DB      $0F,$50,$00 ; . . 3 3 1 1 . . . . . .
-        .DB      $3D,$74,$00 ; . 3 3 1 1 3 1 . . . . .
-        .DB      $DD,$DD,$00 ; 3 1 3 1 3 1 3 1 . . . .
-        .DB      $77,$77,$00 ; 1 3 1 3 1 3 1 3 . . . .
-        .DB      $17,$D4,$00 ; . 1 1 3 3 1 1 . . . . .
-        .DB      $0D,$50,$00 ; . . 3 1 1 1 . . . . . .
-        .DB      $01,$40,$00 ; . . . 1 1 . . . . . . .
-;*******************************************************************************
-; SPACE_MINE_4
-;
+        DB      $03,$08 ; Bitmap size: 3 bytes/row, 8 rows
+        DB      $03,$C0,$00 ; . . . 3 3 . . . . . . .
+        DB      $0F,$50,$00 ; . . 3 3 1 1 . . . . . .
+        DB      $3D,$74,$00 ; . 3 3 1 1 3 1 . . . . .
+        DB      $DD,$DD,$00 ; 3 1 3 1 3 1 3 1 . . . .
+        DB      $77,$77,$00 ; 1 3 1 3 1 3 1 3 . . . .
+        DB      $17,$D4,$00 ; . 1 1 3 3 1 1 . . . . .
+        DB      $0D,$50,$00 ; . . 3 1 1 1 . . . . . .
+        DB      $01,$40,$00 ; . . . 1 1 . . . . . . .
+
 ; Incoming space mine, growth stage 4.
-; Object record: $1A87; bitmap header: $1A89.
 ; Hotspot offsets: X = 4, Y = 5.
 ; Bitmap: 16 x 9 pixels, 4 bytes per row.
-;*******************************************************************************
 SPACE_MINE_4:
-        .DB      $04,$05 ; Hotspot offsets: X = 4, Y = 5
+        DB      $04,$05 ; Hotspot offsets: X = 4, Y = 5
+
 SPACE_MINE_4_HEADER:
-        .DB      $04,$09 ; Bitmap size: 4 bytes/row, 9 rows
-        .DB      $01,$70,$00,$00 ; . . . 1 1 3 . . . . . . . . . .
-        .DB      $05,$FC,$00,$00 ; . . 1 1 3 3 3 . . . . . . . . .
-        .DB      $35,$75,$00,$00 ; . 3 1 1 1 3 1 1 . . . . . . . .
-        .DB      $3D,$55,$00,$00 ; . 3 3 1 1 1 1 1 . . . . . . . .
-        .DB      $DF,$5D,$40,$00 ; 3 1 3 3 1 1 3 1 1 . . . . . . .
-        .DB      $55,$5F,$C0,$00 ; 1 1 1 1 1 1 3 3 3 . . . . . . .
-        .DB      $35,$7D,$00,$00 ; . 3 1 1 1 3 3 1 . . . . . . . .
-        .DB      $07,$74,$00,$00 ; . . 1 3 1 3 1 . . . . . . . . .
-        .DB      $03,$D0,$00,$00 ; . . . 3 3 1 . . . . . . . . . .
-;*******************************************************************************
-; SPACE_MINE_5
-;
+        DB      $04,$09 ; Bitmap size: 4 bytes/row, 9 rows
+        DB      $01,$70,$00,$00 ; . . . 1 1 3 . . . . . . . . . .
+        DB      $05,$FC,$00,$00 ; . . 1 1 3 3 3 . . . . . . . . .
+        DB      $35,$75,$00,$00 ; . 3 1 1 1 3 1 1 . . . . . . . .
+        DB      $3D,$55,$00,$00 ; . 3 3 1 1 1 1 1 . . . . . . . .
+        DB      $DF,$5D,$40,$00 ; 3 1 3 3 1 1 3 1 1 . . . . . . .
+        DB      $55,$5F,$C0,$00 ; 1 1 1 1 1 1 3 3 3 . . . . . . .
+        DB      $35,$7D,$00,$00 ; . 3 1 1 1 3 3 1 . . . . . . . .
+        DB      $07,$74,$00,$00 ; . . 1 3 1 3 1 . . . . . . . . .
+        DB      $03,$D0,$00,$00 ; . . . 3 3 1 . . . . . . . . . .
+
 ; Incoming space mine, growth stage 5.
-; Object record: $1AAF; bitmap header: $1AB1.
 ; Hotspot offsets: X = 5, Y = 6.
 ; Bitmap: 16 x 11 pixels, 4 bytes per row.
-;*******************************************************************************
 SPACE_MINE_5:
-        .DB      $05,$06 ; Hotspot offsets: X = 5, Y = 6
+        DB      $05,$06 ; Hotspot offsets: X = 5, Y = 6
+
 SPACE_MINE_5_HEADER:
-        .DB      $04,$0B ; Bitmap size: 4 bytes/row, 11 rows
-        .DB      $00,$D4,$00,$00 ; . . . . 3 1 1 . . . . . . . . .
-        .DB      $0F,$57,$C0,$00 ; . . 3 3 1 1 1 3 3 . . . . . . .
-        .DB      $3F,$F5,$D0,$00 ; . 3 3 3 3 3 1 1 3 1 . . . . . .
-        .DB      $3D,$FD,$50,$00 ; . 3 3 1 3 3 3 1 1 1 . . . . . .
-        .DB      $35,$75,$70,$00 ; . 3 1 1 1 3 1 1 1 3 . . . . . .
-        .DB      $D7,$55,$FC,$00 ; 3 1 1 3 1 1 1 1 3 3 3 . . . . .
-        .DB      $55,$5D,$F4,$00 ; 1 1 1 1 1 1 3 1 3 3 1 . . . . .
-        .DB      $1D,$DF,$F0,$00 ; . 1 3 1 3 1 3 3 3 3 . . . . . .
-        .DB      $3F,$57,$F0,$00 ; . 3 3 3 1 1 1 3 3 3 . . . . . .
-        .DB      $05,$5F,$40,$00 ; . . 1 1 1 1 3 3 1 . . . . . . .
-        .DB      $00,$5C,$00,$00 ; . . . . 1 1 3 . . . . . . . . .
+        DB      $04,$0B ; Bitmap size: 4 bytes/row, 11 rows
+        DB      $00,$D4,$00,$00 ; . . . . 3 1 1 . . . . . . . . .
+        DB      $0F,$57,$C0,$00 ; . . 3 3 1 1 1 3 3 . . . . . . .
+        DB      $3F,$F5,$D0,$00 ; . 3 3 3 3 3 1 1 3 1 . . . . . .
+        DB      $3D,$FD,$50,$00 ; . 3 3 1 3 3 3 1 1 1 . . . . . .
+        DB      $35,$75,$70,$00 ; . 3 1 1 1 3 1 1 1 3 . . . . . .
+        DB      $D7,$55,$FC,$00 ; 3 1 1 3 1 1 1 1 3 3 3 . . . . .
+        DB      $55,$5D,$F4,$00 ; 1 1 1 1 1 1 3 1 3 3 1 . . . . .
+        DB      $1D,$DF,$F0,$00 ; . 1 3 1 3 1 3 3 3 3 . . . . . .
+        DB      $3F,$57,$F0,$00 ; . 3 3 3 1 1 1 3 3 3 . . . . . .
+        DB      $05,$5F,$40,$00 ; . . 1 1 1 1 3 3 1 . . . . . . .
+        DB      $00,$5C,$00,$00 ; . . . . 1 1 3 . . . . . . . . .
+
 ; Space-mine growth sequences. Control bytes precede object-record pointers.
 SPACE_MINE_GROW_SEQUENCE:
-        .DB      $1C
-        .DW      SPACE_MINE_1
-        .DB      $14
-        .DW      SPACE_MINE_2
-        .DB      $10
-        .DW      SPACE_MINE_3
-        .DB      $0C
-        .DW      SPACE_MINE_4
-        .DB      $FF
-        .DW      SPACE_MINE_5
-        .DB      $00
-        .DW      SPACE_MINE_GROW_SEQUENCE
+        DB      $1C
+        DW      SPACE_MINE_1
+        DB      $14
+        DW      SPACE_MINE_2
+        DB      $10
+        DW      SPACE_MINE_3
+        DB      $0C
+        DW      SPACE_MINE_4
+        DB      $FF
+        DW      SPACE_MINE_5
+        DB      $00
+        DW      SPACE_MINE_GROW_SEQUENCE
+
 SPACE_MINE_FAST_GROW_SEQUENCE:
-        .DB      $09
-        .DW      SPACE_MINE_1
-        .DB      $09
-        .DW      SPACE_MINE_2
-        .DB      $09
-        .DW      SPACE_MINE_3
-        .DB      $09
-        .DW      SPACE_MINE_4
-        .DB      $FF
-        .DW      SPACE_MINE_5
-        .DB      $00
-        .DW      SPACE_MINE_GROW_SEQUENCE
-;*******************************************************************************
-; LASER_BASE_DESTROY_1
-;
+        DB      $09
+        DW      SPACE_MINE_1
+        DB      $09
+        DW      SPACE_MINE_2
+        DB      $09
+        DW      SPACE_MINE_3
+        DB      $09
+        DW      SPACE_MINE_4
+        DB      $FF
+        DW      SPACE_MINE_5
+        DB      $00
+        DW      SPACE_MINE_GROW_SEQUENCE
+
 ; Laser-base destruction animation, frame 1.
-; Object record: $1B03; bitmap header: $1B05.
 ; Hotspot offsets: X = 8, Y = 6.
 ; Bitmap: 16 x 12 pixels, 4 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_1:
-        .DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
+        DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
+
 LASER_BASE_DESTROY_1_HEADER:
-        .DB      $04,$0C ; Bitmap size: 4 bytes/row, 12 rows
-        .DB      $00,$C0,$04,$00 ; . . . . 3 . . . . . 1 . . . . .
-        .DB      $C0,$F3,$00,$00 ; 3 . . . 3 3 . 3 . . . . . . . .
-        .DB      $3F,$FF,$0C,$00 ; . 3 3 3 3 3 3 3 . . 3 . . . . .
-        .DB      $0F,$FF,$FC,$00 ; . . 3 3 3 3 3 3 3 3 3 . . . . .
-        .DB      $0F,$DF,$7F,$00 ; . . 3 3 3 1 3 3 1 3 3 3 . . . .
-        .DB      $FF,$55,$7C,$00 ; 3 3 3 3 1 1 1 1 1 3 3 . . . . .
-        .DB      $FD,$55,$7C,$00 ; 3 3 3 1 1 1 1 1 1 3 3 . . . . .
-        .DB      $3F,$F5,$7C,$00 ; . 3 3 3 3 3 1 1 1 3 3 . . . . .
-        .DB      $0F,$3F,$F0,$00 ; . . 3 3 . 3 3 3 3 3 . . . . . .
-        .DB      $4C,$0F,$C1,$00 ; 1 . 3 . . . 3 3 3 . . 1 . . . .
-        .DB      $00,$0F,$C0,$00 ; . . . . . . 3 3 3 . . . . . . .
-        .DB      $00,$03,$00,$00 ; . . . . . . . 3 . . . . . . . .
-;*******************************************************************************
-; LASER_BASE_DESTROY_2
-;
+        DB      $04,$0C ; Bitmap size: 4 bytes/row, 12 rows
+        DB      $00,$C0,$04,$00 ; . . . . 3 . . . . . 1 . . . . .
+        DB      $C0,$F3,$00,$00 ; 3 . . . 3 3 . 3 . . . . . . . .
+        DB      $3F,$FF,$0C,$00 ; . 3 3 3 3 3 3 3 . . 3 . . . . .
+        DB      $0F,$FF,$FC,$00 ; . . 3 3 3 3 3 3 3 3 3 . . . . .
+        DB      $0F,$DF,$7F,$00 ; . . 3 3 3 1 3 3 1 3 3 3 . . . .
+        DB      $FF,$55,$7C,$00 ; 3 3 3 3 1 1 1 1 1 3 3 . . . . .
+        DB      $FD,$55,$7C,$00 ; 3 3 3 1 1 1 1 1 1 3 3 . . . . .
+        DB      $3F,$F5,$7C,$00 ; . 3 3 3 3 3 1 1 1 3 3 . . . . .
+        DB      $0F,$3F,$F0,$00 ; . . 3 3 . 3 3 3 3 3 . . . . . .
+        DB      $4C,$0F,$C1,$00 ; 1 . 3 . . . 3 3 3 . . 1 . . . .
+        DB      $00,$0F,$C0,$00 ; . . . . . . 3 3 3 . . . . . . .
+        DB      $00,$03,$00,$00 ; . . . . . . . 3 . . . . . . . .
+
 ; Laser-base destruction animation, frame 2.
-; Object record: $1B37; bitmap header: $1B39.
 ; Hotspot offsets: X = 10, Y = 8.
 ; Bitmap: 20 x 17 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_2:
-        .DB      $0A,$08 ; Hotspot offsets: X = 10, Y = 8
+        DB      $0A,$08 ; Hotspot offsets: X = 10, Y = 8
+
 LASER_BASE_DESTROY_2_HEADER:
-        .DB      $05,$11 ; Bitmap size: 5 bytes/row, 17 rows
-        .DB      $01,$00,$00,$00,$00 ; . . . 1 . . . . . . . . . . . . . . . .
-        .DB      $00,$40,$00,$00,$00 ; . . . . 1 . . . . . . . . . . . . . . .
-        .DB      $00,$54,$00,$00,$00 ; . . . . 1 1 1 . . . . . . . . . . . . .
-        .DB      $00,$14,$04,$00,$00 ; . . . . . 1 1 . . . 1 . . . . . . . . .
-        .DB      $00,$15,$54,$00,$C0 ; . . . . . 1 1 1 1 1 1 . . . . . 3 . . .
-        .DB      $00,$1D,$54,$14,$00 ; . . . . . 1 3 1 1 1 1 . . 1 1 . . . . .
-        .DB      $00,$5F,$D5,$55,$00 ; . . . . 1 1 3 3 3 1 1 1 1 1 1 1 . . . .
-        .DB      $00,$5F,$FF,$F5,$00 ; . . . . 1 1 3 3 3 3 3 3 3 3 1 1 . . . .
-        .DB      $C1,$7F,$FF,$F4,$00 ; 3 . . 1 1 3 3 3 3 3 3 3 3 3 1 . . . . .
-        .DB      $15,$7F,$FF,$D4,$00 ; . 1 1 1 1 3 3 3 3 3 3 3 3 1 1 . . . . .
-        .DB      $15,$FF,$FF,$D4,$00 ; . 1 1 1 3 3 3 3 3 3 3 3 3 1 1 . . . . .
-        .DB      $05,$FF,$FF,$F5,$00 ; . . 1 1 3 3 3 3 3 3 3 3 3 3 1 1 . . . .
-        .DB      $05,$F5,$FD,$F4,$00 ; . . 1 1 3 3 1 1 3 3 3 1 3 3 1 . . . . .
-        .DB      $00,$55,$55,$54,$00 ; . . . . 1 1 1 1 1 1 1 1 1 1 1 . . . . .
-        .DB      $05,$14,$14,$45,$40 ; . . 1 1 . 1 1 . . 1 1 . 1 . 1 1 1 . . .
-        .DB      $04,$00,$00,$40,$40 ; . . 1 . . . . . . . . . 1 . . . 1 . . .
-        .DB      $50,$00,$00,$40,$00 ; 1 1 . . . . . . . . . . 1 . . . . . . .
-;*******************************************************************************
-; LASER_BASE_DESTROY_3
-;
+        DB      $05,$11 ; Bitmap size: 5 bytes/row, 17 rows
+        DB      $01,$00,$00,$00,$00 ; . . . 1 . . . . . . . . . . . . . . . .
+        DB      $00,$40,$00,$00,$00 ; . . . . 1 . . . . . . . . . . . . . . .
+        DB      $00,$54,$00,$00,$00 ; . . . . 1 1 1 . . . . . . . . . . . . .
+        DB      $00,$14,$04,$00,$00 ; . . . . . 1 1 . . . 1 . . . . . . . . .
+        DB      $00,$15,$54,$00,$C0 ; . . . . . 1 1 1 1 1 1 . . . . . 3 . . .
+        DB      $00,$1D,$54,$14,$00 ; . . . . . 1 3 1 1 1 1 . . 1 1 . . . . .
+        DB      $00,$5F,$D5,$55,$00 ; . . . . 1 1 3 3 3 1 1 1 1 1 1 1 . . . .
+        DB      $00,$5F,$FF,$F5,$00 ; . . . . 1 1 3 3 3 3 3 3 3 3 1 1 . . . .
+        DB      $C1,$7F,$FF,$F4,$00 ; 3 . . 1 1 3 3 3 3 3 3 3 3 3 1 . . . . .
+        DB      $15,$7F,$FF,$D4,$00 ; . 1 1 1 1 3 3 3 3 3 3 3 3 1 1 . . . . .
+        DB      $15,$FF,$FF,$D4,$00 ; . 1 1 1 3 3 3 3 3 3 3 3 3 1 1 . . . . .
+        DB      $05,$FF,$FF,$F5,$00 ; . . 1 1 3 3 3 3 3 3 3 3 3 3 1 1 . . . .
+        DB      $05,$F5,$FD,$F4,$00 ; . . 1 1 3 3 1 1 3 3 3 1 3 3 1 . . . . .
+        DB      $00,$55,$55,$54,$00 ; . . . . 1 1 1 1 1 1 1 1 1 1 1 . . . . .
+        DB      $05,$14,$14,$45,$40 ; . . 1 1 . 1 1 . . 1 1 . 1 . 1 1 1 . . .
+        DB      $04,$00,$00,$40,$40 ; . . 1 . . . . . . . . . 1 . . . 1 . . .
+        DB      $50,$00,$00,$40,$00 ; 1 1 . . . . . . . . . . 1 . . . . . . .
+
 ; Laser-base destruction animation, frame 3.
-; Object record: $1B90; bitmap header: $1B92.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_3:
-        .DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+        DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_3_HEADER:
-        .DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
-        .DB      $00,$00,$80,$00,$00,$00 ; . . . . . . . . 2 . . . . . . . . . . . . . . .
-        .DB      $00,$02,$60,$00,$00,$00 ; . . . . . . . 2 1 2 . . . . . . . . . . . . . .
-        .DB      $00,$A9,$58,$00,$00,$00 ; . . . . 2 2 2 1 1 1 2 . . . . . . . . . . . . .
-        .DB      $02,$55,$56,$0A,$00,$00 ; . . . 2 1 1 1 1 1 1 1 2 . . 2 2 . . . . . . . .
-        .DB      $0B,$DF,$F5,$A6,$80,$00 ; . . 2 3 3 1 3 3 3 3 1 1 2 2 1 2 2 . . . . . . .
-        .DB      $25,$FF,$FD,$7D,$60,$00 ; . 2 1 1 3 3 3 3 3 3 3 1 1 3 3 1 1 2 . . . . . .
-        .DB      $09,$7F,$FF,$FD,$58,$00 ; . . 2 1 1 3 3 3 3 3 3 3 3 3 3 1 1 1 2 . . . . .
-        .DB      $02,$FF,$FF,$FF,$56,$00 ; . . . 2 3 3 3 3 3 3 3 3 3 3 3 3 1 1 1 2 . . . .
-        .DB      $00,$BF,$FF,$FF,$D5,$80 ; . . . . 2 3 3 3 3 3 3 3 3 3 3 3 3 1 1 1 2 . . .
-        .DB      $02,$5F,$FF,$FF,$FD,$60 ; . . . 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . .
-        .DB      $09,$7F,$FF,$FF,$F5,$80 ; . . 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . . .
-        .DB      $25,$FF,$FF,$FF,$D6,$00 ; . 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . . . .
-        .DB      $A5,$FF,$FF,$FF,$58,$00 ; 2 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . . . . .
-        .DB      $25,$5F,$FF,$F5,$58,$00 ; . 2 1 1 1 1 3 3 3 3 3 3 3 3 1 1 1 1 2 . . . . .
-        .DB      $09,$FF,$FF,$FD,$A0,$00 ; . . 2 1 3 3 3 3 3 3 3 3 3 3 3 1 2 2 . . . . . .
-        .DB      $02,$FB,$FF,$FE,$00,$00 ; . . . 2 3 3 2 3 3 3 3 3 3 3 3 2 . . . . . . . .
-        .DB      $00,$ED,$FF,$FE,$00,$00 ; . . . . 3 2 3 1 3 3 3 3 3 3 3 2 . . . . . . . .
-        .DB      $00,$9F,$FF,$FE,$A0,$00 ; . . . . 2 1 3 3 3 3 3 3 3 3 3 2 2 2 . . . . . .
-        .DB      $02,$57,$DF,$FD,$58,$00 ; . . . 2 1 1 1 3 3 1 3 3 3 3 3 1 1 1 2 . . . . .
-        .DB      $00,$95,$5B,$75,$60,$00 ; . . . . 2 1 1 1 1 1 2 3 1 3 1 1 1 2 . . . . . .
-        .DB      $00,$25,$62,$55,$80,$00 ; . . . . . 2 1 1 1 2 . 2 1 1 1 1 2 . . . . . . .
-        .DB      $00,$09,$80,$96,$00,$00 ; . . . . . . 2 1 2 . . . 2 1 1 2 . . . . . . . .
-        .DB      $00,$02,$00,$28,$00,$00 ; . . . . . . . 2 . . . . . 2 2 . . . . . . . . .
+        DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
+        DB      $00,$00,$80,$00,$00,$00 ; . . . . . . . . 2 . . . . . . . . . . . . . . .
+        DB      $00,$02,$60,$00,$00,$00 ; . . . . . . . 2 1 2 . . . . . . . . . . . . . .
+        DB      $00,$A9,$58,$00,$00,$00 ; . . . . 2 2 2 1 1 1 2 . . . . . . . . . . . . .
+        DB      $02,$55,$56,$0A,$00,$00 ; . . . 2 1 1 1 1 1 1 1 2 . . 2 2 . . . . . . . .
+        DB      $0B,$DF,$F5,$A6,$80,$00 ; . . 2 3 3 1 3 3 3 3 1 1 2 2 1 2 2 . . . . . . .
+        DB      $25,$FF,$FD,$7D,$60,$00 ; . 2 1 1 3 3 3 3 3 3 3 1 1 3 3 1 1 2 . . . . . .
+        DB      $09,$7F,$FF,$FD,$58,$00 ; . . 2 1 1 3 3 3 3 3 3 3 3 3 3 1 1 1 2 . . . . .
+        DB      $02,$FF,$FF,$FF,$56,$00 ; . . . 2 3 3 3 3 3 3 3 3 3 3 3 3 1 1 1 2 . . . .
+        DB      $00,$BF,$FF,$FF,$D5,$80 ; . . . . 2 3 3 3 3 3 3 3 3 3 3 3 3 1 1 1 2 . . .
+        DB      $02,$5F,$FF,$FF,$FD,$60 ; . . . 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . .
+        DB      $09,$7F,$FF,$FF,$F5,$80 ; . . 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . . .
+        DB      $25,$FF,$FF,$FF,$D6,$00 ; . 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . . . .
+        DB      $A5,$FF,$FF,$FF,$58,$00 ; 2 2 1 1 3 3 3 3 3 3 3 3 3 3 3 3 1 1 2 . . . . .
+        DB      $25,$5F,$FF,$F5,$58,$00 ; . 2 1 1 1 1 3 3 3 3 3 3 3 3 1 1 1 1 2 . . . . .
+        DB      $09,$FF,$FF,$FD,$A0,$00 ; . . 2 1 3 3 3 3 3 3 3 3 3 3 3 1 2 2 . . . . . .
+        DB      $02,$FB,$FF,$FE,$00,$00 ; . . . 2 3 3 2 3 3 3 3 3 3 3 3 2 . . . . . . . .
+        DB      $00,$ED,$FF,$FE,$00,$00 ; . . . . 3 2 3 1 3 3 3 3 3 3 3 2 . . . . . . . .
+        DB      $00,$9F,$FF,$FE,$A0,$00 ; . . . . 2 1 3 3 3 3 3 3 3 3 3 2 2 2 . . . . . .
+        DB      $02,$57,$DF,$FD,$58,$00 ; . . . 2 1 1 1 3 3 1 3 3 3 3 3 1 1 1 2 . . . . .
+        DB      $00,$95,$5B,$75,$60,$00 ; . . . . 2 1 1 1 1 1 2 3 1 3 1 1 1 2 . . . . . .
+        DB      $00,$25,$62,$55,$80,$00 ; . . . . . 2 1 1 1 2 . 2 1 1 1 1 2 . . . . . . .
+        DB      $00,$09,$80,$96,$00,$00 ; . . . . . . 2 1 2 . . . 2 1 1 2 . . . . . . . .
+        DB      $00,$02,$00,$28,$00,$00 ; . . . . . . . 2 . . . . . 2 2 . . . . . . . . .
 	 ld   h,(hl)
-;*******************************************************************************
-; LASER_BASE_DESTROY_4
-;
+
 ; Laser-base destruction animation, frame 4.
-; Object record: $1C1F; bitmap header: $1C21.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_4:
-        .DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+        DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_4_HEADER:
-        .DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
-        .DB      $80,$00,$08,$00,$00,$80 ; 2 . . . . . . . . . 2 . . . . . . . . . 2 . . .
-        .DB      $20,$00,$20,$00,$02,$00 ; . 2 . . . . . . . 2 . . . . . . . . . 2 . . . .
-        .DB      $08,$00,$80,$00,$08,$00 ; . . 2 . . . . . 2 . . . . . . . . . 2 . . . . .
-        .DB      $02,$00,$80,$00,$20,$00 ; . . . 2 . . . . 2 . . . . . . . . 2 . . . . . .
-        .DB      $00,$A2,$A1,$40,$80,$00 ; . . . . 2 2 . 2 2 2 . 1 1 . . . 2 . . . . . . .
-        .DB      $00,$2B,$7E,$52,$00,$00 ; . . . . . 2 2 3 1 3 3 2 1 1 . 2 . . . . . . . .
-        .DB      $00,$AF,$FF,$94,$02,$00 ; . . . . 2 2 3 3 3 3 3 3 2 1 1 . . . . 2 . . . .
-        .DB      $00,$2D,$FF,$F4,$08,$00 ; . . . . . 2 3 1 3 3 3 3 3 3 1 . . . 2 . . . . .
-        .DB      $00,$2B,$7F,$D5,$A0,$00 ; . . . . . 2 2 3 1 3 3 3 3 1 1 1 2 2 . . . . . .
-        .DB      $00,$0B,$7F,$D8,$00,$00 ; . . . . . . 2 3 1 3 3 3 3 1 2 . . . . . . . . .
-        .DB      $00,$AB,$7F,$DA,$00,$00 ; . . . . 2 2 2 3 1 3 3 3 3 1 2 2 . . . . . . . .
-        .DB      $02,$BD,$FF,$F6,$00,$00 ; . . . 2 2 3 3 1 3 3 3 3 3 3 1 2 . . . . . . . .
-        .DB      $0A,$DF,$FF,$E8,$00,$00 ; . . 2 2 3 1 3 3 3 3 3 3 3 2 2 . . . . . . . . .
-        .DB      $2B,$D7,$FF,$60,$00,$00 ; . 2 2 3 3 1 1 3 3 3 3 3 1 2 . . . . . . . . . .
-        .DB      $02,$B5,$FD,$68,$00,$00 ; . . . 2 2 3 1 1 3 3 3 1 1 2 2 . . . . . . . . .
-        .DB      $02,$AF,$FD,$FA,$00,$00 ; . . . 2 2 2 3 3 3 3 3 1 3 3 2 2 . . . . . . . .
-        .DB      $08,$2E,$AF,$F8,$00,$00 ; . . 2 . . 2 3 2 2 2 3 3 3 3 2 . . . . . . . . .
-        .DB      $20,$28,$2B,$EA,$00,$00 ; . 2 . . . 2 2 . . 2 2 3 3 2 2 2 . . . . . . . .
-        .DB      $80,$00,$0A,$A2,$80,$00 ; 2 . . . . . . . . . 2 2 2 2 . 2 2 . . . . . . .
-        .DB      $00,$00,$08,$00,$20,$00 ; . . . . . . . . . . 2 . . . . . . 2 . . . . . .
-        .DB      $00,$00,$20,$00,$08,$00 ; . . . . . . . . . 2 . . . . . . . . 2 . . . . .
-        .DB      $00,$00,$80,$00,$02,$00 ; . . . . . . . . 2 . . . . . . . . . . 2 . . . .
-        .DB      $00,$00,$00,$00,$00,$80 ; . . . . . . . . . . . . . . . . . . . . 2 . . .
-;*******************************************************************************
-; LASER_BASE_DESTROY_5
-;
+        DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
+        DB      $80,$00,$08,$00,$00,$80 ; 2 . . . . . . . . . 2 . . . . . . . . . 2 . . .
+        DB      $20,$00,$20,$00,$02,$00 ; . 2 . . . . . . . 2 . . . . . . . . . 2 . . . .
+        DB      $08,$00,$80,$00,$08,$00 ; . . 2 . . . . . 2 . . . . . . . . . 2 . . . . .
+        DB      $02,$00,$80,$00,$20,$00 ; . . . 2 . . . . 2 . . . . . . . . 2 . . . . . .
+        DB      $00,$A2,$A1,$40,$80,$00 ; . . . . 2 2 . 2 2 2 . 1 1 . . . 2 . . . . . . .
+        DB      $00,$2B,$7E,$52,$00,$00 ; . . . . . 2 2 3 1 3 3 2 1 1 . 2 . . . . . . . .
+        DB      $00,$AF,$FF,$94,$02,$00 ; . . . . 2 2 3 3 3 3 3 3 2 1 1 . . . . 2 . . . .
+        DB      $00,$2D,$FF,$F4,$08,$00 ; . . . . . 2 3 1 3 3 3 3 3 3 1 . . . 2 . . . . .
+        DB      $00,$2B,$7F,$D5,$A0,$00 ; . . . . . 2 2 3 1 3 3 3 3 1 1 1 2 2 . . . . . .
+        DB      $00,$0B,$7F,$D8,$00,$00 ; . . . . . . 2 3 1 3 3 3 3 1 2 . . . . . . . . .
+        DB      $00,$AB,$7F,$DA,$00,$00 ; . . . . 2 2 2 3 1 3 3 3 3 1 2 2 . . . . . . . .
+        DB      $02,$BD,$FF,$F6,$00,$00 ; . . . 2 2 3 3 1 3 3 3 3 3 3 1 2 . . . . . . . .
+        DB      $0A,$DF,$FF,$E8,$00,$00 ; . . 2 2 3 1 3 3 3 3 3 3 3 2 2 . . . . . . . . .
+        DB      $2B,$D7,$FF,$60,$00,$00 ; . 2 2 3 3 1 1 3 3 3 3 3 1 2 . . . . . . . . . .
+        DB      $02,$B5,$FD,$68,$00,$00 ; . . . 2 2 3 1 1 3 3 3 1 1 2 2 . . . . . . . . .
+        DB      $02,$AF,$FD,$FA,$00,$00 ; . . . 2 2 2 3 3 3 3 3 1 3 3 2 2 . . . . . . . .
+        DB      $08,$2E,$AF,$F8,$00,$00 ; . . 2 . . 2 3 2 2 2 3 3 3 3 2 . . . . . . . . .
+        DB      $20,$28,$2B,$EA,$00,$00 ; . 2 . . . 2 2 . . 2 2 3 3 2 2 2 . . . . . . . .
+        DB      $80,$00,$0A,$A2,$80,$00 ; 2 . . . . . . . . . 2 2 2 2 . 2 2 . . . . . . .
+        DB      $00,$00,$08,$00,$20,$00 ; . . . . . . . . . . 2 . . . . . . 2 . . . . . .
+        DB      $00,$00,$20,$00,$08,$00 ; . . . . . . . . . 2 . . . . . . . . 2 . . . . .
+        DB      $00,$00,$80,$00,$02,$00 ; . . . . . . . . 2 . . . . . . . . . . 2 . . . .
+        DB      $00,$00,$00,$00,$00,$80 ; . . . . . . . . . . . . . . . . . . . . 2 . . .
+
 ; Laser-base destruction animation, frame 5.
-; Object record: $1CAD; bitmap header: $1CAF.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_5:
-        .DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+        DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_5_HEADER:
-        .DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
-        .DB      $00,$00,$04,$03,$00,$00 ; . . . . . . . . . . 1 . . . . 3 . . . . . . . .
-        .DB      $00,$30,$41,$40,$30,$00 ; . . . . . 3 . . 1 . . 1 1 . . . . 3 . . . . . .
-        .DB      $00,$8C,$20,$08,$00,$00 ; . . . . 2 . 3 . . 2 . . . . 2 . . . . . . . . .
-        .DB      $00,$00,$01,$00,$00,$00 ; . . . . . . . . . . . 1 . . . . . . . . . . . .
-        .DB      $30,$90,$80,$C0,$20,$00 ; . 3 . . 2 1 . . 2 . . . 3 . . . . 2 . . . . . .
-        .DB      $0C,$20,$02,$00,$0F,$C0 ; . . 3 . . 2 . . . . . 2 . . . . . . 3 3 3 . . .
-        .DB      $30,$08,$28,$0C,$30,$00 ; . 3 . . . . 2 . . 2 2 . . . 3 . . 3 . . . . . .
-        .DB      $00,$00,$30,$00,$03,$00 ; . . . . . . . . . 3 . . . . . . . . . 3 . . . .
-        .DB      $0F,$C2,$A0,$14,$05,$40 ; . . 3 3 3 . . 2 2 2 . . . 1 1 . . . 1 1 1 . . .
-        .DB      $03,$C1,$80,$50,$1A,$00 ; . . . 3 3 . . 1 2 . . . 1 1 . . . 1 2 2 . . . .
-        .DB      $0F,$A1,$A1,$44,$4A,$40 ; . . 3 3 2 2 . 1 2 2 . 1 1 . 1 . 1 . 2 2 1 . . .
-        .DB      $F0,$29,$85,$50,$54,$00 ; 3 3 . . . 2 2 1 2 . 1 1 1 1 . . 1 1 1 . . . . .
-        .DB      $FC,$0A,$81,$54,$50,$00 ; 3 3 3 . . . 2 2 2 . . 1 1 1 1 . 1 1 . . . . . .
-        .DB      $0C,$80,$2A,$90,$00,$40 ; . . 3 . 2 . . . . 2 2 2 2 1 . . . . . . 1 . . .
-        .DB      $0F,$54,$08,$48,$50,$00 ; . . 3 3 1 1 1 . . . 2 . 1 . 2 . 1 1 . . . . . .
-        .DB      $30,$14,$20,$40,$10,$00 ; . 3 . . . 1 1 . . 2 . . 1 . . . . 1 . . . . . .
-        .DB      $01,$03,$0C,$04,$0C,$00 ; . . . 1 . . . 3 . . 3 . . . 1 . . . 3 . . . . .
-        .DB      $00,$10,$00,$00,$40,$00 ; . . . . . 1 . . . . . . . . . . 1 . . . . . . .
-        .DB      $20,$00,$04,$00,$00,$00 ; . 2 . . . . . . . . 1 . . . . . . . . . . . . .
-        .DB      $01,$0C,$00,$0C,$04,$00 ; . . . 1 . . 3 . . . . . . . 3 . . . 1 . . . . .
-        .DB      $00,$00,$08,$00,$00,$00 ; . . . . . . . . . . 2 . . . . . . . . . . . . .
-        .DB      $00,$04,$00,$10,$C0,$00 ; . . . . . . 1 . . . . . . 1 . . 3 . . . . . . .
-        .DB      $00,$00,$12,$0C,$00,$00 ; . . . . . . . . . 1 . 2 . . 3 . . . . . . . . .
-;*******************************************************************************
-; LASER_BASE_DESTROY_6
-;
+        DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
+        DB      $00,$00,$04,$03,$00,$00 ; . . . . . . . . . . 1 . . . . 3 . . . . . . . .
+        DB      $00,$30,$41,$40,$30,$00 ; . . . . . 3 . . 1 . . 1 1 . . . . 3 . . . . . .
+        DB      $00,$8C,$20,$08,$00,$00 ; . . . . 2 . 3 . . 2 . . . . 2 . . . . . . . . .
+        DB      $00,$00,$01,$00,$00,$00 ; . . . . . . . . . . . 1 . . . . . . . . . . . .
+        DB      $30,$90,$80,$C0,$20,$00 ; . 3 . . 2 1 . . 2 . . . 3 . . . . 2 . . . . . .
+        DB      $0C,$20,$02,$00,$0F,$C0 ; . . 3 . . 2 . . . . . 2 . . . . . . 3 3 3 . . .
+        DB      $30,$08,$28,$0C,$30,$00 ; . 3 . . . . 2 . . 2 2 . . . 3 . . 3 . . . . . .
+        DB      $00,$00,$30,$00,$03,$00 ; . . . . . . . . . 3 . . . . . . . . . 3 . . . .
+        DB      $0F,$C2,$A0,$14,$05,$40 ; . . 3 3 3 . . 2 2 2 . . . 1 1 . . . 1 1 1 . . .
+        DB      $03,$C1,$80,$50,$1A,$00 ; . . . 3 3 . . 1 2 . . . 1 1 . . . 1 2 2 . . . .
+        DB      $0F,$A1,$A1,$44,$4A,$40 ; . . 3 3 2 2 . 1 2 2 . 1 1 . 1 . 1 . 2 2 1 . . .
+        DB      $F0,$29,$85,$50,$54,$00 ; 3 3 . . . 2 2 1 2 . 1 1 1 1 . . 1 1 1 . . . . .
+        DB      $FC,$0A,$81,$54,$50,$00 ; 3 3 3 . . . 2 2 2 . . 1 1 1 1 . 1 1 . . . . . .
+        DB      $0C,$80,$2A,$90,$00,$40 ; . . 3 . 2 . . . . 2 2 2 2 1 . . . . . . 1 . . .
+        DB      $0F,$54,$08,$48,$50,$00 ; . . 3 3 1 1 1 . . . 2 . 1 . 2 . 1 1 . . . . . .
+        DB      $30,$14,$20,$40,$10,$00 ; . 3 . . . 1 1 . . 2 . . 1 . . . . 1 . . . . . .
+        DB      $01,$03,$0C,$04,$0C,$00 ; . . . 1 . . . 3 . . 3 . . . 1 . . . 3 . . . . .
+        DB      $00,$10,$00,$00,$40,$00 ; . . . . . 1 . . . . . . . . . . 1 . . . . . . .
+        DB      $20,$00,$04,$00,$00,$00 ; . 2 . . . . . . . . 1 . . . . . . . . . . . . .
+        DB      $01,$0C,$00,$0C,$04,$00 ; . . . 1 . . 3 . . . . . . . 3 . . . 1 . . . . .
+        DB      $00,$00,$08,$00,$00,$00 ; . . . . . . . . . . 2 . . . . . . . . . . . . .
+        DB      $00,$04,$00,$10,$C0,$00 ; . . . . . . 1 . . . . . . 1 . . 3 . . . . . . .
+        DB      $00,$00,$12,$0C,$00,$00 ; . . . . . . . . . 1 . 2 . . 3 . . . . . . . . .
+
 ; Laser-base destruction animation, frame 6.
-; Object record: $1D3B; bitmap header: $1D3D.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_6:
-        .DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+        DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_6_HEADER:
-        .DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
-        .DB      $00,$00,$C0,$00,$00,$00 ; . . . . . . . . 3 . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $20,$00,$00,$00,$04,$00 ; . 2 . . . . . . . . . . . . . . . . 1 . . . . .
-        .DB      $00,$00,$00,$20,$00,$00 ; . . . . . . . . . . . . . 2 . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$80 ; . . . . . . . . . . . . . . . . . . . . 2 . . .
-        .DB      $02,$00,$00,$00,$00,$00 ; . . . 2 . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$10,$00,$00,$00 ; . . . . . . . . . 1 . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $C0,$00,$00,$00,$03,$00 ; 3 . . . . . . . . . . . . . . . . . . 3 . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$01,$02,$00,$00,$00 ; . . . . . . . 1 . . . 2 . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$C0,$00 ; . . . . . . . . . . . . . . . . 3 . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$40 ; . . . . . . . . . . . . . . . . . . . . 1 . . .
-        .DB      $40,$00,$00,$00,$00,$00 ; 1 . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$40,$00,$00,$00 ; . . . . . . . . 1 . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
-        .DB      $01,$00,$00,$00,$00,$00 ; . . . 1 . . . . . . . . . . . . . . . . . . . .
-        .DB      $00,$00,$00,$03,$00,$00 ; . . . . . . . . . . . . . . . 3 . . . . . . . .
-        .DB      $00,$00,$04,$00,$00,$00 ; . . . . . . . . . . 1 . . . . . . . . . . . . .
-        .DB      $00,$01,$00,$40,$00,$00 ; . . . . . . . 1 . . . . 1 . . . . . . . . . . .
+        DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
+        DB      $00,$00,$C0,$00,$00,$00 ; . . . . . . . . 3 . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $20,$00,$00,$00,$04,$00 ; . 2 . . . . . . . . . . . . . . . . 1 . . . . .
+        DB      $00,$00,$00,$20,$00,$00 ; . . . . . . . . . . . . . 2 . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$80 ; . . . . . . . . . . . . . . . . . . . . 2 . . .
+        DB      $02,$00,$00,$00,$00,$00 ; . . . 2 . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$10,$00,$00,$00 ; . . . . . . . . . 1 . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $C0,$00,$00,$00,$03,$00 ; 3 . . . . . . . . . . . . . . . . . . 3 . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$01,$02,$00,$00,$00 ; . . . . . . . 1 . . . 2 . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$C0,$00 ; . . . . . . . . . . . . . . . . 3 . . . . . . .
+        DB      $00,$00,$00,$00,$00,$40 ; . . . . . . . . . . . . . . . . . . . . 1 . . .
+        DB      $40,$00,$00,$00,$00,$00 ; 1 . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$40,$00,$00,$00 ; . . . . . . . . 1 . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
+        DB      $01,$00,$00,$00,$00,$00 ; . . . 1 . . . . . . . . . . . . . . . . . . . .
+        DB      $00,$00,$00,$03,$00,$00 ; . . . . . . . . . . . . . . . 3 . . . . . . . .
+        DB      $00,$00,$04,$00,$00,$00 ; . . . . . . . . . . 1 . . . . . . . . . . . . .
+        DB      $00,$01,$00,$40,$00,$00 ; . . . . . . . 1 . . . . 1 . . . . . . . . . . .
+
 ; Laser-base destruction sequence.
 LASER_BASE_DESTROY_SEQUENCE:
-        .DB      $06
-        .DW      LASER_BASE_DESTROY_1
-        .DB      $06
-        .DW      LASER_BASE_DESTROY_2
-        .DB      $06
-        .DW      LASER_BASE_DESTROY_3
-        .DB      $06
-        .DW      LASER_BASE_DESTROY_4
-        .DB      $06
-        .DW      LASER_BASE_DESTROY_5
-        .DB      $06
-        .DW      LASER_BASE_DESTROY_6
-        .DB      $FF
-        .DW      BLANK
-        .DB      $00
-        .DW      LASER_BASE_DESTROY_SEQUENCE
-;*******************************************************************************
-; ATTACK_SATELLITE_1
-;
+        DB      $06
+        DW      LASER_BASE_DESTROY_1
+        DB      $06
+        DW      LASER_BASE_DESTROY_2
+        DB      $06
+        DW      LASER_BASE_DESTROY_3
+        DB      $06
+        DW      LASER_BASE_DESTROY_4
+        DB      $06
+        DW      LASER_BASE_DESTROY_5
+        DB      $06
+        DW      LASER_BASE_DESTROY_6
+        DB      $FF
+        DW      BLANK
+        DB      $00
+        DW      LASER_BASE_DESTROY_SEQUENCE
+
 ; Attack-satellite animation, frame 1.
-; Object record: $1DE1; bitmap header: $1DE3.
 ; Hotspot offsets: X = 7, Y = 5.
 ; Bitmap: 20 x 11 pixels, 5 bytes per row.
-;*******************************************************************************
 ATTACK_SATELLITE_1:
-        .DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+        DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+
 ATTACK_SATELLITE_1_HEADER:
-        .DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
-        .DB      $00,$01,$00,$00,$00 ; . . . . . . . 1 . . . . . . . . . . . .
-        .DB      $C0,$05,$40,$0C,$00 ; 3 . . . . . 1 1 1 . . . . . 3 . . . . .
-        .DB      $C0,$16,$50,$0C,$00 ; 3 . . . . 1 1 2 1 1 . . . . 3 . . . . .
-        .DB      $C0,$5A,$94,$0C,$00 ; 3 . . . 1 1 2 2 2 1 1 . . . 3 . . . . .
-        .DB      $C1,$6B,$A5,$0C,$00 ; 3 . . 1 1 2 2 3 2 2 1 1 . . 3 . . . . .
-        .DB      $FD,$AF,$E9,$FC,$00 ; 3 3 3 1 2 2 3 3 3 2 2 1 3 3 3 . . . . .
-        .DB      $C1,$6B,$A5,$0C,$00 ; 3 . . 1 1 2 2 3 2 2 1 1 . . 3 . . . . .
-        .DB      $C0,$5A,$94,$0C,$00 ; 3 . . . 1 1 2 2 2 1 1 . . . 3 . . . . .
-        .DB      $C0,$16,$50,$0C,$00 ; 3 . . . . 1 1 2 1 1 . . . . 3 . . . . .
-        .DB      $C0,$05,$40,$0C,$00 ; 3 . . . . . 1 1 1 . . . . . 3 . . . . .
-        .DB      $00,$01,$00,$00,$00 ; . . . . . . . 1 . . . . . . . . . . . .
-;*******************************************************************************
-; ATTACK_SATELLITE_2
-;
+        DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
+        DB      $00,$01,$00,$00,$00 ; . . . . . . . 1 . . . . . . . . . . . .
+        DB      $C0,$05,$40,$0C,$00 ; 3 . . . . . 1 1 1 . . . . . 3 . . . . .
+        DB      $C0,$16,$50,$0C,$00 ; 3 . . . . 1 1 2 1 1 . . . . 3 . . . . .
+        DB      $C0,$5A,$94,$0C,$00 ; 3 . . . 1 1 2 2 2 1 1 . . . 3 . . . . .
+        DB      $C1,$6B,$A5,$0C,$00 ; 3 . . 1 1 2 2 3 2 2 1 1 . . 3 . . . . .
+        DB      $FD,$AF,$E9,$FC,$00 ; 3 3 3 1 2 2 3 3 3 2 2 1 3 3 3 . . . . .
+        DB      $C1,$6B,$A5,$0C,$00 ; 3 . . 1 1 2 2 3 2 2 1 1 . . 3 . . . . .
+        DB      $C0,$5A,$94,$0C,$00 ; 3 . . . 1 1 2 2 2 1 1 . . . 3 . . . . .
+        DB      $C0,$16,$50,$0C,$00 ; 3 . . . . 1 1 2 1 1 . . . . 3 . . . . .
+        DB      $C0,$05,$40,$0C,$00 ; 3 . . . . . 1 1 1 . . . . . 3 . . . . .
+        DB      $00,$01,$00,$00,$00 ; . . . . . . . 1 . . . . . . . . . . . .
+
 ; Attack-satellite animation, frame 2.
-; Object record: $1E1C; bitmap header: $1E1E.
 ; Hotspot offsets: X = 7, Y = 5.
 ; Bitmap: 20 x 11 pixels, 5 bytes per row.
-;*******************************************************************************
 ATTACK_SATELLITE_2:
-        .DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+        DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+
 ATTACK_SATELLITE_2_HEADER:
-        .DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
-        .DB      $00,$02,$00,$00,$00 ; . . . . . . . 2 . . . . . . . . . . . .
-        .DB      $00,$0A,$80,$00,$00 ; . . . . . . 2 2 2 . . . . . . . . . . .
-        .DB      $C0,$2B,$A0,$0C,$00 ; 3 . . . . 2 2 3 2 2 . . . . 3 . . . . .
-        .DB      $C0,$AF,$E8,$0C,$00 ; 3 . . . 2 2 3 3 3 2 2 . . . 3 . . . . .
-        .DB      $C2,$BD,$FA,$0C,$00 ; 3 . . 2 2 3 3 1 3 3 2 2 . . 3 . . . . .
-        .DB      $FE,$F5,$7E,$FC,$00 ; 3 3 3 2 3 3 1 1 1 3 3 2 3 3 3 . . . . .
-        .DB      $C2,$BD,$FA,$0C,$00 ; 3 . . 2 2 3 3 1 3 3 2 2 . . 3 . . . . .
-        .DB      $C0,$AF,$E8,$0C,$00 ; 3 . . . 2 2 3 3 3 2 2 . . . 3 . . . . .
-        .DB      $C0,$2B,$A0,$0C,$00 ; 3 . . . . 2 2 3 2 2 . . . . 3 . . . . .
-        .DB      $00,$0A,$80,$00,$00 ; . . . . . . 2 2 2 . . . . . . . . . . .
-        .DB      $00,$02,$00,$00,$00 ; . . . . . . . 2 . . . . . . . . . . . .
-;*******************************************************************************
-; ATTACK_SATELLITE_3
-;
+        DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
+        DB      $00,$02,$00,$00,$00 ; . . . . . . . 2 . . . . . . . . . . . .
+        DB      $00,$0A,$80,$00,$00 ; . . . . . . 2 2 2 . . . . . . . . . . .
+        DB      $C0,$2B,$A0,$0C,$00 ; 3 . . . . 2 2 3 2 2 . . . . 3 . . . . .
+        DB      $C0,$AF,$E8,$0C,$00 ; 3 . . . 2 2 3 3 3 2 2 . . . 3 . . . . .
+        DB      $C2,$BD,$FA,$0C,$00 ; 3 . . 2 2 3 3 1 3 3 2 2 . . 3 . . . . .
+        DB      $FE,$F5,$7E,$FC,$00 ; 3 3 3 2 3 3 1 1 1 3 3 2 3 3 3 . . . . .
+        DB      $C2,$BD,$FA,$0C,$00 ; 3 . . 2 2 3 3 1 3 3 2 2 . . 3 . . . . .
+        DB      $C0,$AF,$E8,$0C,$00 ; 3 . . . 2 2 3 3 3 2 2 . . . 3 . . . . .
+        DB      $C0,$2B,$A0,$0C,$00 ; 3 . . . . 2 2 3 2 2 . . . . 3 . . . . .
+        DB      $00,$0A,$80,$00,$00 ; . . . . . . 2 2 2 . . . . . . . . . . .
+        DB      $00,$02,$00,$00,$00 ; . . . . . . . 2 . . . . . . . . . . . .
+
 ; Attack-satellite animation, frame 3.
-; Object record: $1E57; bitmap header: $1E59.
 ; Hotspot offsets: X = 7, Y = 5.
 ; Bitmap: 20 x 11 pixels, 5 bytes per row.
-;*******************************************************************************
 ATTACK_SATELLITE_3:
-        .DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+        DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+
 ATTACK_SATELLITE_3_HEADER:
-        .DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
-        .DB      $00,$03,$00,$00,$00 ; . . . . . . . 3 . . . . . . . . . . . .
-        .DB      $00,$0F,$C0,$00,$00 ; . . . . . . 3 3 3 . . . . . . . . . . .
-        .DB      $00,$3D,$F0,$00,$00 ; . . . . . 3 3 1 3 3 . . . . . . . . . .
-        .DB      $00,$F5,$7C,$00,$00 ; . . . . 3 3 1 1 1 3 3 . . . . . . . . .
-        .DB      $C3,$D6,$5F,$0C,$00 ; 3 . . 3 3 1 1 2 1 1 3 3 . . 3 . . . . .
-        .DB      $FF,$5A,$97,$FC,$00 ; 3 3 3 3 1 1 2 2 2 1 1 3 3 3 3 . . . . .
-        .DB      $C3,$D6,$5F,$0C,$00 ; 3 . . 3 3 1 1 2 1 1 3 3 . . 3 . . . . .
-        .DB      $00,$F5,$7C,$00,$00 ; . . . . 3 3 1 1 1 3 3 . . . . . . . . .
-        .DB      $00,$3D,$F0,$00,$00 ; . . . . . 3 3 1 3 3 . . . . . . . . . .
-        .DB      $00,$0F,$C0,$00,$00 ; . . . . . . 3 3 3 . . . . . . . . . . .
-        .DB      $00,$03,$00,$00,$00 ; . . . . . . . 3 . . . . . . . . . . . .
+        DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
+        DB      $00,$03,$00,$00,$00 ; . . . . . . . 3 . . . . . . . . . . . .
+        DB      $00,$0F,$C0,$00,$00 ; . . . . . . 3 3 3 . . . . . . . . . . .
+        DB      $00,$3D,$F0,$00,$00 ; . . . . . 3 3 1 3 3 . . . . . . . . . .
+        DB      $00,$F5,$7C,$00,$00 ; . . . . 3 3 1 1 1 3 3 . . . . . . . . .
+        DB      $C3,$D6,$5F,$0C,$00 ; 3 . . 3 3 1 1 2 1 1 3 3 . . 3 . . . . .
+        DB      $FF,$5A,$97,$FC,$00 ; 3 3 3 3 1 1 2 2 2 1 1 3 3 3 3 . . . . .
+        DB      $C3,$D6,$5F,$0C,$00 ; 3 . . 3 3 1 1 2 1 1 3 3 . . 3 . . . . .
+        DB      $00,$F5,$7C,$00,$00 ; . . . . 3 3 1 1 1 3 3 . . . . . . . . .
+        DB      $00,$3D,$F0,$00,$00 ; . . . . . 3 3 1 3 3 . . . . . . . . . .
+        DB      $00,$0F,$C0,$00,$00 ; . . . . . . 3 3 3 . . . . . . . . . . .
+        DB      $00,$03,$00,$00,$00 ; . . . . . . . 3 . . . . . . . . . . . .
+
 ; Attack-satellite animation sequence.
 ATTACK_SATELLITE_SEQUENCE:
-        .DB      $04
-        .DW      ATTACK_SATELLITE_1
-        .DB      $04
-        .DW      ATTACK_SATELLITE_2
-        .DB      $04
-        .DW      ATTACK_SATELLITE_3
-        .DB      $04
-        .DW      ATTACK_SATELLITE_2
-        .DB      $00
-        .DW      ATTACK_SATELLITE_SEQUENCE
+        DB      $04
+        DW      ATTACK_SATELLITE_1
+        DB      $04
+        DW      ATTACK_SATELLITE_2
+        DB      $04
+        DW      ATTACK_SATELLITE_3
+        DB      $04
+        DW      ATTACK_SATELLITE_2
+        DB      $00
+        DW      ATTACK_SATELLITE_SEQUENCE
+
+; Advance HL by one $24-byte record; preserve DE.
+NATIVE_ADVANCE_RECORD_24:
         push de
 	 ld   de,$0024
 	 add  hl,de
 	 pop  de
 	 ret
+
+; Write DE at HL using port $5B control; preserve I.
+NATIVE_WRITE_RECORD_WORD:
 	 ld   a,i
 	 push af
 	 xor  a
 	 ld   i,a
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),e
 	 inc  hl
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),d
 	 pop  af
 	 ld   i,a
 	 ret
+
+; Write matching words $24 bytes apart; protect interrupt state.
+NATIVE_WRITE_PAIRED_RECORD_WORD:
 	 ld   a,i
 	 push af
 	 di
-	 call $1EA8
+	 call NATIVE_WRITE_RECORD_WORD
 	 dec  hl
-	 call $1EA1
-	 call $1EA8
+	 call NATIVE_ADVANCE_RECORD_24
+	 call NATIVE_WRITE_RECORD_WORD
 	 pop  af
 	 jp   po,$1ECE
 	 ei
 	 ret
+
+; Write E at HL using port $5B control; preserve I.
+NATIVE_WRITE_RECORD_BYTE:
 	 ld   a,i
 	 push af
 	 xor  a
 	 ld   i,a
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),e
 	 pop  af
 	 ld   i,a
 	 ret
+
+; Write matching bytes $24 bytes apart; protect interrupt state.
+NATIVE_WRITE_PAIRED_RECORD_BYTE:
 	 ld   a,i
 	 push af
 	 di
-	 call $1ECF
-	 call $1EA1
-	 call $1ECF
+	 call NATIVE_WRITE_RECORD_BYTE
+	 call NATIVE_ADVANCE_RECORD_24
+	 call NATIVE_WRITE_RECORD_BYTE
 	 pop  af
 	 jp   po,$1EF0
 	 ei
 	 ret
 	 pop  hl
 	 pop  de
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 jp   (iy)
 	 pop  hl
 	 ld   de,$0000
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 jp   (iy)
 	 pop  hl
 	 pop  de
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 pop  hl
 	 ld   e,$01
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 pop  hl
 	 ld   e,$00
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 pop  hl
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   (iy)
 	 exx
 	 ld   a,r
@@ -4219,7 +4499,7 @@ ATTACK_SATELLITE_SEQUENCE:
 	 xor  a
 	 ld   i,a
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ld   (hl),$00
 	 inc  hl
 	 dec  c
@@ -4231,68 +4511,82 @@ ATTACK_SATELLITE_SEQUENCE:
 	 ei
 	 ld   hl,$D001
 	 ld   e,$01
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D00F
 	 ld   c,$10
 	 in   e,(c)
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 exx
 	 jp   (iy)
-	 rst  $08
-	 ld   c,$10
-	 ld   hl,$0B05
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 dec  de
-	 or   (hl)
-	 inc  bc
-	 ld   ($1B0B),hl
-	 add  a,b
-	 ld   a,(hl)
-	 dec  de
-	 add  a,b
-	 ld   bc,$0B22
-	 dec  de
-	 dec  bc
-	 push de
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 inc  hl
-	 inc  h
-	 dec  h
-	 rrca
-	 ld   h,$1B
-	 nop
-	 add  a,b
-	 dec  de
-	 add  a,b
-	 ld   a,(hl)
-	 inc  hl
-	 inc  h
-	 dec  h
-	 rrca
-	 ld   h,$27
-	 inc  bc
-	 sub  a
-	 rra
-	 ld   b,$21
-	 ld   ($1900),a
-	 ld   (hl),$01
+
+; Compiled TERSE sound initialization/control thread.
+TERSE_COLON_1F92:
+	 RST $08
+TERSE_THREAD_1F93:
+	 DB $0E ; $1F93 token $0E -> $0059
+	 DB $10
+	 DB $21 ; $1F95 token $21 -> $01D9
+	 DB $05 ; $1F96 token $05 -> $0094
+TERSE_THREAD_1F97:
+	 DB $0B ; $1F97 token $0B -> $007B
+	 DB $1B ; $1F98 token $1B -> $0050
+	 DW $D155 ; inline word
+	 DB $1B ; $1F9B token $1B -> $0050
+	 DW $03B6 ; inline word
+	 DB $22 ; $1F9E token $22 -> $0D43
+	 DB $0B ; $1F9F token $0B -> $007B
+	 DB $1B ; $1FA0 token $1B -> $0050
+	 DW $7E80 ; inline word
+	 DB $1B ; $1FA3 token $1B -> $0050
+	 DW $0180 ; inline word
+	 DB $22 ; $1FA6 token $22 -> $0D43
+	 DB $0B ; $1FA7 token $0B -> $007B
+	 DB $1B ; $1FA8 token $1B -> $0050
+	 DW $D50B ; inline word
+	 DB $1B ; $1FAB token $1B -> $0050
+	 DW $D155 ; inline word
+	 DB $23 ; $1FAE token $23 -> $016D
+	 DB $24 ; $1FAF token $24 -> $01B6
+	 DB $25 ; $1FB0 token $25 -> $00A4
+	 DB $0F ; $1FB1 token $0F -> $00BF
+	 DB $26 ; $1FB2 token $26 -> $0188
+	 DB $1B ; $1FB3 token $1B -> $0050
+	 DW $8000 ; inline word
+	 DB $1B ; $1FB6 token $1B -> $0050
+	 DW $7E80 ; inline word
+	 DB $23 ; $1FB9 token $23 -> $016D
+	 DB $24 ; $1FBA token $24 -> $01B6
+	 DB $25 ; $1FBB token $25 -> $00A4
+	 DB $0F ; $1FBC token $0F -> $00BF
+	 DB $26 ; $1FBD token $26 -> $0188
+	 DB $27 ; $1FBE token $27 -> $0139
+	 DB $03 ; $1FBF token $03 -> $01FC
+	 DW TERSE_THREAD_1F97 ; 0BRANCH
+	 DB $06 ; $1FC2 token $06 -> $0044
+
+; Set the active sound-state flag at DE+$32.
+AUDIO_STATE_INIT_1FC3:
+	 LD HL,$0032
+	 ADD HL,DE
+	 LD (HL),$01
+
+; Clear sound registers $17..$10 and sound-state bytes at DE+$1A.
+AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
-	 ld   bc,$0818
+	 ld   bc,$0818 ; eight sound registers, starting after $17
+AUDIO_CLEAR_NEXT_REGISTER:
 	 dec  c
 	 out  (c),a
 	 dec  b
-	 jp   nz,$1FCD
+	 jp   nz,AUDIO_CLEAR_NEXT_REGISTER
 	 ld   hl,$001A
 	 add  hl,de
-	 ld   c,$18
+	 ld   c,$18 ; clear 24 bytes of the sound-state record
+AUDIO_CLEAR_NEXT_STATE_BYTE:
 	 ld   (hl),a
 	 inc  hl
 	 dec  c
-	 jp   nz,$1FDA
+	 jp   nz,AUDIO_CLEAR_NEXT_STATE_BYTE
 	 exx
 	 ret
 	 ld   a,(iy+$22)
@@ -4307,7 +4601,7 @@ ATTACK_SATELLITE_SEQUENCE:
 	 xor  a
 	 cp   (iy+$32)
 	 jp   z,$2002
-	 jp   $0362
+	 jp   NATIVE_EVENT_DISPATCH_RECORD_02
 	 ld   hl,$D002
 	 cp   (hl)
 	 jp   z,$20DE
@@ -4327,8 +4621,11 @@ ATTACK_SATELLITE_SEQUENCE:
 	 jp   z,$20A8
 	 dec  (iy+$20)
 	 jp   nz,$20A8
+
+; Advance the oscillator using IY sound state; write sound port $10.
+AUDIO_MASTER_OSCILLATOR_STEP:
 	 ld   l,(iy+$1f)
-	 ld   c,$10
+	 ld   c,SOUND_MASTER_FREQUENCY
 	 ld   a,(iy+$1a)
 	 add  a,l
 	 ld   (iy+$1a),a
@@ -4380,7 +4677,10 @@ ATTACK_SATELLITE_SEQUENCE:
 	 jp   z,$20CE
 	 dec  (iy+$25)
 	 jp   nz,$20CE
-	 ld   c,$17
+
+; Advance IY noise-envelope accumulator and write noise volume ($17).
+AUDIO_NOISE_VOLUME_STEP:
+	 ld   c,SOUND_NOISE_VOLUME
 	 ld   a,(iy+$27)
 	 add  a,(iy+$24)
 	 ld   (iy+$27),a
@@ -4394,8 +4694,8 @@ ATTACK_SATELLITE_SEQUENCE:
 	 cp   (iy+$32)
 	 ld   (iy+$32),a
 	 jp   nz,$20DE
-	 jp   $0362
-	 jp   $0346
+	 jp   NATIVE_EVENT_DISPATCH_RECORD_02
+	 jp   NATIVE_EVENT_RECORD_DISPATCH_0346
 	 ld   hl,$D187
 	 ld   (hl),$00
 	 ld   hl,$1FF8
@@ -4457,6 +4757,9 @@ ATTACK_SATELLITE_SEQUENCE:
 	 out  (c),e
 	 exx
 	 jp   (iy)
+
+; Write sound register ($18-B) using data C; preserves input index in B.
+AUDIO_WRITE_REGISTER_INDEXED:
 	 ld   a,$18
 	 sub  b
 	 ld   e,c
@@ -4466,7 +4769,7 @@ ATTACK_SATELLITE_SEQUENCE:
 	 exx
 	 pop  bc
 	 ld   b,$08
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 ld   hl,$D16F
 	 ld   (hl),e
 	 exx
@@ -4474,7 +4777,7 @@ ATTACK_SATELLITE_SEQUENCE:
 	 exx
 	 pop  bc
 	 ld   b,$01
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 ld   hl,$D17C
 	 ld   (hl),e
 	 exx
@@ -4482,20 +4785,20 @@ ATTACK_SATELLITE_SEQUENCE:
 	 exx
 	 pop  bc
 	 ld   b,$02
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 exx
 	 jp   (iy)
 	 exx
 	 pop  bc
 	 ld   b,$03
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 exx
 	 jp   (iy)
 	 pop  hl
 	 exx
 	 pop  bc
 	 ld   b,$07
-	 call $213E
+	 call AUDIO_WRITE_REGISTER_INDEXED
 	 pop  de
 	 inc  c
 	 out  (c),e
@@ -5076,22 +5379,23 @@ ATTACK_SATELLITE_SEQUENCE:
 	 ld   b,$FD
 	 sla  h
 	 sbc  a,$C9
+
 ; Alternate alien-ship destruction sequence used by the gameplay script.
 ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
-        .DB      $02
-        .DW      BLANK
-        .DB      $03
-        .DW      ALIEN_SHIP_DESTROY_1
-        .DB      $03
-        .DW      ALIEN_SHIP_DESTROY_2
-        .DB      $03
-        .DW      ALIEN_SHIP_DESTROY_3
-        .DB      $04
-        .DW      ALIEN_SHIP_DESTROY_4
-        .DB      $FF
-        .DW      BLANK
-        .DB      $00
-        .DW      ALIEN_SHIP_DESTROY_SEQUENCE
+        DB      $02
+        DW      BLANK
+        DB      $03
+        DW      ALIEN_SHIP_DESTROY_1
+        DB      $03
+        DW      ALIEN_SHIP_DESTROY_2
+        DB      $03
+        DW      ALIEN_SHIP_DESTROY_3
+        DB      $04
+        DW      ALIEN_SHIP_DESTROY_4
+        DB      $FF
+        DW      BLANK
+        DB      $00
+        DW      ALIEN_SHIP_DESTROY_SEQUENCE
 	 ld   hl,($D098)
 	 ld   de,$001C
 	 add  hl,de
@@ -5130,7 +5434,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 add  hl,de
 	 ld   de,$D017
 	 ex   de,hl
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 ld   a,($D011)
 	 or   a
 	 jp   z,$25AA
@@ -5141,14 +5445,14 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   hl,$D013
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,($D01B)
 	 ld   e,l
 	 ld   d,h
 	 add  hl,de
 	 ld   de,$D01B
 	 ex   de,hl
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 call $2546
 	 jp   $25CE
 	 ld   hl,($D015)
@@ -5158,14 +5462,14 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   hl,$D012
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,($D019)
 	 ld   e,l
 	 ld   d,h
 	 add  hl,de
 	 ld   de,$D019
 	 ex   de,hl
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 call $2546
 	 jp   (iy)
 	 rst  $08
@@ -5373,1813 +5677,2063 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  bc
 	 ret  nz
 	 ld   h,$06
-	 rst  $08
-	 dec  de
-	 sbc  a,c
-	 jp   nc,$CF06
-	 dec  de
-	 push hl
-	 jp   nc,$CF06
-	 dec  de
-	 ld   sp,$06D3
-	 rst  $08
-	 dec  de
-	 ld   a,l
-	 out  ($06),a
-	 rst  $08
-	 dec  de
-	 adc  a,l
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 adc  a,(hl)
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 adc  a,a
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 sub  b
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 and  c
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 and  d
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 sbc  a,a
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 and  b
-	 pop  de
-	 ld   b,$CF
-	 dec  de
-	 scf
-	 ld   a,(de)
-	 ld   b,$CF
-	 dec  de
-	 ld   b,b
-	 ld   a,(de)
-	 ld   b,$CF
-	 ld   (hl),h
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ld   h,$27
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 ld   (hl),l
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   b,$CF
-	 dec  bc
-	 rla
-	 dec  de
-	 xor  b
-	 rst  $38
-	 jr   $2753
-	 dec  hl
-	 ld   a,(de)
-	 ld   b,$CF
-	 dec  bc
-	 rla
-	 ld   c,$58
-	 jr   $275D
-	 dec  hl
-	 ld   a,(de)
-	 halt
-	 ld   b,$CF
-	 ld   c,$8C
-	 rla
-	 dec  bc
-	 jr   $2768
-	 ld   sp,$061A
-	 rst  $08
-	 dec  de
-	 ld   (hl),h
-	 rst  $38
-	 rla
-	 dec  bc
-	 jr   $2773
-	 ld   sp,$771A
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 ld   d,a
-	 ld   l,d
-	 add  hl,de
-	 ld   a,(de)
-	 ld   (hl),b
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 add  hl,bc
-	 jr   z,$27D8
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 dec  e
-	 dec  de
-	 adc  a,b
-	 pop  de
-	 dec  h
-	 dec  d
-	 dec  a
-	 add  a,h
-	 daa
-	 dec  sp
-	 daa
-	 ld   b,(hl)
-	 daa
-	 jr   nc,$27A9
-	 ld   d,b
-	 daa
-	 ld   l,e
-	 dec  de
-	 adc  a,h
-	 pop  de
-	 dec  h
-	 ld   c,(hl)
-	 inc  bc
-	 sbc  a,e
-	 daa
-	 dec  c
-	 dec  de
-	 adc  a,e
-	 pop  de
-	 dec  h
-	 inc  b
-	 ccf
-	 dec  de
-	 sbc  a,e
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 and  e
-	 daa
-	 dec  de
-	 adc  a,e
-	 pop  de
-	 dec  h
-	 dec  de
-	 sbc  a,e
-	 pop  de
-	 dec  e
-	 ld   c,a
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 ld   a,c
-	 ld   l,h
-	 ld   a,d
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 cp   c
-	 daa
-	 ld   c,$32
-	 ld   a,e
-	 ld   l,h
-	 ld   b,(hl)
-	 rlca
-	 jr   z,$27D5
-	 adc  a,h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 rlca
-	 jr   z,$27DC
-	 adc  a,b
-	 pop  de
-	 dec  h
-	 dec  d
-	 dec  c
-	 dec  c
-	 dec  a
-	 jp   nc,$D227
-	 ld   h,$D7
-	 ld   h,$DC
-	 ld   h,$E1
-	 ld   h,$0D
-	 ld   c,e
-	 inc  bc
-	 di
-	 daa
-	 ld   d,l
-	 dec  a
-	 ex   (sp),hl
-	 daa
-	 and  $26
-	 ex   de,hl
-	 ld   h,$F0
-	 ld   h,$F5
-	 ld   h,$49
-	 dec  a
-	 rst  $28
-	 daa
-	 ld   c,$27
-	 inc  de
-	 daa
-	 ld   c,$27
-	 inc  de
-	 daa
-	 ld   l,e
-	 ld   b,(hl)
-	 push af
-	 daa
-	 dec  b
-	 dec  b
-	 dec  de
-	 sbc  a,e
-	 pop  de
-	 dec  h
-	 ld   c,a
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 ld   a,c
-	 ld   l,h
-	 ld   a,d
-	 inc  bc
-	 rlca
-	 jr   z,$2812
-	 ld   ($6C7B),a
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 ld   h,e
-	 daa
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   c,$0A
-	 ld   b,$CF
-	 dec  de
-	 or   $FF
-	 ld   b,$CF
-	 ld   c,$0B
-	 ld   b,$CF
-	 dec  de
-	 push af
-	 rst  $38
-	 ld   b,$CF
-	 dec  bc
-	 ld   b,$CF
-	 add  hl,bc
-	 ld   b,$CF
-	 ld   c,$02
-	 ld   b,$CF
-	 ld   c,$03
-	 ld   b,$CF
-	 ld   c,$C0
-	 ld   b,$CF
-	 ld   c,$80
-	 ld   b,$CF
-	 ld   c,$40
-	 ld   b,$CF
-	 ld   c,$18
-	 ld   a,l
-	 ld   a,(hl)
-	 ld   b,$CF
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,a
-	 add  a,b
-	 ld   b,$CF
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,l
-	 dec  bc
-	 ld   b,$CF
-	 ld   c,$18
-	 ld   a,a
-	 add  a,c
-	 ld   b,$CF
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   h,l
-	 jr   z,$2849
-	 ld   h,$F0
-	 ld   h,$F5
-	 ld   h,$E6
-	 ld   h,$06
-	 rst  $08
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 halt
-	 jr   z,$2878
-	 daa
-	 jp   m,$FF26
-	 ld   h,$04
-	 daa
-	 ld   b,$CF
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 add  a,a
-	 jr   z,$2857
-	 ld   h,$DC
-	 ld   h,$E1
-	 ld   h,$D2
-	 ld   h,$06
-	 rst  $08
-	 ld   c,$37
-	 ld   c,$37
-	 dec  bc
-	 ld   b,$CF
-	 ld   c,$37
-	 ld   c,$37
-	 add  a,d
-	 add  hl,bc
-	 ld   b,$CF
-	 ld   c,$37
-	 add  a,d
-	 ld   c,$37
-	 add  a,d
-	 ld   c,$02
-	 ld   b,$CF
-	 ld   c,$37
-	 add  a,d
-	 ld   c,$37
-	 ld   c,$03
-	 ld   b,$CF
-	 ld   hl,($0E41)
-	 rlca
-	 ld   c,h
-	 dec  de
-	 ld   de,$25D0
-	 inc  bc
-	 cp   l
-	 jr   z,$28D3
-	 sub  e
-	 pop  de
-	 ld   b,(hl)
-	 ret  nz
-	 jr   z,$28D9
-	 sub  d
-	 pop  de
-	 dec  h
-	 rrca
-	 add  hl,bc
-	 ld   d,d
-	 dec  de
-	 sub  (hl)
-	 pop  de
-	 ex   af,af'
-	 ld   c,$0C
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 ld   l,d
-	 ld   d,a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 sub  d
-	 ld   e,$6B
-	 ld   b,c
-	 ld   c,$03
-	 ld   c,h
-	 dec  a
-	 call po,$8828
-	 jr   z,$286E
-	 jr   z,$2878
-	 jr   z,$2884
-	 jr   z,$2900
-	 sub  a
-	 pop  de
-	 ex   af,af'
-	 jr   $2901
-	 ld   c,$58
-	 ld   e,(hl)
-	 dec  de
-	 xor  b
-	 rst  $38
-	 ld   e,a
-	 ld   c,$58
-	 ld   h,b
-	 dec  de
-	 xor  b
-	 rst  $38
-	 ld   h,c
-	 ld   b,c
-	 ld   c,$07
-	 ld   c,h
-	 ld   c,$04
-	 ld   (bc),a
-	 dec  de
-	 sub  h
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   (de),a
-	 add  hl,hl
-	 jr   $2934
-	 jr   $2936
-	 inc  e
-	 jr   z,$292D
-	 jr   z,$2990
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   ($0F29),hl
-	 jr   z,$2930
-	 jr   z,$2932
-	 jr   z,$2930
-	 jr   z,$29A2
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  de
-	 sub  h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 inc  a
-	 add  hl,hl
-	 dec  a
-	 add  hl,sp
-	 add  hl,hl
-	 ld   a,e
-	 nop
-	 scf
-	 jr   z,$2969
-	 jr   z,$2967
-	 jr   z,$2980
-	 ld   b,a
-	 add  hl,hl
-	 dec  a
-	 ld   b,a
-	 add  hl,hl
-	 cpl
-	 jr   z,$29BD
-	 nop
-	 scf
-	 jr   z,$2979
-	 jr   z,$29A5
-	 dec  de
-	 nop
-	 inc  bc
-	 ld   e,e
-	 ld   h,(hl)
-	 dec  de
-	 sub  h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 ld   e,c
-	 add  hl,hl
-	 ld   c,$20
-	 ld   b,(hl)
-	 ld   e,h
-	 add  hl,hl
-	 dec  de
-	 ret  po
-	 rst  $38
-	 ld   c,$10
-	 add  a,e
-	 ld   c,$10
-	 ld   c,a
-	 add  a,h
-	 add  a,l
-	 ld   l,c
-	 ld   l,b
-	 ld   l,h
-	 ld   h,(hl)
-	 dec  de
-	 sub  h
-	 pop  de
-	 dec  h
-	 inc  bc
-	 ld   (hl),h
-	 add  hl,hl
-	 ld   c,$20
-	 ld   b,(hl)
-	 ld   (hl),a
-	 add  hl,hl
-	 dec  de
-	 ret  po
-	 rst  $38
-	 ld   c,$10
-	 add  a,e
-	 ld   c,$10
-	 ld   c,a
-	 add  a,h
-	 add  a,l
-	 ld   l,c
-	 ld   l,h
-	 ld   h,(hl)
-	 add  a,(hl)
-	 daa
-	 inc  bc
-	 adc  a,e
-	 add  hl,hl
-	 add  a,h
-	 add  a,l
-	 ld   l,c
-	 ld   l,h
-	 add  a,a
-	 inc  bc
-	 call z,$3629
-	 adc  a,b
-	 add  a,d
-	 ld   a,l
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 and  d
-	 add  hl,hl
-	 inc  sp
-	 jr   z,$29D0
-	 jr   z,$2A1A
-	 nop
-	 ld   a,e
-	 nop
-	 ld   e,l
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 or   d
-	 add  hl,hl
-	 dec  hl
-	 jr   z,$29D1
-	 jr   z,$29D3
-	 jr   z,$29DC
-	 jr   z,$29CE
-	 sbc  a,b
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 push bc
-	 add  hl,hl
-	 dec  hl
-	 jr   z,$29E7
-	 jr   z,$29E6
-	 jr   z,$29E5
-	 jr   z,$29E1
-	 sub  a
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 ld   b,$2A
-	 ld   (hl),$89
-	 add  a,d
-	 ld   a,a
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 rst  $18
-	 add  hl,hl
-	 scf
-	 jr   z,$2A09
-	 jr   z,$2A0B
-	 jr   z,$2A15
-	 jr   z,$2A3D
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 rst  $28
-	 add  hl,hl
-	 ld   hl,$2128
-	 jr   z,$2A13
-	 jr   z,$2A15
-	 jr   z,$2A0B
-	 sbc  a,b
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 sub  a
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   (bc),a
-	 ld   hl,($2824)
-	 ld   hl,$2B28
-	 jr   z,$2A28
-	 jr   z,$2A1E
-	 sub  a
-	 pop  de
-	 ex   af,af'
-	 ld   l,b
-	 dec  de
-	 sbc  a,b
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   d,$2A
-	 jr   c,$2A35
-	 ld   hl,($3825)
-	 dec  h
-	 ld   hl,($8A25)
-	 dec  e
-	 adc  a,e
-	 ld   c,c
-	 adc  a,d
-	 ld   a,c
-	 ld   (hl),$0E
-	 inc  e
-	 rrca
-	 inc  c
-	 adc  a,h
-	 ld   c,$1C
-	 rrca
-	 djnz $2A5D
-	 ld   c,$1E
-	 rrca
-	 inc  c
-	 adc  a,h
-	 ld   c,$1E
-	 rrca
-	 djnz $2A4C
-	 sub  (hl)
-	 pop  de
-	 ld   b,e
-	 dec  de
-	 sub  (hl)
-	 pop  de
-	 dec  h
-	 daa
-	 inc  bc
-	 sub  (hl)
-	 ld   hl,($981B)
-	 pop  de
-	 dec  h
-	 dec  a
-	 ld   c,e
-	 ld   hl,($283B)
-	 ld   b,c
-	 jr   z,$2A90
-	 jr   z,$2A99
-	 jr   z,$2AA9
-	 ld   h,(hl)
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 ld   c,$02
-	 ld   b,h
-	 inc  bc
-	 ld   h,c
-	 ld   hl,($020E)
-	 dec  de
-	 dec  e
-	 call nc,$1B08
-	 ld   d,l
-	 pop  de
-	 adc  a,l
-	 ld   l,h
-	 ld   a,d
-	 inc  bc
-	 ld   l,h
-	 ld   hl,($C80E)
-	 ld   (hl),h
-	 ld   b,(hl)
-	 ld   (hl),c
-	 ld   hl,($1B8E)
-	 ret
-	 out  ($55),a
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 ld   c,$02
-	 ld   b,h
-	 inc  bc
-	 adc  a,b
-	 ld   hl,($030E)
-	 dec  de
-	 dec  e
-	 call nc,$1B08
-	 ld   d,l
-	 pop  de
-	 adc  a,a
-	 ld   b,(hl)
-	 adc  a,h
-	 ld   hl,($1D1B)
-	 call nc,$711D
-	 adc  a,e
-	 dec  e
-	 dec  bc
-	 ld   a,e
-	 ld   l,h
-	 add  hl,bc
-	 ld   b,(hl)
-	 add  a,$2A
-	 ld   h,(hl)
-	 ld   l,h
-	 ld   a,d
-	 adc  a,d
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 push bc
-	 ld   hl,($8B71)
-	 dec  e
-	 ld   c,$C8
-	 ld   a,e
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 ld   c,$02
-	 ld   b,h
-	 inc  bc
-	 cp   h
-	 ld   hl,($030E)
-	 dec  de
-	 dec  e
-	 call nc,$1B08
-	 ld   d,l
-	 pop  de
-	 adc  a,a
-	 ld   b,(hl)
-	 ret  nz
-	 ld   hl,($1D1B)
-	 call nc,$6C1D
-	 add  hl,bc
-	 ld   b,(hl)
-	 add  a,$2A
-	 dec  bc
-	 adc  a,e
-	 dec  e
-	 adc  a,d
-	 dec  e
-	 inc  bc
-	 inc  bc
-	 add  hl,hl
-	 ld   l,l
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 rst  $18
-	 ld   hl,($7890)
-	 inc  bc
-	 push de
-	 ld   hl,($9136)
-	 ld   b,(hl)
-	 pop  hl
-	 ld   hl,($9236)
-	 ld   b,$CF
-	 dec  de
-	 adc  a,b
-	 pop  de
-	 dec  h
-	 ld   b,h
-	 inc  bc
-	 pop  af
-	 ld   hl,($9A1B)
-	 pop  de
-	 ld   b,(hl)
-	 call p,$1B2A
-	 sbc  a,c
-	 pop  de
-	 ld   c,c
-	 ld   b,$CF
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 dec  h
-	 dec  c
-	 dec  de
-	 sub  l
-	 pop  de
-	 ex   af,af'
-	 add  hl,bc
-	 sub  e
-	 inc  l
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 sub  l
-	 ld   c,$18
-	 jr   $2B18
-	 rla
-	 halt
-	 sub  (hl)
-	 dec  h
-	 inc  bc
-	 daa
-	 dec  hl
-	 sub  a
-	 ld   c,c
-	 sbc  a,b
-	 dec  sp
-	 ld   (hl),$3B
-	 ccf
-	 ld   c,$06
-	 ld   d,d
-	 ld   c,$03
-	 sub  h
-	 xor  c
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 add  hl,hl
-	 dec  hl
-	 add  hl,bc
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 ld   c,$02
-	 sub  e
-	 ld   e,e
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 and  h
-	 pop  de
-	 sub  l
-	 dec  bc
-	 jr   $2B47
-	 jr   $2B52
-	 sbc  a,d
-	 dec  h
-	 inc  bc
-	 ld   d,l
-	 dec  hl
-	 sbc  a,e
-	 ld   c,c
-	 sbc  a,h
-	 add  hl,sp
-	 ld   (hl),$39
-	 ccf
-	 ld   c,$08
-	 ld   d,d
-	 ld   a,($0E3A)
-	 ld   (bc),a
-	 sub  h
-	 and  h
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 ld   e,b
-	 dec  hl
-	 ld   c,$02
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 ld   c,$03
-	 sub  e
-	 adc  a,e
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 sub  l
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 jr   $2B75
-	 rla
-	 sbc  a,l
-	 dec  h
-	 inc  bc
-	 add  a,l
-	 dec  hl
-	 sbc  a,(hl)
-	 ld   c,c
-	 sbc  a,a
-	 dec  sp
-	 add  a,d
-	 ld   (hl),$3B
-	 add  a,d
-	 ccf
-	 ld   c,$06
-	 ld   d,d
-	 ld   c,$03
-	 sub  h
-	 xor  c
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 adc  a,b
-	 dec  hl
-	 ld   c,$03
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 ld   c,$04
-	 sub  e
-	 cp   (hl)
-	 dec  hl
-	 dec  bc
-	 sub  h
-	 and  h
-	 pop  de
-	 sub  l
-	 dec  bc
-	 jr   $2BB3
-	 ret  pe
-	 rst  $38
-	 rla
-	 ld   (hl),a
-	 and  b
-	 dec  h
-	 inc  bc
-	 cp   b
-	 dec  hl
-	 and  c
-	 ld   c,c
-	 and  d
-	 add  hl,sp
-	 add  a,d
-	 ld   (hl),$39
-	 add  a,d
-	 ccf
-	 ld   c,$08
-	 ld   d,d
-	 ld   a,($0E3A)
-	 ld   (bc),a
-	 sub  h
-	 and  h
-	 pop  de
-	 ex   af,af'
-	 ld   b,(hl)
-	 cp   e
-	 dec  hl
-	 ld   c,$04
-	 sbc  a,c
-	 ld   b,(hl)
-	 cp   a
-	 dec  hl
-	 dec  b
-	 ld   b,$CF
-	 ld   hl,($7156)
-	 ld   d,a
-	 and  e
-	 dec  de
-	 jp   nc,$0B17
-	 sub  h
-	 and  h
-	 pop  de
-	 ld   c,$05
-	 ld   d,$1B
-	 rst  $10
-	 rla
-	 dec  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 ld   c,$05
-	 ld   d,$0E
-	 jr   c,$2BEB
-	 inc  bc
-	 sub  h
-	 xor  c
-	 pop  de
-	 ex   af,af'
-	 ld   c,$1D
-	 ld   c,$02
-	 sub  h
-	 and  h
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 jr   $2BC1
-	 dec  h
-	 daa
-	 inc  bc
-	 di
-	 dec  hl
-	 dec  (hl)
-	 dec  de
-	 jr   $2BCA
-	 ld   b,e
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 jr   nz,$2C29
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 rra
-	 inc  l
-	 dec  de
-	 sbc  a,c
-	 pop  de
-	 dec  e
-	 and  h
-	 and  l
-	 add  hl,bc
-	 ld   c,a
-	 ld   (hl),e
-	 and  l
-	 dec  de
-	 dec  e
-	 call nc,$0325
-	 ld   e,$2C
-	 dec  de
-	 sbc  a,c
-	 pop  de
-	 dec  h
-	 inc  bc
-	 ld   e,$2C
-	 and  h
-	 ld   e,b
-	 ld   a,b
-	 inc  bc
-	 jp   c,$362B
-	 sub  c
-	 ld   b,$CF
-	 ld   (hl),$A6
-	 add  a,d
-	 and  a
-	 ld   (hl),$A8
-	 add  a,d
-	 xor  c
-	 ld   c,$85
-	 ld   h,b
-	 dec  de
-	 ld   a,e
-	 rst  $38
-	 ld   h,c
-	 ld   c,$56
-	 ld   e,(hl)
-	 dec  de
-	 xor  d
-	 rst  $38
-	 ld   e,a
-	 ld   l,c
-	 ld   c,$19
-	 ld   (hl),h
-	 xor  d
-	 ld   h,d
-	 ld   l,d
-	 ld   e,c
-	 dec  de
-	 adc  a,e
-	 rla
-	 ld   l,e
-	 ld   c,$1E
-	 ld   c,a
-	 ld   b,$8A
-	 rst  $08
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 xor  c
-	 dec  de
-	 ret  z
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 sbc  a,e
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 xor  h
-	 inc  l
-	 ld   c,$84
-	 rla
-	 dec  bc
-	 jr   $2C17
-	 add  a,d
-	 and  a
-	 sbc  a,d
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ld   a,h
-	 inc  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 add  hl,de
-	 sbc  a,e
-	 ld   a,c
-	 ld   c,$18
-	 ld   a,l
-	 ld   l,h
-	 sbc  a,d
-	 dec  e
-	 ld   a,d
-	 sbc  a,e
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 sub  l
-	 inc  l
-	 xor  a
-	 ld   l,h
-	 ld   b,(hl)
-	 xor  d
-	 inc  l
-	 adc  a,(hl)
-	 xor  l
-	 dec  bc
-	 ld   a,l
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 ld   d,l
-	 inc  l
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 and  a
-	 dec  de
-	 pop  de
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 sbc  a,(hl)
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 inc  de
-	 dec  l
-	 dec  bc
-	 rla
-	 dec  de
-	 xor  e
-	 rst  $38
-	 jr   $2CEC
-	 sbc  a,h
-	 pop  de
-	 inc  c
-	 xor  c
-	 sbc  a,l
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ex   (sp),hl
-	 inc  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 sbc  a,(hl)
-	 ld   a,c
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,a
-	 ld   l,h
-	 sbc  a,l
-	 dec  e
-	 ld   a,d
-	 sbc  a,(hl)
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 call m,$AF2C
-	 ld   l,h
-	 ld   b,(hl)
-	 ld   de,$8E2D
-	 xor  l
-	 dec  bc
-	 ld   a,a
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 cp   c
-	 inc  l
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 xor  c
-	 dec  de
-	 ret  z
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 and  c
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 ld   (hl),a
-	 dec  l
-	 dec  de
-	 ld   a,h
-	 rst  $38
-	 rla
-	 dec  bc
-	 jr   $2CE3
-	 and  a
-	 and  b
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 ld   b,a
-	 dec  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 and  c
-	 ld   a,c
-	 dec  de
-	 ret  pe
-	 rst  $38
-	 ld   a,l
-	 ld   l,h
-	 and  b
-	 dec  e
-	 ld   a,d
-	 and  c
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 ld   h,b
-	 dec  l
-	 xor  a
-	 ld   l,h
-	 ld   b,(hl)
-	 ld   (hl),l
-	 dec  l
-	 adc  a,(hl)
-	 xor  l
-	 dec  bc
-	 ld   a,l
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 jr   nz,$2DA7
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($0C0E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   (hl),c
-	 dec  bc
-	 and  a
-	 dec  de
-	 pop  de
-	 inc  h
-	 ld   e,h
-	 ld   d,a
-	 ld   l,d
-	 sub  a
-	 dec  e
-	 dec  (hl)
-	 ld   a,b
-	 ld   c,(hl)
-	 daa
-	 inc  bc
-	 dec  ixl
-	 dec  bc
-	 rla
-	 ld   c,$55
-	 jr   $2DB6
-	 sbc  a,h
-	 pop  de
-	 inc  c
-	 add  a,d
-	 xor  c
-	 sub  (hl)
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 xor  (hl)
-	 dec  l
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 xor  h
-	 xor  l
-	 ld   (hl),b
-	 xor  (hl)
-	 ld   l,e
-	 sub  a
-	 ld   a,c
-	 ld   c,$18
-	 ld   a,a
-	 ld   l,h
-	 sub  (hl)
-	 dec  e
-	 ld   a,d
-	 sub  a
-	 dec  h
-	 ld   d,h
-	 inc  bc
-	 add  a,$2D
-	 xor  a
-	 ld   l,h
-	 ld   b,(hl)
-	 in   a,($2D)
-	 adc  a,(hl)
-	 xor  l
-	 dec  bc
-	 ld   a,a
-	 ld   l,h
-	 ld   (hl),c
-	 dec  de
-	 ret
-	 out  ($55),a
-	 ld   e,b
-	 ld   (hl),b
-	 dec  de
-	 ret
-	 dec  e
-	 ld   l,e
-	 ld   c,$26
-	 ld   c,a
-	 ld   l,h
-	 ld   h,d
-	 ld   l,l
-	 ld   a,b
-	 inc  bc
-	 add  a,h
-	 dec  l
-	 ld   (hl),$7C
-	 ld   b,$CF
-	 ld   hl,($6771)
-	 ld   d,a
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 call nz,$562E
-	 dec  de
-	 sbc  a,d
-	 pop  de
-	 ld   c,c
-	 sbc  a,e
-	 ld   c,c
-	 and  c
-	 ld   c,c
-	 sub  a
-	 ld   c,c
-	 sbc  a,(hl)
-	 ld   c,c
-	 dec  de
-	 inc  bc
-	 ret  nc
-	 dec  h
-	 add  hl,bc
-	 ld   c,h
-	 daa
-	 inc  bc
-	 rrca
-	 ld   l,$1B
-	 inc  bc
-	 ret  nc
-	 add  hl,hl
-	 dec  de
-	 ld   d,l
-	 pop  de
-	 scf
-	 ld   c,$06
-	 dec  de
-	 dec  l
-	 call nc,$9808
-	 ld   d,l
-	 sbc  a,a
-	 ld   d,l
-	 and  d
-	 ld   d,l
-	 sbc  a,h
-	 ld   d,l
-	 dec  de
-	 or   l
-	 pop  de
-	 ld   d,l
-	 dec  de
-	 ld   c,l
-	 jp   nc,$7255
-	 ld   (hl),e
-	 ld   d,b
-	 dec  de
-; The threaded base-render script embeds object-record pointers at these
-; locations:
-;   $2E29, $2E49  LASER_BASE_BODY_DESTROY
-;   $2E39, $2EC6  LASER_BASE_BODY
-;   $2E78, $2EA2  LASER_BASE_DESTROY_3
-	 ld   e,(hl)
-	 jr   $2DC1
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 ld   c,$09
-	 ld   c,a
-	 ld   (hl),e
-	 dec  de
-	 call c,$9517
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 ld   c,$09
-	 ld   c,a
-	 ld   (hl),e
-	 dec  de
-	 ld   e,(hl)
-	 jr   $2DE1
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$10
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$12
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$16
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$20
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$10
-	 or   b
-	 ld   (hl),e
-	 ld   (hl),d
-	 ld   (hl),e
-	 ld   c,$12
-	 or   b
-	 ld   (hl),e
-	 sub  b
-	 dec  de
-	 dec  l
-	 call nc,$2725
-	 inc  bc
-	 ld   a,b
-	 ld   l,$1B
-	 ld   de,$25D0
-	 dec  de
-	 ld   (de),a
-	 ret  nc
-	 rrca
-	 dec  h
-	 daa
-	 inc  bc
-	 sub  h
-	 ld   l,$1B
-	 add  a,b
-	 ld   bc,$9646
-	 ld   l,$0E
-	 ld   h,b
-	 ld   c,a
-	 dec  de
-	 and  e
-	 pop  de
-	 ld   a,c
-	 ld   (hl),e
-	 ld   c,$06
-	 dec  de
-	 ld   l,$D4
-	 ex   af,af'
-	 sub  b
-	 dec  de
-	 ld   l,$D4
-	 dec  h
-	 daa
-	 inc  bc
-	 and  d
-	 ld   l,$98
-	 or   c
-	 sbc  a,a
-	 or   d
-	 dec  de
-	 ld   c,l
-	 jp   nc,$A292
-	 or   e
-	 sbc  a,h
-	 or   h
-	 dec  de
-	 or   l
-	 pop  de
-	 or   l
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 cp   e
-	 ld   l,$B6
-	 dec  de
-	 call c,$9517
-	 and  l
-	 halt
-	 and  l
-	 ld   (hl),a
-	 and  l
-	 add  hl,de
-	 and  l
-	 ld   a,(de)
-	 dec  bc
-	 inc  bc
-	 ret  pe
-	 dec  l
-	 ld   b,$CF
-	 ld   hl,($080E)
-	 ld   h,l
-	 ld   d,(hl)
-	 ld   e,c
-	 ld   (hl),c
-	 ld   d,a
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 cp   $2E
-	 ld   h,d
-	 ld   d,a
-	 dec  de
-	 adc  a,e
-	 rla
-	 ld   l,e
-	 ld   c,$1E
-	 ld   c,a
-	 ld   l,h
-	 ld   l,d
-	 dec  (hl)
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 inc  bc
-	 jp   p,$462E
-	 ld   h,d
-	 cpl
-	 dec  de
-	 adc  a,d
-	 pop  de
-	 dec  h
-	 add  hl,bc
-	 sub  e
-	 inc  de
-	 cpl
-	 dec  bc
-	 rla
-	 ld   c,$10
-	 jr   $2F27
-; The threaded alien-render script selects ALIEN_SHIP_HORIZONTAL at $2F0C and
-; $2F31, and ALIEN_SHIP_VERTICAL at $2F1E and $2F40.
-	 cp   c
-	 rla
-	 ld   a,(de)
-	 add  hl,de
-	 ld   b,(hl)
-	 ld   b,h
-	 cpl
-	 ld   c,$02
-	 sub  e
-	 dec  h
-	 cpl
-	 ld   c,$10
-	 rla
-	 dec  bc
-	 jr   $2F39
-	 sbc  a,l
-	 rla
-	 ld   (hl),a
-	 add  hl,de
-	 ld   b,(hl)
-	 ld   b,h
-	 cpl
-	 ld   c,$03
-	 sub  e
-	 jr   c,$2F59
-	 dec  bc
-	 rla
-	 dec  de
-	 ret  p
-	 rst  $38
-	 jr   $2F4C
-	 cp   c
-	 rla
-	 ld   a,(de)
-	 halt
-	 ld   b,(hl)
-	 ld   b,h
-	 cpl
-	 dec  b
-	 dec  de
-	 ret  p
-	 rst  $38
-	 rla
-	 dec  bc
-	 jr   $2F5B
-	 sbc  a,l
-	 rla
-	 ld   a,(de)
-	 add  hl,de
-	 sub  l
-	 and  l
-	 dec  de
-	 inc  d
-	 ret  nc
-	 dec  h
-	 daa
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 dec  h
-	 dec  de
-	 adc  a,d
-	 pop  de
-	 dec  h
-	 ld   b,h
-	 ld   c,h
-	 inc  bc
-	 ld   e,c
-	 cpl
-	 dec  (hl)
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 dec  h
-	 dec  de
-	 adc  a,d
-	 pop  de
-	 ex   af,af'
-	 ld   l,l
-	 dec  bc
-	 inc  bc
-	 ret  po
-	 ld   l,$06
-	 in   a,($10)
+
+; $26D2-$270C: twelve 16-bit literal-return TERSE colon definitions.
+TERSE_COLON_26D2:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D299 ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26D7:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D2E5 ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26DC:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D331 ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26E1:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D37D ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26E6:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D18D ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26EB:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D18E ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26F0:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D18F ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26F5:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D190 ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26FA:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D1A1 ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_26FF:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D1A2 ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_2704:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D19F ; address/value
+	 DB $06 ; TERSE_EXIT
+
+TERSE_COLON_2709:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D1A0 ; address/value
+
+;==============================================================================
+; TERSE COMPILED WORDS $270D-$2AE0
+;==============================================================================
+; Native indexed tokens and inline operands, represented as typed ROM data.
+	 DB $06 ; EXIT for the preceding LIT16 address word
+
+; TERSE colon definition at $270E; inline operands remain typed below.
+TERSE_COLON_270E:
+	 RST $08
+	 DB $1B ; $270F token -> native $0050
+	 DW $1A37 ; LIT16
+	 DB $06 ; $2712 token -> native $0044
+
+; TERSE colon definition at $2713; inline operands remain typed below.
+TERSE_COLON_2713:
+	 RST $08
+	 DB $1B ; $2714 token -> native $0050
+	 DW $1A40 ; LIT16
+	 DB $06 ; $2717 token -> native $0044
+
+; TERSE colon definition at $2718; inline operands remain typed below.
+TERSE_COLON_2718:
+	 RST $08
+	 DB $74 ; $2719 token -> native $254C
+	 DB $1B ; $271A token -> native $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $271D token -> native $00A4
+	 DB $27 ; $271E token -> native $0139
+	 DB $03 ; $271F token -> native $01FC
+	 DW TERSE_THREAD_2726 ; 0BRANCH
+	 DB $1B ; $2722 token -> native $0050
+	 DW $D155 ; LIT16
+	 DB $75 ; $2725 token -> native $22FA
+TERSE_THREAD_2726:
+	 DB $58 ; $2726 token -> native $1212
+	 DB $70 ; $2727 token -> native $11AB
+	 DB $1B ; $2728 token -> native $0050
+	 DW $1DC9 ; LIT16
+	 DB $6B ; $272B token -> native $10B7
+	 DB $0E ; $272C token -> native $0059
+	 DB $26 ; LIT8
+	 DB $4F ; $272E token -> native $0EC7
+	 DB $06 ; $272F token -> native $0044
+
+; TERSE colon definition at $2730; inline operands remain typed below.
+TERSE_COLON_2730:
+	 RST $08
+	 DB $0B ; $2731 token -> native $007B
+	 DB $17 ; $2732 token -> native $10DA
+	 DB $1B ; $2733 token -> native $0050
+	 DW $FFA8 ; LIT16
+	 DB $18 ; $2736 token -> native $10EC
+	 DB $1B ; $2737 token -> native $0050
+	 DW $1A2B ; LIT16
+	 DB $06 ; $273A token -> native $0044
+
+; TERSE colon definition at $273B; inline operands remain typed below.
+TERSE_COLON_273B:
+	 RST $08
+	 DB $0B ; $273C token -> native $007B
+	 DB $17 ; $273D token -> native $10DA
+	 DB $0E ; $273E token -> native $0059
+	 DB $58 ; LIT8
+	 DB $18 ; $2740 token -> native $10EC
+	 DB $1B ; $2741 token -> native $0050
+	 DW $1A2B ; LIT16
+	 DB $76 ; $2744 token -> native $11D0
+	 DB $06 ; $2745 token -> native $0044
+
+; TERSE colon definition at $2746; inline operands remain typed below.
+TERSE_COLON_2746:
+	 RST $08
+	 DB $0E ; $2747 token -> native $0059
+	 DB $8C ; LIT8
+	 DB $17 ; $2749 token -> native $10DA
+	 DB $0B ; $274A token -> native $007B
+	 DB $18 ; $274B token -> native $10EC
+	 DB $1B ; $274C token -> native $0050
+	 DW $1A31 ; LIT16
+	 DB $06 ; $274F token -> native $0044
+
+; TERSE colon definition at $2750; inline operands remain typed below.
+TERSE_COLON_2750:
+	 RST $08
+	 DB $1B ; $2751 token -> native $0050
+	 DW $FF74 ; LIT16
+	 DB $17 ; $2754 token -> native $10DA
+	 DB $0B ; $2755 token -> native $007B
+	 DB $18 ; $2756 token -> native $10EC
+	 DB $1B ; $2757 token -> native $0050
+	 DW $1A31 ; LIT16
+	 DB $77 ; $275A token -> native $11DB
+	 DB $06 ; $275B token -> native $0044
+
+; TERSE colon definition at $275C; inline operands remain typed below.
+TERSE_COLON_275C:
+	 RST $08
+	 DB $2A ; $275D token -> native $042F
+	 DB $0E ; $275E token -> native $0059
+	 DB $0C ; LIT8
+	 DB $65 ; $2760 token -> native $1195
+	 DB $56 ; $2761 token -> native $11C3
+	 DB $71 ; $2762 token -> native $1166
+TERSE_THREAD_2763:
+	 DB $57 ; $2763 token -> native $121C
+	 DB $6A ; $2764 token -> native $10CD
+	 DB $19 ; $2765 token -> native $11FC
+	 DB $1A ; $2766 token -> native $1207
+	 DB $70 ; $2767 token -> native $11AB
+	 DB $35 ; $2768 token -> native $04A6
+	 DB $78 ; $2769 token -> native $24DA
+	 DB $4E ; $276A token -> native $013F
+	 DB $27 ; $276B token -> native $0139
+	 DB $03 ; $276C token -> native $01FC
+	 DW TERSE_THREAD_2809 ; 0BRANCH
+	 DB $68 ; $276F token -> native $1229
+	 DB $1B ; $2770 token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $1D ; $2773 token -> native $0266
+	 DB $1B ; $2774 token -> native $0050
+	 DW $D188 ; LIT16
+	 DB $25 ; $2777 token -> native $00A4
+	 DB $15 ; $2778 token -> native $00D4
+	 DB $3D ; $2779 -> TERSE_INDEXED_DISPATCH
+	 DW $2784 ; end/default continuation
+	 DW $273B ; native target 0
+	 DW $2746 ; native target 1
+	 DW $2730 ; native target 2
+	 DW $2750 ; native target 3
+DB $6B ; $2784 token -> native $10B7
+	 DB $1B ; $2785 token -> native $0050
+	 DW $D18C ; LIT16
+	 DB $25 ; $2788 token -> native $00A4
+	 DB $4E ; $2789 token -> native $013F
+	 DB $03 ; $278A token -> native $01FC
+	 DW TERSE_THREAD_279B ; 0BRANCH
+	 DB $0D ; $278D token -> native $0087
+	 DB $1B ; $278E token -> native $0050
+	 DW $D18B ; LIT16
+	 DB $25 ; $2791 token -> native $00A4
+	 DB $04 ; $2792 token -> native $0097
+	 DB $3F ; $2793 token -> native $00C5
+	 DB $1B ; $2794 token -> native $0050
+	 DW $D19B ; LIT16
+	 DB $08 ; $2797 token -> native $00B2
+	 DB $46 ; $2798 token -> native $01F4
+	 DW TERSE_THREAD_27A3 ; BRANCH
+TERSE_THREAD_279B:
+	 DB $1B ; $279B token -> native $0050
+	 DW $D18B ; LIT16
+	 DB $25 ; $279E token -> native $00A4
+	 DB $1B ; $279F token -> native $0050
+	 DW $D19B ; LIT16
+	 DB $1D ; $27A2 token -> native $0266
+TERSE_THREAD_27A3:
+	 DB $4F ; $27A3 token -> native $0EC7
+	 DB $1B ; $27A4 token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $79 ; $27A7 token -> native $0EDA
+	 DB $6C ; $27A8 token -> native $0CE2
+	 DB $7A ; $27A9 token -> native $0EED
+	 DB $1B ; $27AA token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $25 ; $27AD token -> native $00A4
+	 DB $54 ; $27AE token -> native $0154
+	 DB $03 ; $27AF token -> native $01FC
+	 DW TERSE_THREAD_27B9 ; 0BRANCH
+	 DB $0E ; $27B2 token -> native $0059
+	 DB $32 ; LIT8
+	 DB $7B ; $27B4 token -> native $2718
+	 DB $6C ; $27B5 token -> native $0CE2
+	 DB $46 ; $27B6 token -> native $01F4
+	 DW TERSE_THREAD_2807 ; BRANCH
+TERSE_THREAD_27B9:
+	 DB $1B ; $27B9 token -> native $0050
+	 DW $D18C ; LIT16
+	 DB $25 ; $27BC token -> native $00A4
+	 DB $03 ; $27BD token -> native $01FC
+	 DW TERSE_THREAD_2807 ; 0BRANCH
+	 DB $1B ; $27C0 token -> native $0050
+	 DW $D188 ; LIT16
+	 DB $25 ; $27C3 token -> native $00A4
+	 DB $15 ; $27C4 token -> native $00D4
+	 DB $0D ; $27C5 token -> native $0087
+	 DB $0D ; $27C6 token -> native $0087
+	 DB $3D ; $27C7 -> TERSE_INDEXED_DISPATCH
+	 DW $27D2 ; end/default continuation
+	 DW $26D2 ; native target 0
+	 DW $26D7 ; native target 1
+	 DW $26DC ; native target 2
+	 DW $26E1 ; native target 3
+DB $0D ; $27D2 token -> native $0087
+	 DB $4B ; $27D3 token -> native $1237
+	 DB $03 ; $27D4 token -> native $01FC
+	 DW TERSE_THREAD_27F3 ; 0BRANCH
+	 DB $55 ; $27D7 token -> native $04BB
+	 DB $3D ; $27D8 -> TERSE_INDEXED_DISPATCH
+	 DW $27E3 ; end/default continuation
+	 DW $26E6 ; native target 0
+	 DW $26EB ; native target 1
+	 DW $26F0 ; native target 2
+	 DW $26F5 ; native target 3
+DB $49 ; $27E3 token -> native $0262
+	 DB $3D ; $27E4 -> TERSE_INDEXED_DISPATCH
+	 DW $27EF ; end/default continuation
+	 DW $270E ; native target 0
+	 DW $2713 ; native target 1
+	 DW $270E ; native target 2
+	 DW $2713 ; native target 3
+DB $6B ; $27EF token -> native $10B7
+	 DB $46 ; $27F0 token -> native $01F4
+	 DW TERSE_THREAD_27F5 ; BRANCH
+TERSE_THREAD_27F3:
+	 DB $05 ; $27F3 token -> native $0094
+	 DB $05 ; $27F4 token -> native $0094
+TERSE_THREAD_27F5:
+	 DB $1B ; $27F5 token -> native $0050
+	 DW $D19B ; LIT16
+	 DB $25 ; $27F8 token -> native $00A4
+	 DB $4F ; $27F9 token -> native $0EC7
+	 DB $1B ; $27FA token -> native $0050
+	 DW $D19A ; LIT16
+	 DB $79 ; $27FD token -> native $0EDA
+	 DB $6C ; $27FE token -> native $0CE2
+	 DB $7A ; $27FF token -> native $0EED
+	 DB $03 ; $2800 token -> native $01FC
+	 DW TERSE_THREAD_2807 ; 0BRANCH
+	 DB $0E ; $2803 token -> native $0059
+	 DB $32 ; LIT8
+	 DB $7B ; $2805 token -> native $2718
+	 DB $6C ; $2806 token -> native $0CE2
+TERSE_THREAD_2807:
+	 DB $6D ; $2807 token -> native $12C7
+	 DB $78 ; $2808 token -> native $24DA
+TERSE_THREAD_2809:
+	 DB $03 ; $2809 token -> native $01FC
+	 DW TERSE_THREAD_2763 ; 0BRANCH
+	 DB $36 ; $280C token -> native $1216
+	 DB $7C ; $280D token -> native $263E
+	 DB $06 ; $280E token -> native $0044
+
+; TERSE colon definition at $280F; inline operands remain typed below.
+TERSE_COLON_280F:
+	 RST $08
+	 DB $0E ; $2810 token -> native $0059
+	 DB $0A ; LIT8
+	 DB $06 ; $2812 token -> native $0044
+
+; TERSE colon definition at $2813; inline operands remain typed below.
+TERSE_COLON_2813:
+	 RST $08
+	 DB $1B ; $2814 token -> native $0050
+	 DW $FFF6 ; LIT16
+	 DB $06 ; $2817 token -> native $0044
+
+; TERSE colon definition at $2818; inline operands remain typed below.
+TERSE_COLON_2818:
+	 RST $08
+	 DB $0E ; $2819 token -> native $0059
+	 DB $0B ; LIT8
+	 DB $06 ; $281B token -> native $0044
+
+; TERSE colon definition at $281C; inline operands remain typed below.
+TERSE_COLON_281C:
+	 RST $08
+	 DB $1B ; $281D token -> native $0050
+	 DW $FFF5 ; LIT16
+	 DB $06 ; $2820 token -> native $0044
+
+; TERSE colon definition at $2821; inline operands remain typed below.
+TERSE_COLON_2821:
+	 RST $08
+	 DB $0B ; $2822 token -> native $007B
+	 DB $06 ; $2823 token -> native $0044
+
+; TERSE colon definition at $2824; inline operands remain typed below.
+TERSE_COLON_2824:
+	 RST $08
+	 DB $09 ; $2825 token -> native $0081
+	 DB $06 ; $2826 token -> native $0044
+
+; TERSE colon definition at $2827; inline operands remain typed below.
+TERSE_COLON_2827:
+	 RST $08
+	 DB $0E ; $2828 token -> native $0059
+	 DB $02 ; LIT8
+	 DB $06 ; $282A token -> native $0044
+
+; TERSE colon definition at $282B; inline operands remain typed below.
+TERSE_COLON_282B:
+	 RST $08
+	 DB $0E ; $282C token -> native $0059
+	 DB $03 ; LIT8
+	 DB $06 ; $282E token -> native $0044
+
+; TERSE colon definition at $282F; inline operands remain typed below.
+TERSE_COLON_282F:
+	 RST $08
+	 DB $0E ; $2830 token -> native $0059
+	 DB $C0 ; LIT8
+	 DB $06 ; $2832 token -> native $0044
+
+; TERSE colon definition at $2833; inline operands remain typed below.
+TERSE_COLON_2833:
+	 RST $08
+	 DB $0E ; $2834 token -> native $0059
+	 DB $80 ; LIT8
+	 DB $06 ; $2836 token -> native $0044
+
+; TERSE colon definition at $2837; inline operands remain typed below.
+TERSE_COLON_2837:
+	 RST $08
+	 DB $0E ; $2838 token -> native $0059
+	 DB $40 ; LIT8
+	 DB $06 ; $283A token -> native $0044
+
+; TERSE colon definition at $283B; inline operands remain typed below.
+TERSE_COLON_283B:
+	 RST $08
+	 DB $0E ; $283C token -> native $0059
+	 DB $18 ; LIT8
+	 DB $7D ; $283E token -> native $100A
+	 DB $7E ; $283F token -> native $2833
+	 DB $06 ; $2840 token -> native $0044
+
+; TERSE colon definition at $2841; inline operands remain typed below.
+TERSE_COLON_2841:
+	 RST $08
+	 DB $1B ; $2842 token -> native $0050
+	 DW $FFE8 ; LIT16
+	 DB $7F ; $2845 token -> native $1026
+	 DB $80 ; $2846 token -> native $282F
+	 DB $06 ; $2847 token -> native $0044
+
+; TERSE colon definition at $2848; inline operands remain typed below.
+TERSE_COLON_2848:
+	 RST $08
+	 DB $1B ; $2849 token -> native $0050
+	 DW $FFE8 ; LIT16
+	 DB $7D ; $284C token -> native $100A
+	 DB $0B ; $284D token -> native $007B
+	 DB $06 ; $284E token -> native $0044
+
+; TERSE colon definition at $284F; inline operands remain typed below.
+TERSE_COLON_284F:
+	 RST $08
+	 DB $0E ; $2850 token -> native $0059
+	 DB $18 ; LIT8
+	 DB $7F ; $2852 token -> native $1026
+	 DB $81 ; $2853 token -> native $2837
+	 DB $06 ; $2854 token -> native $0044
+
+; TERSE colon definition at $2855; inline operands remain typed below.
+TERSE_COLON_2855:
+	 RST $08
+	 DB $1B ; $2856 token -> native $0050
+	 DW $D198 ; LIT16
+	 DB $25 ; $2859 token -> native $00A4
+	 DB $3D ; $285A -> TERSE_INDEXED_DISPATCH
+	 DW $2865 ; end/default continuation
+	 DW $26EB ; native target 0
+	 DW $26F0 ; native target 1
+	 DW $26F5 ; native target 2
+	 DW $26E6 ; native target 3
+DB $06 ; $2865 token -> native $0044
+
+; Select one of four native targets using the byte at RAM $D198.
+TERSE_COLON_2866:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D198 ; RAM location
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; indexed native dispatch
+	 DW $2876 ; end/default continuation
+	 DW $2709 ; native target 0
+	 DW $26FA ; native target 1
+	 DW $26FF ; native target 2
+	 DW $2704 ; native target 3
+	 DB $06 ; EXIT
+
+; TERSE colon definition at $2877; inline operands remain typed below.
+TERSE_COLON_2877:
+	 RST $08
+	 DB $1B ; $2878 token -> native $0050
+	 DW $D198 ; LIT16
+	 DB $25 ; $287B token -> native $00A4
+	 DB $3D ; $287C -> TERSE_INDEXED_DISPATCH
+	 DW $2887 ; end/default continuation
+	 DW $26D7 ; native target 0
+	 DW $26DC ; native target 1
+	 DW $26E1 ; native target 2
+	 DW $26D2 ; native target 3
+DB $06 ; $2887 token -> native $0044
+
+; TERSE colon definition at $2888; inline operands remain typed below.
+TERSE_COLON_2888:
+	 RST $08
+	 DB $0E ; $2889 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0E ; $288B token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0B ; $288D token -> native $007B
+	 DB $06 ; $288E token -> native $0044
+
+; TERSE colon definition at $288F; inline operands remain typed below.
+TERSE_COLON_288F:
+	 RST $08
+	 DB $0E ; $2890 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0E ; $2892 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $2894 token -> native $00CD
+	 DB $09 ; $2895 token -> native $0081
+	 DB $06 ; $2896 token -> native $0044
+
+; TERSE colon definition at $2897; inline operands remain typed below.
+TERSE_COLON_2897:
+	 RST $08
+	 DB $0E ; $2898 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $289A token -> native $00CD
+	 DB $0E ; $289B token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $289D token -> native $00CD
+	 DB $0E ; $289E token -> native $0059
+	 DB $02 ; LIT8
+	 DB $06 ; $28A0 token -> native $0044
+
+; TERSE colon definition at $28A1; inline operands remain typed below.
+TERSE_COLON_28A1:
+	 RST $08
+	 DB $0E ; $28A2 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $82 ; $28A4 token -> native $00CD
+	 DB $0E ; $28A5 token -> native $0059
+	 DB $37 ; LIT8
+	 DB $0E ; $28A7 token -> native $0059
+	 DB $03 ; LIT8
+	 DB $06 ; $28A9 token -> native $0044
+
+; $28AA-$2AE0: original 1980 TERSE compiled colon definition.
+; Decode: 269 indexed token instructions, 13 four-way native dispatch tables,
+; and 26 absolute branches. Values and operand boundaries validated against 567 bytes.
+TERSE_COLON_28AA:
+	 RST $08
+	 DB $2A ; TOKEN_$2A
+	 DB $41 ; TOKEN_$41
+	 DB $0E ; LIT8
+	 DB $07
+	 DB $4C ; BITWISE_AND
+	 DB $1B ; LIT16
+	 DW $D011
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_28BD ; inline absolute thread address
+	 DB $1B ; LIT16
+	 DW $D193
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_28C0 ; inline absolute thread address
+TERSE_THREAD_28BD:
+	 DB $1B ; LIT16
+	 DW $D192
+TERSE_THREAD_28C0:
+	 DB $25 ; BYTE_FETCH
+	 DB $0F ; ADD
+	 DB $09 ; ONE
+	 DB $52 ; TOKEN_$52
+	 DB $1B ; LIT16
+	 DW $D196
+	 DB $08 ; BYTE_STORE
+	 DB $0E ; LIT8
+	 DB $0C
+	 DB $65 ; TOKEN_$65
+	 DB $56 ; TOKEN_$56
+	 DB $71 ; TOKEN_$71
+	 DB $6A ; TOKEN_$6A
+	 DB $57 ; TOKEN_$57
+	 DB $58 ; TOKEN_$58
+	 DB $70 ; TOKEN_$70
+	 DB $1B ; LIT16
+	 DW $1E92
+	 DB $6B ; TOKEN_$6B
+	 DB $41 ; TOKEN_$41
+	 DB $0E ; LIT8
+	 DB $03
+	 DB $4C ; BITWISE_AND
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $28E4 ; table end/default continuation
+	 DW $2888 ; native execution target index 0
+	 DW $288F ; native execution target index 1
+	 DW $2897 ; native execution target index 2
+	 DW $28A1 ; native execution target index 3
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $08 ; BYTE_STORE
+	 DB $18 ; TOKEN_$18
+	 DB $17 ; TOKEN_$17
+	 DB $0E ; LIT8
+	 DB $58
+	 DB $5E ; TOKEN_$5E
+	 DB $1B ; LIT16
+	 DW $FFA8
+	 DB $5F ; TOKEN_$5F
+	 DB $0E ; LIT8
+	 DB $58
+	 DB $60 ; TOKEN_$60
+	 DB $1B ; LIT16
+	 DW $FFA8
+	 DB $61 ; TOKEN_$61
+	 DB $41 ; TOKEN_$41
+	 DB $0E ; LIT8
+	 DB $07
+	 DB $4C ; BITWISE_AND
+	 DB $0E ; LIT8
+	 DB $04
+	 DB $02 ; TOKEN_$02
+	 DB $1B ; LIT16
+	 DW $D194
+	 DB $08 ; BYTE_STORE
+TERSE_THREAD_2903:
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $2912 ; table end/default continuation
+	 DW $2818 ; native execution target index 0
+	 DW $2818 ; native execution target index 1
+	 DW $281C ; native execution target index 2
+	 DW $281C ; native execution target index 3
+	 DB $7D ; TOKEN_$7D
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $2922 ; table end/default continuation
+	 DW $280F ; native execution target index 0
+	 DW $2813 ; native execution target index 1
+	 DW $2813 ; native execution target index 2
+	 DW $280F ; native execution target index 3
+	 DB $7F ; TOKEN_$7F
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $1B ; LIT16
+	 DW $D194
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_293C ; inline absolute thread address
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $2939 ; table end/default continuation
+	 DW $007B ; native execution target index 0
+	 DW $2837 ; native execution target index 1
+	 DW $2833 ; native execution target index 2
+	 DW $282F ; native execution target index 3
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2947 ; inline absolute thread address
+TERSE_THREAD_293C:
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $2947 ; table end/default continuation
+	 DW $282F ; native execution target index 0
+	 DW $007B ; native execution target index 1
+	 DW $2837 ; native execution target index 2
+	 DW $2833 ; native execution target index 3
+TERSE_THREAD_2947:
+	 DB $5D ; TOKEN_$5D
+	 DB $1B ; LIT16
+	 DW $0300
+	 DB $5B ; TOKEN_$5B
+	 DB $66 ; TOKEN_$66
+	 DB $1B ; LIT16
+	 DW $D194
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2959 ; inline absolute thread address
+	 DB $0E ; LIT8
+	 DB $20
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_295C ; inline absolute thread address
+TERSE_THREAD_2959:
+	 DB $1B ; LIT16
+	 DW $FFE0
+TERSE_THREAD_295C:
+	 DB $0E ; LIT8
+	 DB $10
+	 DB $83 ; TOKEN_$83
+	 DB $0E ; LIT8
+	 DB $10
+	 DB $4F ; TOKEN_$4F
+	 DB $84 ; TOKEN_$84
+	 DB $85 ; TOKEN_$85
+	 DB $69 ; TOKEN_$69
+	 DB $68 ; TOKEN_$68
+	 DB $6C ; TOKEN_$6C
+	 DB $66 ; TOKEN_$66
+	 DB $1B ; LIT16
+	 DW $D194
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2974 ; inline absolute thread address
+	 DB $0E ; LIT8
+	 DB $20
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2977 ; inline absolute thread address
+TERSE_THREAD_2974:
+	 DB $1B ; LIT16
+	 DW $FFE0
+TERSE_THREAD_2977:
+	 DB $0E ; LIT8
+	 DB $10
+	 DB $83 ; TOKEN_$83
+	 DB $0E ; LIT8
+	 DB $10
+	 DB $4F ; TOKEN_$4F
+	 DB $84 ; TOKEN_$84
+	 DB $85 ; TOKEN_$85
+	 DB $69 ; TOKEN_$69
+	 DB $6C ; TOKEN_$6C
+	 DB $66 ; TOKEN_$66
+	 DB $86 ; TOKEN_$86
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_298B ; inline absolute thread address
+	 DB $84 ; TOKEN_$84
+	 DB $85 ; TOKEN_$85
+	 DB $69 ; TOKEN_$69
+	 DB $6C ; TOKEN_$6C
+TERSE_THREAD_298B:
+	 DB $87 ; TOKEN_$87
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_29CC ; inline absolute thread address
+	 DB $36 ; TOKEN_$36
+	 DB $88 ; TOKEN_$88
+	 DB $82 ; NEGATE
+	 DB $7D ; TOKEN_$7D
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $29A2 ; table end/default continuation
+	 DW $2833 ; native execution target index 0
+	 DW $2833 ; native execution target index 1
+	 DW $007B ; native execution target index 2
+	 DW $007B ; native execution target index 3
+	 DB $5D ; TOKEN_$5D
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $29B2 ; table end/default continuation
+	 DW $282B ; native execution target index 0
+	 DW $2824 ; native execution target index 1
+	 DW $2824 ; native execution target index 2
+	 DW $282B ; native execution target index 3
+	 DB $1B ; LIT16
+	 DW $D198
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $29C5 ; table end/default continuation
+	 DW $282B ; native execution target index 0
+	 DW $2827 ; native execution target index 1
+	 DW $2824 ; native execution target index 2
+	 DW $2821 ; native execution target index 3
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $08 ; BYTE_STORE
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2A06 ; inline absolute thread address
+TERSE_THREAD_29CC:
+	 DB $36 ; TOKEN_$36
+	 DB $89 ; TOKEN_$89
+	 DB $82 ; NEGATE
+	 DB $7F ; TOKEN_$7F
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $29DF ; table end/default continuation
+	 DW $2837 ; native execution target index 0
+	 DW $282F ; native execution target index 1
+	 DW $282F ; native execution target index 2
+	 DW $2837 ; native execution target index 3
+	 DB $5D ; TOKEN_$5D
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $29EF ; table end/default continuation
+	 DW $2821 ; native execution target index 0
+	 DW $2821 ; native execution target index 1
+	 DW $2827 ; native execution target index 2
+	 DW $2827 ; native execution target index 3
+	 DB $1B ; LIT16
+	 DW $D198
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $2A02 ; table end/default continuation
+	 DW $2824 ; native execution target index 0
+	 DW $2821 ; native execution target index 1
+	 DW $282B ; native execution target index 2
+	 DW $2827 ; native execution target index 3
+	 DB $1B ; LIT16
+	 DW $D197
+	 DB $08 ; BYTE_STORE
+TERSE_THREAD_2A06:
+	 DB $68 ; TOKEN_$68
+	 DB $1B ; LIT16
+	 DW $D198
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $2A16 ; table end/default continuation
+	 DW $2538 ; native execution target index 0
+	 DW $252A ; native execution target index 1
+	 DW $2538 ; native execution target index 2
+	 DW $252A ; native execution target index 3
+	 DB $8A ; TOKEN_$8A
+	 DB $1D ; TOKEN_$1D
+	 DB $8B ; TOKEN_$8B
+	 DB $49 ; TOKEN_$49
+	 DB $8A ; TOKEN_$8A
+	 DB $79 ; TOKEN_$79
+	 DB $36 ; TOKEN_$36
+	 DB $0E ; LIT8
+	 DB $1C
+	 DB $0F ; ADD
+	 DB $0C ; FETCH
+	 DB $8C ; TOKEN_$8C
+	 DB $0E ; LIT8
+	 DB $1C
+	 DB $0F ; ADD
+	 DB $10 ; STORE
+	 DB $36 ; TOKEN_$36
+	 DB $0E ; LIT8
+	 DB $1E
+	 DB $0F ; ADD
+	 DB $0C ; FETCH
+	 DB $8C ; TOKEN_$8C
+	 DB $0E ; LIT8
+	 DB $1E
+	 DB $0F ; ADD
+	 DB $10 ; STORE
+	 DB $1B ; LIT16
+	 DW $D196
+	 DB $43 ; DECREMENT_BYTE_AT_ADDRESS
+	 DB $1B ; LIT16
+	 DW $D196
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2A96 ; inline absolute thread address
+	 DB $1B ; LIT16
+	 DW $D198
+	 DB $25 ; BYTE_FETCH
+	 DB $3D ; INDEXED_DISPATCH
+	 DW $2A4B ; table end/default continuation
+	 DW $283B ; native execution target index 0
+	 DW $2841 ; native execution target index 1
+	 DW $2848 ; native execution target index 2
+	 DW $284F ; native execution target index 3
+	 DB $5D ; TOKEN_$5D
+	 DB $66 ; TOKEN_$66
+	 DB $1B ; LIT16
+	 DW $D003
+	 DB $25 ; BYTE_FETCH
+	 DB $0E ; LIT8
+	 DB $02
+	 DB $44 ; EQUAL
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2A61 ; inline absolute thread address
+	 DB $0E ; LIT8
+	 DB $02
+	 DB $1B ; LIT16
+	 DW $D41D
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D155
+	 DB $8D ; TOKEN_$8D
+TERSE_THREAD_2A61:
+	 DB $6C ; TOKEN_$6C
+	 DB $7A ; TOKEN_$7A
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2A6C ; inline absolute thread address
+	 DB $0E ; LIT8
+	 DB $C8
+	 DB $74 ; TOKEN_$74
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2A71 ; inline absolute thread address
+TERSE_THREAD_2A6C:
+	 DB $8E ; TOKEN_$8E
+	 DB $1B ; LIT16
+	 DW $D3C9
+	 DB $55 ; TOKEN_$55
+TERSE_THREAD_2A71:
+	 DB $1B ; LIT16
+	 DW $D003
+	 DB $25 ; BYTE_FETCH
+	 DB $0E ; LIT8
+	 DB $02
+	 DB $44 ; EQUAL
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2A88 ; inline absolute thread address
+	 DB $0E ; LIT8
+	 DB $03
+	 DB $1B ; LIT16
+	 DW $D41D
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D155
+	 DB $8F ; TOKEN_$8F
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2A8C ; inline absolute thread address
+TERSE_THREAD_2A88:
+	 DB $1B ; LIT16
+	 DW $D41D
+	 DB $1D ; TOKEN_$1D
+TERSE_THREAD_2A8C:
+	 DB $71 ; TOKEN_$71
+	 DB $8B ; TOKEN_$8B
+	 DB $1D ; TOKEN_$1D
+	 DB $0B ; ZERO
+	 DB $7B ; TOKEN_$7B
+	 DB $6C ; TOKEN_$6C
+	 DB $09 ; ONE
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2AC6 ; inline absolute thread address
+TERSE_THREAD_2A96:
+	 DB $66 ; TOKEN_$66
+	 DB $6C ; TOKEN_$6C
+	 DB $7A ; TOKEN_$7A
+	 DB $8A ; TOKEN_$8A
+	 DB $25 ; BYTE_FETCH
+	 DB $54 ; BITWISE_OR
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2AC5 ; inline absolute thread address
+	 DB $71 ; TOKEN_$71
+	 DB $8B ; TOKEN_$8B
+	 DB $1D ; TOKEN_$1D
+	 DB $0E ; LIT8
+	 DB $C8
+	 DB $7B ; TOKEN_$7B
+	 DB $1B ; LIT16
+	 DW $D003
+	 DB $25 ; BYTE_FETCH
+	 DB $0E ; LIT8
+	 DB $02
+	 DB $44 ; EQUAL
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2ABC ; inline absolute thread address
+	 DB $0E ; LIT8
+	 DB $03
+	 DB $1B ; LIT16
+	 DW $D41D
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D155
+	 DB $8F ; TOKEN_$8F
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2AC0 ; inline absolute thread address
+TERSE_THREAD_2ABC:
+	 DB $1B ; LIT16
+	 DW $D41D
+	 DB $1D ; TOKEN_$1D
+TERSE_THREAD_2AC0:
+	 DB $6C ; TOKEN_$6C
+	 DB $09 ; ONE
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2AC6 ; inline absolute thread address
+TERSE_THREAD_2AC5:
+	 DB $0B ; ZERO
+TERSE_THREAD_2AC6:
+	 DB $8B ; TOKEN_$8B
+	 DB $1D ; TOKEN_$1D
+	 DB $8A ; TOKEN_$8A
+	 DB $1D ; TOKEN_$1D
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2903 ; inline absolute thread address
+	 DB $6D ; TOKEN_$6D
+	 DB $1B ; LIT16
+	 DW $D014
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2ADF ; inline absolute thread address
+TERSE_THREAD_2AD5:
+	 DB $90 ; TOKEN_$90
+	 DB $78 ; TOKEN_$78
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2AD5 ; inline absolute thread address
+	 DB $36 ; TOKEN_$36
+	 DB $91 ; TOKEN_$91
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2AE1 ; inline absolute thread address
+TERSE_THREAD_2ADF:
+	 DB $36 ; TOKEN_$36
+	 DB $92 ; TOKEN_$92
+; $2AE1: EXIT of preceding TERSE definition.
+TERSE_THREAD_2AE1:
+	 DB $06 ; TERSE_EXIT
+
+; $2AE2: original compiled TERSE game-control word.
+TERSE_COLON_2AE2:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D188 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $44 ; EQUAL
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2AF1 ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $D19A ; LIT16
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2AF4 ; BRANCH
+TERSE_THREAD_2AF1:
+	 DB $1B ; LIT16
+	 DW $D199 ; LIT16
+TERSE_THREAD_2AF4:
+	 DB $49 ; TOKEN_$49
+	 DB $06 ; EXIT
+; $2AF6: original compiled TERSE game-control word.
+TERSE_COLON_2AF6:
+	 RST $08
+	 DB $1B ; LIT16
+	 DW $D189 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $0D ; DUP
+	 DB $1B ; LIT16
+	 DW $D195 ; LIT16
+	 DB $08 ; BYTE_STORE
+	 DB $09 ; ONE
+	 DB $93 ; $2B01 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2B2C ; inline branch-on-not-equal target for token $93
+	 DB $0B ; ZERO
+	 DB $94 ; $2B05 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
+	 DB $95 ; TOKEN_$95
+	 DB $0E ; LIT8
+	 DB $18 ; LIT8
+	 DB $18 ; TOKEN_$18
+	 DB $0B ; ZERO
+	 DB $17 ; TOKEN_$17
+	 DB $76 ; TOKEN_$76
+	 DB $96 ; TOKEN_$96
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2B27 ; 0BRANCH
+	 DB $97 ; TOKEN_$97
+	 DB $49 ; TOKEN_$49
+	 DB $98 ; TOKEN_$98
+	 DB $3B ; TOKEN_$3B
+	 DB $36 ; TOKEN_$36
+	 DB $3B ; TOKEN_$3B
+	 DB $3F ; SUBTRACT
+	 DB $0E ; LIT8
+	 DB $06 ; LIT8
+	 DB $52 ; TOKEN_$52
+	 DB $0E ; LIT8
+	 DB $03 ; LIT8
+	 DB $94 ; $2B20 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
+	 DB $08 ; BYTE_STORE
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2B29 ; BRANCH
+TERSE_THREAD_2B27:
+	 DB $09 ; ONE
+	 DB $99 ; TOKEN_$99
+TERSE_THREAD_2B29:
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $0E ; LIT8
+	 DB $02 ; LIT8
+	 DB $93 ; $2B2E -> TERSE_COMPARE_BRANCH_NE
+	 DW $2B5B ; inline branch-on-not-equal target for token $93
+	 DB $0B ; ZERO
+	 DB $94 ; $2B32 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
+	 DB $95 ; TOKEN_$95
+	 DB $0B ; ZERO
+	 DB $18 ; TOKEN_$18
+	 DB $0E ; LIT8
+	 DB $18 ; LIT8
+	 DB $17 ; TOKEN_$17
+	 DB $9A ; TOKEN_$9A
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2B55 ; 0BRANCH
+	 DB $9B ; TOKEN_$9B
+	 DB $49 ; TOKEN_$49
+	 DB $9C ; TOKEN_$9C
+	 DB $39 ; TOKEN_$39
+	 DB $36 ; TOKEN_$36
+	 DB $39 ; TOKEN_$39
+	 DB $3F ; SUBTRACT
+	 DB $0E ; LIT8
+	 DB $08 ; LIT8
+	 DB $52 ; TOKEN_$52
+	 DB $3A ; ARITH_SHIFT_RIGHT
+	 DB $3A ; ARITH_SHIFT_RIGHT
+	 DB $0E ; LIT8
+	 DB $02 ; LIT8
+	 DB $94 ; $2B4E -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
+	 DB $08 ; BYTE_STORE
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2B58 ; BRANCH
+TERSE_THREAD_2B55:
+	 DB $0E ; LIT8
+	 DB $02 ; LIT8
+	 DB $99 ; TOKEN_$99
+TERSE_THREAD_2B58:
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $0E ; LIT8
+	 DB $03 ; LIT8
+	 DB $93 ; $2B5D -> TERSE_COMPARE_BRANCH_NE
+	 DW $2B8B ; inline branch-on-not-equal target for token $93
+	 DB $0B ; ZERO
+	 DB $94 ; $2B61 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
+	 DB $95 ; TOKEN_$95
+	 DB $1B ; LIT16
+	 DW $FFE8 ; LIT16
+	 DB $18 ; TOKEN_$18
+	 DB $0B ; ZERO
+	 DB $17 ; TOKEN_$17
+	 DB $9D ; TOKEN_$9D
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2B85 ; 0BRANCH
+	 DB $9E ; TOKEN_$9E
+	 DB $49 ; TOKEN_$49
+	 DB $9F ; TOKEN_$9F
+	 DB $3B ; TOKEN_$3B
+	 DB $82 ; NEGATE
+	 DB $36 ; TOKEN_$36
+	 DB $3B ; TOKEN_$3B
+	 DB $82 ; NEGATE
+	 DB $3F ; SUBTRACT
+	 DB $0E ; LIT8
+	 DB $06 ; LIT8
+	 DB $52 ; TOKEN_$52
+	 DB $0E ; LIT8
+	 DB $03 ; LIT8
+	 DB $94 ; $2B7E -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
+	 DB $08 ; BYTE_STORE
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2B88 ; BRANCH
+TERSE_THREAD_2B85:
+	 DB $0E ; LIT8
+	 DB $03 ; LIT8
+	 DB $99 ; TOKEN_$99
+TERSE_THREAD_2B88:
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $0E ; LIT8
+	 DB $04 ; LIT8
+	 DB $93 ; $2B8D -> TERSE_COMPARE_BRANCH_NE
+	 DW $2BBE ; inline branch-on-not-equal target for token $93
+	 DB $0B ; ZERO
+	 DB $94 ; $2B91 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
+	 DB $95 ; TOKEN_$95
+	 DB $0B ; ZERO
+	 DB $18 ; TOKEN_$18
+	 DB $1B ; LIT16
+	 DW $FFE8 ; LIT16
+	 DB $17 ; TOKEN_$17
+	 DB $77 ; TOKEN_$77
+	 DB $A0 ; TOKEN_$A0
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2BB8 ; 0BRANCH
+	 DB $A1 ; TOKEN_$A1
+	 DB $49 ; TOKEN_$49
+	 DB $A2 ; TOKEN_$A2
+	 DB $39 ; TOKEN_$39
+	 DB $82 ; NEGATE
+	 DB $36 ; TOKEN_$36
+	 DB $39 ; TOKEN_$39
+	 DB $82 ; NEGATE
+	 DB $3F ; SUBTRACT
+	 DB $0E ; LIT8
+	 DB $08 ; LIT8
+	 DB $52 ; TOKEN_$52
+	 DB $3A ; ARITH_SHIFT_RIGHT
+	 DB $3A ; ARITH_SHIFT_RIGHT
+	 DB $0E ; LIT8
+	 DB $02 ; LIT8
+	 DB $94 ; $2BB1 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
+	 DB $08 ; BYTE_STORE
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2BBB ; BRANCH
+TERSE_THREAD_2BB8:
+	 DB $0E ; LIT8
+	 DB $04 ; LIT8
+	 DB $99 ; TOKEN_$99
+TERSE_THREAD_2BBB:
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2BBF ; BRANCH
+	 DB $05 ; DROP
+TERSE_THREAD_2BBF:
+	 DB $06 ; EXIT
+; $2BC0: original compiled TERSE game-control word.
+TERSE_COLON_2BC0:
+	 RST $08
+	 DB $2A ; TOKEN_$2A
+	 DB $56 ; TOKEN_$56
+	 DB $71 ; TOKEN_$71
+	 DB $57 ; TOKEN_$57
+	 DB $A3 ; TOKEN_$A3
+	 DB $1B ; LIT16
+	 DW $17D2 ; LIT16
+	 DB $0B ; ZERO
+	 DB $94 ; $2BCA -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
+	 DB $0E ; LIT8
+	 DB $05 ; LIT8
+	 DB $16 ; MEMORY_COPY
+	 DB $1B ; LIT16
+	 DW $17D7 ; LIT16
+	 DB $0B ; ZERO
+	 DB $94 ; $2BD4 -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
+	 DB $0E ; LIT8
+	 DB $05 ; LIT8
+	 DB $16 ; MEMORY_COPY
+TERSE_THREAD_2BDA:
+	 DB $0E ; LIT8
+	 DB $38 ; LIT8
+	 DB $0E ; LIT8
+	 DB $03 ; LIT8
+	 DB $94 ; $2BDE -> TERSE_ADD_INLINE16
+	 DW $D1A9 ; inline little-endian displacement for token $94
+	 DB $08 ; BYTE_STORE
+	 DB $0E ; LIT8
+	 DB $1D ; LIT8
+	 DB $0E ; LIT8
+	 DB $02 ; LIT8
+	 DB $94 ; $2BE6 -> TERSE_ADD_INLINE16
+	 DW $D1A4 ; inline little-endian displacement for token $94
+	 DB $08 ; BYTE_STORE
+	 DB $1B ; LIT16
+	 DW $D418 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2BF3 ; 0BRANCH
+	 DB $35 ; TOKEN_$35
+TERSE_THREAD_2BF3:
+	 DB $1B ; LIT16
+	 DW $D418 ; LIT16
+	 DB $43 ; DECREMENT_BYTE_AT_ADDRESS
+	 DB $78 ; TOKEN_$78
+	 DB $4E ; TOKEN_$4E
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2C20 ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $D014 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2C1F ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $D199 ; LIT16
+	 DB $1D ; TOKEN_$1D
+	 DB $A4 ; TOKEN_$A4
+	 DB $A5 ; TOKEN_$A5
+	 DB $09 ; ONE
+	 DB $4F ; TOKEN_$4F
+	 DB $73 ; TOKEN_$73
+	 DB $A5 ; TOKEN_$A5
+	 DB $1B ; LIT16
+	 DW $D41D ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2C1E ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $D199 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2C1E ; 0BRANCH
+	 DB $A4 ; TOKEN_$A4
+TERSE_THREAD_2C1E:
+	 DB $58 ; TOKEN_$58
+TERSE_THREAD_2C1F:
+	 DB $78 ; TOKEN_$78
+TERSE_THREAD_2C20:
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2BDA ; 0BRANCH
+	 DB $36 ; TOKEN_$36
+	 DB $91 ; TOKEN_$91
+	 DB $06 ; EXIT
+; $2C26: original compiled TERSE game-control word.
+TERSE_COLON_2C26:
+	 RST $08
+	 DB $36 ; TOKEN_$36
+	 DB $A6 ; TOKEN_$A6
+	 DB $82 ; NEGATE
+	 DB $A7 ; TOKEN_$A7
+	 DB $36 ; TOKEN_$36
+	 DB $A8 ; TOKEN_$A8
+	 DB $82 ; NEGATE
+	 DB $A9 ; TOKEN_$A9
+	 DB $0E ; LIT8
+	 DB $85 ; LIT8
+	 DB $60 ; TOKEN_$60
+	 DB $1B ; LIT16
+	 DW $FF7B ; LIT16
+	 DB $61 ; TOKEN_$61
+	 DB $0E ; LIT8
+	 DB $56 ; LIT8
+	 DB $5E ; TOKEN_$5E
+	 DB $1B ; LIT16
+	 DW $FFAA ; LIT16
+	 DB $5F ; TOKEN_$5F
+	 DB $69 ; TOKEN_$69
+	 DB $0E ; LIT8
+	 DB $19 ; LIT8
+	 DB $74 ; TOKEN_$74
+	 DB $AA ; TOKEN_$AA
+	 DB $62 ; TOKEN_$62
+	 DB $6A ; TOKEN_$6A
+	 DB $59 ; TOKEN_$59
+	 DB $1B ; LIT16
+	 DW $178B ; LIT16
+	 DB $6B ; TOKEN_$6B
+	 DB $0E ; LIT8
+	 DB $1E ; LIT8
+	 DB $4F ; TOKEN_$4F
+	 DB $06 ; EXIT
+TERSE_INTERWORD_2C4D:
+	 DB $8A ; original byte between colon definitions
+
+; $2C4E: original compiled TERSE game-control word.
+TERSE_COLON_2C4E:
+	 RST $08
+	 DB $2A ; TOKEN_$2A
+	 DB $0E ; LIT8
+	 DB $0C ; LIT8
+	 DB $65 ; TOKEN_$65
+	 DB $56 ; TOKEN_$56
+	 DB $71 ; TOKEN_$71
+TERSE_THREAD_2C55:
+	 DB $0B ; ZERO
+	 DB $A9 ; TOKEN_$A9
+	 DB $1B ; LIT16
+	 DW $24C8 ; LIT16
+	 DB $5C ; TOKEN_$5C
+	 DB $57 ; TOKEN_$57
+	 DB $6A ; TOKEN_$6A
+	 DB $9B ; TOKEN_$9B
+	 DB $1D ; TOKEN_$1D
+	 DB $35 ; TOKEN_$35
+	 DB $78 ; TOKEN_$78
+	 DB $4E ; TOKEN_$4E
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2CAC ; 0BRANCH
+	 DB $0E ; LIT8
+	 DB $84 ; LIT8
+	 DB $17 ; TOKEN_$17
+	 DB $0B ; ZERO
+	 DB $18 ; TOKEN_$18
+	 DB $AB ; TOKEN_$AB
+	 DB $82 ; NEGATE
+	 DB $A7 ; TOKEN_$A7
+	 DB $9A ; TOKEN_$9A
+	 DB $49 ; TOKEN_$49
+	 DB $1B ; LIT16
+	 DW $D003 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2C7C ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $D155 ; LIT16
+	 DB $AC ; TOKEN_$AC
+TERSE_THREAD_2C7C:
+	 DB $AD ; TOKEN_$AD
+	 DB $70 ; TOKEN_$70
+	 DB $AE ; TOKEN_$AE
+	 DB $6B ; TOKEN_$6B
+	 DB $19 ; TOKEN_$19
+	 DB $9B ; TOKEN_$9B
+	 DB $79 ; TOKEN_$79
+	 DB $0E ; LIT8
+	 DB $18 ; LIT8
+	 DB $7D ; TOKEN_$7D
+	 DB $6C ; TOKEN_$6C
+	 DB $9A ; TOKEN_$9A
+	 DB $1D ; TOKEN_$1D
+	 DB $7A ; TOKEN_$7A
+	 DB $9B ; TOKEN_$9B
+	 DB $25 ; BYTE_FETCH
+	 DB $54 ; BITWISE_OR
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2C95 ; 0BRANCH
+	 DB $AF ; TOKEN_$AF
+	 DB $6C ; TOKEN_$6C
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2CAA ; BRANCH
+TERSE_THREAD_2C95:
+	 DB $8E ; TOKEN_$8E
+	 DB $AD ; TOKEN_$AD
+	 DB $0B ; ZERO
+	 DB $7D ; TOKEN_$7D
+	 DB $6C ; TOKEN_$6C
+	 DB $71 ; TOKEN_$71
+	 DB $1B ; LIT16
+	 DW $D3C9 ; LIT16
+	 DB $55 ; TOKEN_$55
+	 DB $58 ; TOKEN_$58
+	 DB $70 ; TOKEN_$70
+	 DB $1B ; LIT16
+	 DW $1DC9 ; LIT16
+	 DB $6B ; TOKEN_$6B
+	 DB $0E ; LIT8
+	 DB $26 ; LIT8
+	 DB $4F ; TOKEN_$4F
+	 DB $6C ; TOKEN_$6C
+	 DB $62 ; TOKEN_$62
+TERSE_THREAD_2CAA:
+	 DB $6D ; TOKEN_$6D
+	 DB $78 ; TOKEN_$78
+TERSE_THREAD_2CAC:
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2C55 ; 0BRANCH
+	 DB $36 ; TOKEN_$36
+	 DB $7C ; TOKEN_$7C
+	 DB $06 ; EXIT
+; $2CB2: original compiled TERSE game-control word.
+TERSE_COLON_2CB2:
+	 RST $08
+	 DB $2A ; TOKEN_$2A
+	 DB $0E ; LIT8
+	 DB $0C ; LIT8
+	 DB $65 ; TOKEN_$65
+	 DB $56 ; TOKEN_$56
+	 DB $71 ; TOKEN_$71
+TERSE_THREAD_2CB9:
+	 DB $0B ; ZERO
+	 DB $A7 ; TOKEN_$A7
+	 DB $1B ; LIT16
+	 DW $24D1 ; LIT16
+	 DB $5C ; TOKEN_$5C
+	 DB $57 ; TOKEN_$57
+	 DB $6A ; TOKEN_$6A
+	 DB $9E ; TOKEN_$9E
+	 DB $1D ; TOKEN_$1D
+	 DB $35 ; TOKEN_$35
+	 DB $78 ; TOKEN_$78
+	 DB $4E ; TOKEN_$4E
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2D13 ; 0BRANCH
+	 DB $0B ; ZERO
+	 DB $17 ; TOKEN_$17
+	 DB $1B ; LIT16
+	 DW $FFAB ; LIT16
+	 DB $18 ; TOKEN_$18
+	 DB $1B ; LIT16
+	 DW $D19C ; LIT16
+	 DB $0C ; FETCH
+	 DB $A9 ; TOKEN_$A9
+	 DB $9D ; TOKEN_$9D
+	 DB $49 ; TOKEN_$49
+	 DB $1B ; LIT16
+	 DW $D003 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2CE3 ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $D155 ; LIT16
+	 DB $AC ; TOKEN_$AC
+TERSE_THREAD_2CE3:
+	 DB $AD ; TOKEN_$AD
+	 DB $70 ; TOKEN_$70
+	 DB $AE ; TOKEN_$AE
+	 DB $6B ; TOKEN_$6B
+	 DB $9E ; TOKEN_$9E
+	 DB $79 ; TOKEN_$79
+	 DB $1B ; LIT16
+	 DW $FFE8 ; LIT16
+	 DB $7F ; TOKEN_$7F
+	 DB $6C ; TOKEN_$6C
+	 DB $9D ; TOKEN_$9D
+	 DB $1D ; TOKEN_$1D
+	 DB $7A ; TOKEN_$7A
+	 DB $9E ; TOKEN_$9E
+	 DB $25 ; BYTE_FETCH
+	 DB $54 ; BITWISE_OR
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2CFC ; 0BRANCH
+	 DB $AF ; TOKEN_$AF
+	 DB $6C ; TOKEN_$6C
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2D11 ; BRANCH
+TERSE_THREAD_2CFC:
+	 DB $8E ; TOKEN_$8E
+	 DB $AD ; TOKEN_$AD
+	 DB $0B ; ZERO
+	 DB $7F ; TOKEN_$7F
+	 DB $6C ; TOKEN_$6C
+	 DB $71 ; TOKEN_$71
+	 DB $1B ; LIT16
+	 DW $D3C9 ; LIT16
+	 DB $55 ; TOKEN_$55
+	 DB $58 ; TOKEN_$58
+	 DB $70 ; TOKEN_$70
+	 DB $1B ; LIT16
+	 DW $1DC9 ; LIT16
+	 DB $6B ; TOKEN_$6B
+	 DB $0E ; LIT8
+	 DB $26 ; LIT8
+	 DB $4F ; TOKEN_$4F
+	 DB $6C ; TOKEN_$6C
+	 DB $62 ; TOKEN_$62
+TERSE_THREAD_2D11:
+	 DB $6D ; TOKEN_$6D
+	 DB $78 ; TOKEN_$78
+TERSE_THREAD_2D13:
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2CB9 ; 0BRANCH
+	 DB $36 ; TOKEN_$36
+	 DB $7C ; TOKEN_$7C
+	 DB $06 ; EXIT
+; $2D19: original compiled TERSE game-control word.
+TERSE_COLON_2D19:
+	 RST $08
+	 DB $2A ; TOKEN_$2A
+	 DB $0E ; LIT8
+	 DB $0C ; LIT8
+	 DB $65 ; TOKEN_$65
+	 DB $56 ; TOKEN_$56
+	 DB $71 ; TOKEN_$71
+TERSE_THREAD_2D20:
+	 DB $0B ; ZERO
+	 DB $A9 ; TOKEN_$A9
+	 DB $1B ; LIT16
+	 DW $24C8 ; LIT16
+	 DB $5C ; TOKEN_$5C
+	 DB $57 ; TOKEN_$57
+	 DB $6A ; TOKEN_$6A
+	 DB $A1 ; TOKEN_$A1
+	 DB $1D ; TOKEN_$1D
+	 DB $35 ; TOKEN_$35
+	 DB $78 ; TOKEN_$78
+	 DB $4E ; TOKEN_$4E
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2D77 ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $FF7C ; LIT16
+	 DB $17 ; TOKEN_$17
+	 DB $0B ; ZERO
+	 DB $18 ; TOKEN_$18
+	 DB $AB ; TOKEN_$AB
+	 DB $A7 ; TOKEN_$A7
+	 DB $A0 ; TOKEN_$A0
+	 DB $49 ; TOKEN_$49
+	 DB $1B ; LIT16
+	 DW $D003 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2D47 ; 0BRANCH
+	 DB $1B ; LIT16
+	 DW $D155 ; LIT16
+	 DB $AC ; TOKEN_$AC
+TERSE_THREAD_2D47:
+	 DB $AD ; TOKEN_$AD
+	 DB $70 ; TOKEN_$70
+	 DB $AE ; TOKEN_$AE
+	 DB $6B ; TOKEN_$6B
+	 DB $A1 ; TOKEN_$A1
+	 DB $79 ; TOKEN_$79
+	 DB $1B ; LIT16
+	 DW $FFE8 ; LIT16
+	 DB $7D ; TOKEN_$7D
+	 DB $6C ; TOKEN_$6C
+	 DB $A0 ; TOKEN_$A0
+	 DB $1D ; TOKEN_$1D
+	 DB $7A ; TOKEN_$7A
+	 DB $A1 ; TOKEN_$A1
+	 DB $25 ; BYTE_FETCH
+	 DB $54 ; BITWISE_OR
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2D60 ; 0BRANCH
+	 DB $AF ; TOKEN_$AF
+	 DB $6C ; TOKEN_$6C
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2D75 ; BRANCH
+TERSE_THREAD_2D60:
+	 DB $8E ; TOKEN_$8E
+	 DB $AD ; TOKEN_$AD
+	 DB $0B ; ZERO
+	 DB $7D ; TOKEN_$7D
+	 DB $6C ; TOKEN_$6C
+	 DB $71 ; TOKEN_$71
+	 DB $1B ; LIT16
+	 DW $D3C9 ; LIT16
+	 DB $55 ; TOKEN_$55
+	 DB $58 ; TOKEN_$58
+	 DB $70 ; TOKEN_$70
+	 DB $1B ; LIT16
+	 DW $1DC9 ; LIT16
+	 DB $6B ; TOKEN_$6B
+	 DB $0E ; LIT8
+	 DB $26 ; LIT8
+	 DB $4F ; TOKEN_$4F
+	 DB $6C ; TOKEN_$6C
+	 DB $62 ; TOKEN_$62
+TERSE_THREAD_2D75:
+	 DB $6D ; TOKEN_$6D
+	 DB $78 ; TOKEN_$78
+TERSE_THREAD_2D77:
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2D20 ; 0BRANCH
+	 DB $36 ; TOKEN_$36
+	 DB $7C ; TOKEN_$7C
+; $2D7C: EXIT of preceding colon program.
+	 DB $06 ; TERSE_EXIT
+
+; $2D7D compiled TERSE byte-token definition.
+TERSE_COLON_2D7D:
+	 RST $08
+	 DB $2A ; $2D7E => $042F
+	 DB $0E ; $2D7F => $0059
+	 DB $0C ; LIT8
+	 DB $65 ; $2D81 => $1195
+	 DB $56 ; $2D82 => $11C3
+	 DB $71 ; $2D83 => $1166
+TERSE_THREAD_2D84:
+	 DB $0B ; $2D84 => $007B
+	 DB $A7 ; $2D85 => $10FE
+	 DB $1B ; $2D86 => $0050
+	 DW $24D1 ; LIT16
+	 DB $5C ; $2D89 => $109C
+	 DB $57 ; $2D8A => $121C
+	 DB $6A ; $2D8B => $10CD
+	 DB $97 ; $2D8C => $2704
+	 DB $1D ; $2D8D => $0266
+	 DB $35 ; $2D8E => $04A6
+	 DB $78 ; $2D8F => $24DA
+	 DB $4E ; $2D90 => $013F
+	 DB $27 ; $2D91 => $0139
+	 DB $03 ; $2D92 => $01FC
+	 DW TERSE_THREAD_2DDD ; 0BRANCH
+	 DB $0B ; $2D95 => $007B
+	 DB $17 ; $2D96 => $10DA
+	 DB $0E ; $2D97 => $0059
+	 DB $55 ; LIT8
+	 DB $18 ; $2D99 => $10EC
+	 DB $1B ; $2D9A => $0050
+	 DW $D19C ; LIT16
+	 DB $0C ; $2D9D => $009D
+	 DB $82 ; $2D9E => $00CD
+	 DB $A9 ; $2D9F => $110E
+	 DB $96 ; $2DA0 => $26E6
+	 DB $49 ; $2DA1 => $0262
+	 DB $1B ; $2DA2 => $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $2DA5 => $00A4
+	 DB $27 ; $2DA6 => $0139
+	 DB $03 ; $2DA7 => $01FC
+	 DW TERSE_THREAD_2DAE ; 0BRANCH
+	 DB $1B ; $2DAA => $0050
+	 DW $D155 ; LIT16
+	 DB $AC ; $2DAD => $231D
+TERSE_THREAD_2DAE:
+	 DB $AD ; $2DAE => $1086
+	 DB $70 ; $2DAF => $11AB
+	 DB $AE ; $2DB0 => $261F
+	 DB $6B ; $2DB1 => $10B7
+	 DB $97 ; $2DB2 => $2704
+	 DB $79 ; $2DB3 => $0EDA
+	 DB $0E ; $2DB4 => $0059
+	 DB $18 ; LIT8
+	 DB $7F ; $2DB6 => $1026
+	 DB $6C ; $2DB7 => $0CE2
+	 DB $96 ; $2DB8 => $26E6
+	 DB $1D ; $2DB9 => $0266
+	 DB $7A ; $2DBA => $0EED
+	 DB $97 ; $2DBB => $2704
+	 DB $25 ; $2DBC => $00A4
+	 DB $54 ; $2DBD => $0154
+	 DB $03 ; $2DBE => $01FC
+	 DW TERSE_THREAD_2DC6 ; 0BRANCH
+	 DB $AF ; $2DC1 => $2C26
+	 DB $6C ; $2DC2 => $0CE2
+	 DB $46 ; $2DC3 => $01F4
+	 DW TERSE_THREAD_2DDB ; BRANCH
+TERSE_THREAD_2DC6:
+	 DB $8E ; $2DC6 => $25D0
+	 DB $AD ; $2DC7 => $1086
+	 DB $0B ; $2DC8 => $007B
+	 DB $7F ; $2DC9 => $1026
+	 DB $6C ; $2DCA => $0CE2
+	 DB $71 ; $2DCB => $1166
+	 DB $1B ; $2DCC => $0050
+	 DW $D3C9 ; LIT16
+	 DB $55 ; $2DCF => $04BB
+	 DB $58 ; $2DD0 => $1212
+	 DB $70 ; $2DD1 => $11AB
+	 DB $1B ; $2DD2 => $0050
+	 DW $1DC9 ; LIT16
+	 DB $6B ; $2DD5 => $10B7
+	 DB $0E ; $2DD6 => $0059
+	 DB $26 ; LIT8
+	 DB $4F ; $2DD8 => $0EC7
+	 DB $6C ; $2DD9 => $0CE2
+	 DB $62 ; $2DDA => $2393
+TERSE_THREAD_2DDB:
+	 DB $6D ; $2DDB => $12C7
+	 DB $78 ; $2DDC => $24DA
+TERSE_THREAD_2DDD:
+	 DB $03 ; $2DDD => $01FC
+	 DW TERSE_THREAD_2D84 ; 0BRANCH
+	 DB $36 ; $2DE0 => $1216
+	 DB $7C ; $2DE1 => $263E
+	 DB $06 ; $2DE2 => $0044
+
+; $2DE3 compiled TERSE byte-token definition.
+TERSE_COLON_2DE3:
+	 RST $08
+	 DB $2A ; $2DE4 => $042F
+	 DB $71 ; $2DE5 => $1166
+	 DB $67 ; $2DE6 => $1182
+	 DB $57 ; $2DE7 => $121C
+TERSE_THREAD_2DE8:
+	 DB $35 ; $2DE8 => $04A6
+	 DB $1B ; $2DE9 => $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2DEC => $00A4
+	 DB $03 ; $2DED => $01FC
+	 DW TERSE_THREAD_2EC4 ; 0BRANCH
+	 DB $56 ; $2DF0 => $11C3
+	 DB $1B ; $2DF1 => $0050
+	 DW $D19A ; LIT16
+	 DB $49 ; $2DF4 => $0262
+	 DB $9B ; $2DF5 => $2709
+	 DB $49 ; $2DF6 => $0262
+	 DB $A1 ; $2DF7 => $26FF
+	 DB $49 ; $2DF8 => $0262
+	 DB $97 ; $2DF9 => $2704
+	 DB $49 ; $2DFA => $0262
+	 DB $9E ; $2DFB => $26FA
+	 DB $49 ; $2DFC => $0262
+	 DB $1B ; $2DFD => $0050
+	 DW $D003 ; LIT16
+	 DB $25 ; $2E00 => $00A4
+	 DB $09 ; $2E01 => $0081
+	 DB $4C ; $2E02 => $0149
+	 DB $27 ; $2E03 => $0139
+	 DB $03 ; $2E04 => $01FC
+	 DW TERSE_THREAD_2E0F ; 0BRANCH
+	 DB $1B ; $2E07 => $0050
+	 DW $D003 ; LIT16
+	 DB $29 ; $2E0A => $1F10
+	 DB $1B ; $2E0B => $0050
+	 DW $D155 ; LIT16
+	 DB $37 ; $2E0E => $21AA
+TERSE_THREAD_2E0F:
+	 DB $0E ; $2E0F => $0059
+	 DB $06 ; LIT8
+	 DB $1B ; $2E11 => $0050
+	 DW $D42D ; LIT16
+	 DB $08 ; $2E14 => $00B2
+	 DB $98 ; $2E15 => $26D2
+	 DB $55 ; $2E16 => $04BB
+	 DB $9F ; $2E17 => $26DC
+	 DB $55 ; $2E18 => $04BB
+	 DB $A2 ; $2E19 => $26E1
+	 DB $55 ; $2E1A => $04BB
+	 DB $9C ; $2E1B => $26D7
+	 DB $55 ; $2E1C => $04BB
+	 DB $1B ; $2E1D => $0050
+	 DW $D1B5 ; LIT16
+	 DB $55 ; $2E20 => $04BB
+	 DB $1B ; $2E21 => $0050
+	 DW $D24D ; LIT16
+	 DB $55 ; $2E24 => $04BB
+	 DB $72 ; $2E25 => $24FD
+	 DB $73 ; $2E26 => $0D11
+	 DB $50 ; $2E27 => $24F6
+	 DB $1B ; $2E28 => $0050
+	 DW $185E ; LIT16
+	 DB $95 ; $2E2B => $1188
+	 DB $A5 ; $2E2C => $12DB
+	 DB $76 ; $2E2D => $11D0
+	 DB $A5 ; $2E2E => $12DB
+	 DB $77 ; $2E2F => $11DB
+	 DB $A5 ; $2E30 => $12DB
+	 DB $19 ; $2E31 => $11FC
+	 DB $A5 ; $2E32 => $12DB
+	 DB $1A ; $2E33 => $1207
+	 DB $0E ; $2E34 => $0059
+	 DB $09 ; LIT8
+	 DB $4F ; $2E36 => $0EC7
+	 DB $73 ; $2E37 => $0D11
+	 DB $1B ; $2E38 => $0050
+	 DW $17DC ; LIT16
+	 DB $95 ; $2E3B => $1188
+	 DB $A5 ; $2E3C => $12DB
+	 DB $76 ; $2E3D => $11D0
+	 DB $A5 ; $2E3E => $12DB
+	 DB $77 ; $2E3F => $11DB
+	 DB $A5 ; $2E40 => $12DB
+	 DB $19 ; $2E41 => $11FC
+	 DB $A5 ; $2E42 => $12DB
+	 DB $1A ; $2E43 => $1207
+	 DB $0E ; $2E44 => $0059
+	 DB $09 ; LIT8
+	 DB $4F ; $2E46 => $0EC7
+	 DB $73 ; $2E47 => $0D11
+	 DB $1B ; $2E48 => $0050
+	 DW $185E ; LIT16
+	 DB $95 ; $2E4B => $1188
+	 DB $A5 ; $2E4C => $12DB
+	 DB $76 ; $2E4D => $11D0
+	 DB $A5 ; $2E4E => $12DB
+	 DB $77 ; $2E4F => $11DB
+	 DB $A5 ; $2E50 => $12DB
+	 DB $19 ; $2E51 => $11FC
+	 DB $A5 ; $2E52 => $12DB
+	 DB $1A ; $2E53 => $1207
+	 DB $72 ; $2E54 => $24FD
+	 DB $73 ; $2E55 => $0D11
+	 DB $0E ; $2E56 => $0059
+	 DB $10 ; LIT8
+	 DB $B0 ; $2E58 => $2508
+	 DB $73 ; $2E59 => $0D11
+	 DB $72 ; $2E5A => $24FD
+	 DB $73 ; $2E5B => $0D11
+	 DB $0E ; $2E5C => $0059
+	 DB $12 ; LIT8
+	 DB $B0 ; $2E5E => $2508
+	 DB $73 ; $2E5F => $0D11
+	 DB $72 ; $2E60 => $24FD
+	 DB $73 ; $2E61 => $0D11
+	 DB $0E ; $2E62 => $0059
+	 DB $16 ; LIT8
+	 DB $B0 ; $2E64 => $2508
+	 DB $73 ; $2E65 => $0D11
+	 DB $72 ; $2E66 => $24FD
+	 DB $73 ; $2E67 => $0D11
+	 DB $0E ; $2E68 => $0059
+	 DB $20 ; LIT8
+	 DB $B0 ; $2E6A => $2508
+	 DB $73 ; $2E6B => $0D11
+	 DB $72 ; $2E6C => $24FD
+	 DB $73 ; $2E6D => $0D11
+	 DB $0E ; $2E6E => $0059
+	 DB $10 ; LIT8
+	 DB $B0 ; $2E70 => $2508
+	 DB $73 ; $2E71 => $0D11
+	 DB $72 ; $2E72 => $24FD
+	 DB $73 ; $2E73 => $0D11
+	 DB $0E ; $2E74 => $0059
+	 DB $12 ; LIT8
+	 DB $B0 ; $2E76 => $2508
+	 DB $73 ; $2E77 => $0D11
+TERSE_THREAD_2E78:
+	 DB $90 ; $2E78 => $047E
+	 DB $1B ; $2E79 => $0050
+	 DW $D42D ; LIT16
+	 DB $25 ; $2E7C => $00A4
+	 DB $27 ; $2E7D => $0139
+	 DB $03 ; $2E7E => $01FC
+	 DW TERSE_THREAD_2E78 ; 0BRANCH
+	 DB $1B ; $2E81 => $0050
+	 DW $D011 ; LIT16
+	 DB $25 ; $2E84 => $00A4
+	 DB $1B ; $2E85 => $0050
+	 DW $D012 ; LIT16
+	 DB $0F ; $2E88 => $00BF
+	 DB $25 ; $2E89 => $00A4
+	 DB $27 ; $2E8A => $0139
+	 DB $03 ; $2E8B => $01FC
+	 DW TERSE_THREAD_2E94 ; 0BRANCH
+	 DB $1B ; $2E8E => $0050
+	 DW $0180 ; LIT16
+	 DB $46 ; $2E91 => $01F4
+	 DW TERSE_THREAD_2E96 ; BRANCH
+TERSE_THREAD_2E94:
+	 DB $0E ; $2E94 => $0059
+	 DB $60 ; LIT8
+TERSE_THREAD_2E96:
+	 DB $4F ; $2E96 => $0EC7
+	 DB $1B ; $2E97 => $0050
+	 DW $D1A3 ; LIT16
+	 DB $79 ; $2E9A => $0EDA
+	 DB $73 ; $2E9B => $0D11
+	 DB $0E ; $2E9C => $0059
+	 DB $06 ; LIT8
+	 DB $1B ; $2E9E => $0050
+	 DW $D42E ; LIT16
+	 DB $08 ; $2EA1 => $00B2
+TERSE_THREAD_2EA2:
+	 DB $90 ; $2EA2 => $047E
+	 DB $1B ; $2EA3 => $0050
+	 DW $D42E ; LIT16
+	 DB $25 ; $2EA6 => $00A4
+	 DB $27 ; $2EA7 => $0139
+	 DB $03 ; $2EA8 => $01FC
+	 DW TERSE_THREAD_2EA2 ; 0BRANCH
+	 DB $98 ; $2EAB => $26D2
+	 DB $B1 ; $2EAC => $2D7D
+	 DB $9F ; $2EAD => $26DC
+	 DB $B2 ; $2EAE => $2CB2
+	 DB $1B ; $2EAF => $0050
+	 DW $D24D ; LIT16
+	 DB $92 ; $2EB2 => $275C
+	 DB $A2 ; $2EB3 => $26E1
+	 DB $B3 ; $2EB4 => $2D19
+	 DB $9C ; $2EB5 => $26D7
+	 DB $B4 ; $2EB6 => $2C4E
+	 DB $1B ; $2EB7 => $0050
+	 DW $D1B5 ; LIT16
+	 DB $B5 ; $2EBA => $2BC0
+TERSE_THREAD_2EBB:
+	 DB $35 ; $2EBB => $04A6
+	 DB $1B ; $2EBC => $0050
+	 DW $D014 ; LIT16
+	 DB $25 ; $2EBF => $00A4
+	 DB $27 ; $2EC0 => $0139
+	 DB $03 ; $2EC1 => $01FC
+	 DW TERSE_THREAD_2EBB ; 0BRANCH
+TERSE_THREAD_2EC4:
+	 DB $B6 ; $2EC4 => $24BB
+	 DB $1B ; $2EC5 => $0050
+	 DW $17DC ; LIT16
+	 DB $95 ; $2EC8 => $1188
+	 DB $A5 ; $2EC9 => $12DB
+	 DB $76 ; $2ECA => $11D0
+	 DB $A5 ; $2ECB => $12DB
+	 DB $77 ; $2ECC => $11DB
+	 DB $A5 ; $2ECD => $12DB
+	 DB $19 ; $2ECE => $11FC
+	 DB $A5 ; $2ECF => $12DB
+	 DB $1A ; $2ED0 => $1207
+	 DB $0B ; $2ED1 => $007B
+	 DB $03 ; $2ED2 => $01FC
+	 DW TERSE_THREAD_2DE8 ; 0BRANCH
+; $2ED5: EXIT of preceding game-control definition.
+	 DB $06 ; TERSE_EXIT
+
+; $2ED6-$2F66: TERSE game-control definition.
+TERSE_COLON_2ED6:
+	 RST $08
+	 DB $2A ; TOKEN_$2A
+	 DB $0E ; LIT8
+	 DB $08 ; LIT8
+	 DB $65 ; TOKEN_$65
+	 DB $56 ; TOKEN_$56
+	 DB $59 ; TOKEN_$59
+	 DB $71 ; TOKEN_$71
+	 DB $57 ; TOKEN_$57
+	 DB $35 ; TOKEN_$35
+TERSE_THREAD_2EE0:
+	 DB $1B ; LIT16
+	 DW $D014 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2EFE ; 0BRANCH
+	 DB $62 ; TOKEN_$62
+	 DB $57 ; TOKEN_$57
+	 DB $1B ; LIT16
+	 DW $178B ; LIT16
+	 DB $6B ; TOKEN_$6B
+	 DB $0E ; LIT8
+	 DB $1E ; LIT8
+	 DB $4F ; TOKEN_$4F
+	 DB $6C ; TOKEN_$6C
+	 DB $6A ; TOKEN_$6A
+TERSE_THREAD_2EF2:
+	 DB $35 ; TOKEN_$35
+	 DB $1B ; LIT16
+	 DW $D014 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2EF2 ; 0BRANCH
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2F62 ; BRANCH
+TERSE_THREAD_2EFE:
+	 DB $1B ; LIT16
+	 DW $D18A ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $09 ; ONE
+	 DB $93 ; $2F03 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2F13 ; inline branch-on-not-equal target for token $93
+	 DB $0B ; ZERO
+	 DB $17 ; TOKEN_$17
+	 DB $0E ; LIT8
+	 DB $10 ; LIT8
+	 DB $18 ; TOKEN_$18
+	 DB $1B ; LIT16
+	 DW $17B9 ; LIT16
+	 DB $1A ; TOKEN_$1A
+	 DB $19 ; TOKEN_$19
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2F44 ; BRANCH
+	 DB $0E ; LIT8
+	 DB $02 ; LIT8
+	 DB $93 ; $2F15 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2F25 ; inline branch-on-not-equal target for token $93
+	 DB $0E ; LIT8
+	 DB $10 ; LIT8
+	 DB $17 ; TOKEN_$17
+	 DB $0B ; ZERO
+	 DB $18 ; TOKEN_$18
+	 DB $1B ; LIT16
+	 DW $179D ; LIT16
+	 DB $77 ; TOKEN_$77
+	 DB $19 ; TOKEN_$19
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2F44 ; BRANCH
+	 DB $0E ; LIT8
+	 DB $03 ; LIT8
+	 DB $93 ; $2F27 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2F38 ; inline branch-on-not-equal target for token $93
+	 DB $0B ; ZERO
+	 DB $17 ; TOKEN_$17
+	 DB $1B ; LIT16
+	 DW $FFF0 ; LIT16
+	 DB $18 ; TOKEN_$18
+	 DB $1B ; LIT16
+	 DW $17B9 ; LIT16
+	 DB $1A ; TOKEN_$1A
+	 DB $76 ; TOKEN_$76
+	 DB $46 ; BRANCH_ABSOLUTE
+	 DW TERSE_THREAD_2F44 ; BRANCH
+	 DB $05 ; DROP
+	 DB $1B ; LIT16
+	 DW $FFF0 ; LIT16
+	 DB $17 ; TOKEN_$17
+	 DB $0B ; ZERO
+	 DB $18 ; TOKEN_$18
+	 DB $1B ; LIT16
+	 DW $179D ; LIT16
+	 DB $1A ; TOKEN_$1A
+	 DB $19 ; TOKEN_$19
+TERSE_THREAD_2F44:
+	 DB $95 ; TOKEN_$95
+	 DB $A5 ; TOKEN_$A5
+	 DB $1B ; LIT16
+	 DW $D014 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $27 ; TOKEN_$27
+	 DB $1B ; LIT16
+	 DW $D189 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $1B ; LIT16
+	 DW $D18A ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $44 ; EQUAL
+	 DB $4C ; BITWISE_AND
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2F59 ; 0BRANCH
+	 DB $35 ; TOKEN_$35
+TERSE_THREAD_2F59:
+	 DB $1B ; LIT16
+	 DW $D189 ; LIT16
+	 DB $25 ; BYTE_FETCH
+	 DB $1B ; LIT16
+	 DW $D18A ; LIT16
+	 DB $08 ; BYTE_STORE
+	 DB $6D ; TOKEN_$6D
+TERSE_THREAD_2F62:
+	 DB $0B ; ZERO
+	 DB $03 ; ZERO_BRANCH
+	 DW TERSE_THREAD_2EE0 ; 0BRANCH
+	 DB $06 ; EXIT
+; Test $4000-$7FFF screen RAM; use palette writes to signal failures.
+NATIVE_SCREEN_RAM_TEST:
+	 in   a,(IO_INPUT_0)
 	 bit  2,a
 	 jp   nz,$300A
 	 ld   d,a
@@ -7194,7 +7748,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   bc,$3FFF
 	 ld   (hl),a
 	 ldir
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 exx
 	 cp   d
 	 exx
@@ -7209,8 +7763,8 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  hl
 	 exx
 	 inc  a
-	 out  ($00),a
-	 out  ($04),a
+	 out  (VIDEO_PALETTE_0),a
+	 out  (VIDEO_PALETTE_4),a
 	 dec  de
 	 ld   a,d
 	 or   e
@@ -7224,11 +7778,15 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 or   h
 	 exx
 	 jp   nz,$2F75
+
+; Test $D000-$D7FF static RAM using protected-RAM writes.
+; Disable interrupts and clear I before the test.
+NATIVE_STATIC_RAM_TEST:
 	 exx
 	 di
 	 xor  a
 	 ld   i,a
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 ld   d,a
 	 ld   e,$FF
 	 ld   hl,$0002
@@ -7237,7 +7795,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   de,$D001
 	 ld   bc,$07FF
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 exx
 	 ld   a,e
 	 exx
@@ -7245,7 +7803,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   a,(hl)
 	 ex   af,af'
 	 ld   a,$A5
-	 out  ($5B),a
+	 out  (PROTECTED_RAM_UNLOCK),a
 	 ex   af,af'
 	 ld   (de),a
 	 inc  de
@@ -7254,7 +7812,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   a,b
 	 or   c
 	 jp   nz,$2FCE
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 exx
 	 cp   d
 	 exx
@@ -7269,8 +7827,8 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  hl
 	 exx
 	 inc  a
-	 out  ($00),a
-	 out  ($04),a
+	 out  (VIDEO_PALETTE_0),a
+	 out  (VIDEO_PALETTE_4),a
 	 dec  de
 	 ld   a,d
 	 or   e
@@ -7291,7 +7849,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 exx
 	 push bc
 	 ld   a,$10
-	 out  ($0C),a
+	 out  (VIDEO_FUNCTION_CONTROL),a
 	 exx
 	 push hl
 	 call $1248
@@ -7340,7 +7898,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 pop  bc
 	 jp   (iy)
 	 ld   hl,$0000
-	 in   a,($12)
+	 in   a,(IO_INPUT_2)
 	 bit  5,a
 	 jp   nz,$3074
 	 ld   a,($D011)
@@ -7352,50 +7910,53 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 call $3062
 	 push hl
 	 jp   (iy)
-	 rst  $08
-	 sub  l
-	 ld   h,l
-	 or   a
-	 inc  bc
-	 adc  a,h
-	 jr   nc,$3006
-	 inc  b
-	 add  a,d
-	 inc  b
-	 halt
-	 ld   (hl),a
-	 ld   b,(hl)
-	 adc  a,l
-	 jr   nc,$30E5
-	 jr   $30A6
-	 cp   b
-	 ld   b,$CF
-	 ld   c,$40
-	 ld   d,h
-	 ld   b,$11
-	 ld   b,b
-	 jr   nz,$30CB
-	 add  hl,sp
-	 jr   c,$30CD
-	 jr   nz,$30EC
-	 ld   c,c
-	 ld   b,h
-	 ld   d,a
-	 ld   b,c
-	 ld   e,c
-	 jr   nz,$30F3
-	 ld   b,(hl)
-	 ld   b,a
+
+; $307C-$3095: two original compiled TERSE display helpers.
+TERSE_COLON_307C:
+	 RST $08
+	 DB $95 ; $307D token -> native $1188
+	 DB $65 ; $307E token -> native $1195
+	 DB $B7 ; $307F token -> native $3076
+	 DB $03 ; $3080 token -> native $01FC
+	 DW TERSE_THREAD_308C ; 0BRANCH
+	 DB $82 ; $3083 token -> native $00CD
+	 DB $04 ; $3084 token -> native $0097
+	 DB $82 ; $3085 token -> native $00CD
+	 DB $04 ; $3086 token -> native $0097
+	 DB $76 ; $3087 token -> native $11D0
+	 DB $77 ; $3088 token -> native $11DB
+	 DB $46 ; $3089 token -> native $01F4
+	 DW TERSE_THREAD_308D ; BRANCH
+TERSE_THREAD_308C:
+	 DB $58 ; $308C token -> native $1212
+TERSE_THREAD_308D:
+	 DB $18 ; $308D token -> native $10EC
+	 DB $17 ; $308E token -> native $10DA
+	 DB $B8 ; $308F token -> native $1537
+	 DB $06 ; $3090 token -> native $0044
+
+TERSE_COLON_3091:
+	 RST $08
+	 DB $0E ; $3092 token -> native $0059
+	 DB $40 ; LIT8
+	 DB $54 ; $3094 token -> native $0154
+	 DB $06 ; $3095 token -> native $0044
+
+; Screen message and display record data.
+SPACE_ZAP_SCREEN_TEXT_PREFIX:
+	 DB $11 ; original byte preceding MIDWAY copyright string
+; $3097  @ 1980 MIDWAY MFG
+TEXT_MIDWAY_COPYRIGHT:
+	 DB "@ 1980 MIDWAY MFG"
 	 dec  b
-	 ld   d,e
-	 ld   d,b
-	 ld   b,c
-	 ld   b,e
-	 ld   b,l
-	 inc  bc
-	 ld   e,d
-	 ld   b,c
-	 ld   d,b
+; $30A9  SPACE
+TEXT_SPACE_TITLE:
+	 DB "SPACE"
+; Title separator and remaining three letters.
+	 DB $03
+
+TEXT_ZAP_TITLE:
+	 DB "ZAP"
 	 rst  $08
 	 dec  de
 	 sub  b
@@ -7438,81 +7999,32 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 cp   e
 	 cp   h
 	 ld   b,$0C
-	 ld   c,c
-	 ld   c,(hl)
-	 ld   d,e
-	 ld   b,l
-	 ld   d,d
-	 ld   d,h
-	 jr   nz,$3138
-	 ld   c,a
-	 ld   c,c
-	 ld   c,(hl)
-	 ld   d,e
+; $30ED  INSERT COINS
+TEXT_INSERT_COINS:
+	 DB "INSERT COINS"
 	 add  hl,bc
-	 ld   b,c
-	 ld   b,h
-	 ld   b,h
-	 jr   nz,$3142
-	 ld   c,a
-	 ld   c,c
-	 ld   c,(hl)
-	 ld   d,e
+; $30FA  ADD COINS
+TEXT_ADD_COINS:
+	 DB "ADD COINS"
 	 inc  c
-	 ld   b,(hl)
-	 ld   c,a
-	 ld   d,d
-	 jr   nz,$313B
-	 jr   nz,$315B
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
+; $3104  FOR 2 PLAYER
+TEXT_FOR_TWO_PLAYERS:
+	 DB "FOR 2 PLAYER"
 	 ld   (bc),a
 	 ld   c,a
 	 ld   d,d
 	 dec  d
-	 ld   d,b
-	 ld   d,l
-	 ld   d,e
-	 ld   c,b
-	 jr   nz,$314B
-	 jr   nz,$316C
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$3177
-	 ld   c,a
-	 jr   nz,$3176
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
+; $3114  PUSH 1 PLAYER TO PLAY
+TEXT_PUSH_ONE_PLAYER:
+	 DB "PUSH 1 PLAYER TO PLAY"
 	 rlca
-	 ld   b,h
-	 ld   b,l
-	 ld   d,b
-	 ld   c,a
-	 ld   d,e
-	 ld   c,c
-	 ld   d,h
+; $312A  DEPOSIT
+TEXT_DEPOSIT:
+	 DB "DEPOSIT"
 	 rrca
-	 ld   b,c
-	 ld   b,h
-	 ld   b,h
-	 ld   c,c
-	 ld   d,h
-	 ld   c,c
-	 ld   c,a
-	 ld   c,(hl)
-	 ld   b,c
-	 ld   c,h
-	 jr   nz,$3181
-	 ld   c,a
-	 ld   c,c
-	 ld   c,(hl)
+; $3132  ADDITIONAL COIN
+TEXT_ADDITIONAL_COIN:
+	 DB "ADDITIONAL COIN"
 	 rst  $08
 	 ld   c,(hl)
 	 inc  bc
@@ -7571,53 +8083,29 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  de
 	 ld   sp,$06BA
 	 ex   af,af'
-	 ld   c,b
-	 ld   c,c
-	 jr   nz,$31EF
-	 ld   b,e
-	 ld   c,a
-	 ld   d,d
-	 ld   b,l
+; $3198  HI SCORE
+TEXT_HI_SCORE:
+	 DB "HI SCORE"
 	 ex   af,af'
-	 ld   d,b
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$31DA
+; $31A1  PLAYER 1
+TEXT_PLAYER_1:
+	 DB "PLAYER 1"
 	 ex   af,af'
-	 ld   d,b
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$31E4
+; $31AA  PLAYER 2
+TEXT_PLAYER_2:
+	 DB "PLAYER 2"
 	 rlca
-	 ld   b,e
-	 ld   d,d
-	 ld   b,l
-	 ld   b,h
-	 ld   c,c
-	 ld   d,h
-	 ld   d,e
+; $31B3  CREDITS
+TEXT_CREDITS:
+	 DB "CREDITS"
 	 dec  b
-	 ld   b,d
-	 ld   b,c
-	 ld   d,e
-	 ld   b,l
-	 ld   d,e
+; $31BB  BASES
+TEXT_BASES:
+	 DB "BASES"
 	 ld   a,(bc)
-	 ld   b,d
-	 ld   c,a
-	 ld   c,(hl)
-	 ld   d,l
-	 ld   d,e
-	 jr   nz,$320A
-	 ld   b,c
-	 ld   d,e
-	 ld   b,l
+; $31C1  BONUS BASE
+TEXT_BONUS_BASE:
+	 DB "BONUS BASE"
 	 rst  $08
 	 inc  c
 	 dec  bc
@@ -7704,57 +8192,26 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   c,$02
 	 pop  bc
 	 ld   b,$10
-	 jr   nz,$3283
-	 jr   nz,$327C
-	 jr   nz,$3290
-	 jr   nz,$325B
-	 ld   c,b
-	 jr   nz,$3287
-	 jr   nz,$3287
-	 jr   nz,$328A
-	 jr   nz,$324F
-	 jr   nz,$328D
-	 ld   b,c
-	 ld   c,l
-	 ld   b,l
-	 jr   nz,$329A
-	 ld   d,(hl)
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$3266
-	 ld   d,b
-	 ld   d,l
-	 ld   d,e
-	 ld   c,b
-	 jr   nz,$3287
-	 jr   nz,$32A7
-	 ld   d,d
-	 jr   nz,$328D
-	 jr   nz,$32AD
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
-	 jr   nz,$32AA
-	 ld   c,a
-	 ld   d,d
+; $3233  High score and game-over announcement strings.
+TEXT_NEW_HIGH_SCORE:
+	 DB " N E W  H I G H "
+	 DB $0B ; separator byte
+
+TEXT_GAME_OVER:
+	 DB " GAME OVER "
+	 DB $16 ; original screen-text separator at $324F
+
+; $3250  PUSH 1 OR 2 PLAYER FOR
+TEXT_PUSH_ONE_OR_TWO:
+	 DB "PUSH 1 OR 2 PLAYER FOR"
 	 ld   a,(bc)
-	 ld   sp,$5453
-	 jr   nz,$32BC
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
+; $3267  1ST PLAYER
+TEXT_FIRST_PLAYER:
+	 DB "1ST PLAYER"
 	 ld   a,(bc)
-	 ld   ($444E),a
-	 jr   nz,$32C7
-	 ld   c,h
-	 ld   b,c
-	 ld   e,c
-	 ld   b,l
-	 ld   d,d
+; $3272  2ND PLAYER
+TEXT_SECOND_PLAYER:
+	 DB "2ND PLAYER"
 	 rst  $08
 	 dec  de
 	 ret  c
@@ -8707,7 +9164,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 scf
 	 dec  de
 	 ld   c,l
-	 jp   nc,$034B
+	 jp   nc,NATIVE_EVENT_DISPATCH_ENTRY_034B
 	 xor  e
 	 jr   c,$37F1
 	 inc  bc
@@ -8826,7 +9283,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ret  c
 	 rst  $38
 	 dec  de
-	 out  ($FF),a
+	 out  (BOOT_PORT_FF),a
 	 ld   d,(hl)
 	 ld   c,$0C
 	 dec  de
@@ -9046,13 +9503,13 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 add  hl,de
 	 ex   de,hl
 	 ld   hl,$D006
-	 call $1EBB
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
 	 exx
 	 ret
 	 exx
 	 ld   hl,$D00D
 	 ld   e,$01
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 exx
 	 ret
 	 ld   de,$D155
@@ -9076,7 +9533,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 push de
 	 push bc
 	 ld   a,($D42C)
-	 out  ($04),a
+	 out  (VIDEO_PALETTE_4),a
 	 ld   a,($D001)
 	 or   a
 	 jp   nz,$3A41
@@ -9087,9 +9544,9 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   hl,$D41A
 	 or   a
 	 jp   nz,$39E3
-	 in   a,($12)
+	 in   a,(IO_INPUT_2)
 	 jp   $39E5
-	 in   a,($11)
+	 in   a,(IO_INPUT_1)
 	 and  $0F
 	 ld   e,a
 	 xor  (hl)
@@ -9152,19 +9609,19 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 jp   $0000
 	 ld   de,$D004
 	 ex   de,hl
-	 call $1EBB
-	 in   a,($10)
+	 call NATIVE_WRITE_PAIRED_RECORD_WORD
+	 in   a,(IO_INPUT_0)
 	 bit  3,a
 	 jp   nz,$3A71
 	 ld   e,$01
 	 ld   hl,$D00E
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   $39A0
 	 bit  2,a
 	 jp   nz,$3A79
 	 jp   $39A0
 	 ld   b,a
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 cp   b
 	 jp   nz,$3A79
 	 ld   hl,$D00F
@@ -9178,12 +9635,12 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 jp   z,$3A9D
 	 res  0,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ex   af,af'
 	 jp   $3AB6
 	 set  0,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 call $3995
 	 exx
 	 ld   a,($D00C)
@@ -9203,12 +9660,12 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 jp   z,$3ACC
 	 res  1,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ex   af,af'
 	 jp   $3AF4
 	 set  1,a
 	 ld   e,a
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 call $3995
 	 exx
 	 ld   a,($D00C)
@@ -9237,7 +9694,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   hl,$D009
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   a,b
 	 cp   $FF
 	 jp   z,$3B25
@@ -9247,12 +9704,12 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   hl,$D009
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 jp   $3B25
 	 ld   hl,$D00B
 	 ld   e,(hl)
 	 inc  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   c,$13
 	 xor  a
 	 ld   b,a
@@ -9261,7 +9718,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 jp   z,$3B43
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D008
 	 ld   a,$0A
 	 cp   (hl)
@@ -9273,17 +9730,17 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 jp   z,$3B55
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D008
 	 ld   e,$14
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 xor  a
 	 ld   hl,$D00A
 	 cp   (hl)
 	 jp   z,$3B70
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D00A
 	 ld   a,$0A
 	 cp   (hl)
@@ -9295,20 +9752,20 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 jp   z,$3B82
 	 ld   e,(hl)
 	 dec  e
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 ld   hl,$D00A
 	 ld   e,$14
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 in   a,(c)
 	 ld   e,b
 	 ld   hl,$D00C
-	 call $1EDE
+	 call NATIVE_WRITE_PAIRED_RECORD_BYTE
 	 call $3062
 	 or   a
 	 jp   nz,$3B97
-	 in   a,($12)
+	 in   a,(IO_INPUT_2)
 	 jp   $3B99
-	 in   a,($11)
+	 in   a,(IO_INPUT_1)
 	 ld   hl,$D419
 	 xor  (hl)
 	 bit  4,a
@@ -9350,7 +9807,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   a,($D001)
 	 or   a
 	 jp   z,$3BFA
-	 in   a,($10)
+	 in   a,(IO_INPUT_0)
 	 ld   hl,$D425
 	 bit  4,a
 	 jp   nz,$3BF3
@@ -9528,560 +9985,518 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 inc  bc
 	 ld   l,l
 	 inc  a
-	 ld   b,$CF
-	 pop  af
-	 jp   p,$F4F3
-	 dec  de
-	 inc  h
-	 ret  nc
-	 ld   c,d
-	 dec  de
-	 ld   c,$D0
-	 dec  h
-	 inc  bc
-	 dec  b
-	 dec  a
-	 dec  de
-	 ld   c,$D0
-	 add  hl,hl
-	 dec  de
-	 ld   bc,$4AD0
-	 dec  de
-	 ld   b,$D0
-	 add  hl,hl
-	 dec  de
-	 rlca
-	 ret  nc
-	 dec  h
-	 inc  bc
-	 ld   (bc),a
-	 dec  a
-	 dec  de
-	 rlca
-	 ret  nc
-	 ld   d,e
-	 ld   b,(hl)
-	 dec  h
-	 dec  a
-	 dec  de
-	 ld   bc,$25D0
-	 daa
-	 inc  bc
-	 dec  h
-	 dec  a
-	 dec  de
-	 ld   (de),a
-	 ret  nc
-	 dec  h
-	 ld   c,$0D
-	 ld   (bc),a
-	 inc  bc
-	 dec  h
-	 dec  a
-	 dec  de
-	 inc  de
-	 ret  nc
-	 dec  h
-	 ld   c,$0D
-	 ld   (bc),a
-	 inc  bc
-	 dec  h
-	 dec  a
-	 dec  de
-	 inc  h
-	 ret  nc
-	 add  hl,hl
-	 ld   c,$10
-	 ld   hl,$040E
-	 ld   c,h
-	 daa
-	 inc  bc
-	 ld   l,e
-	 dec  a
-	 dec  bc
-	 ld   c,$09
-	 add  hl,bc
-	 inc  hl
-	 dec  bc
-	 dec  de
-	 nop
-	 ex   af,af'
-	 dec  bc
-	 inc  hl
-	 push af
-	 inc  h
-	 rrca
-	 dec  h
-	 rrca
-	 ld   c,$10
-	 ld   hl,$2605
-	 ld   c,$FF
-	 ld   c,h
-	 ld   c,$FF
-	 ld   b,h
-	 daa
-	 inc  bc
-	 ld   h,d
-	 dec  a
-	 dec  de
-	 ld   ($1BD4),a
-	 sbc  a,b
-	 ret  nc
-	 djnz $3D7A
-	 dec  c
-	 rrca
-	 dec  c
-	 rrca
-	 dec  c
-	 rrca
-	 dec  bc
-	 ld   c,$0C
-	 add  hl,bc
-	 inc  h
-	 cp   a
-	 dec  de
-	 nop
-	 ex   af,af'
-	 rrca
-	 ld   h,$0B
-	 inc  bc
-	 ld   h,a
-	 dec  a
-	 ret  nc
-	 di
-	 inc  (hl)
-	 dec  de
-	 adc  a,c
-	 pop  de
-	 ld   c,c
-	 ld   c,$55
-	 dec  de
-	 adc  a,e
-	 pop  de
-	 ex   af,af'
-	 dec  de
-	 ld   bc,$4AD0
-	 dec  de
-	 inc  l
-	 call nc,$1B1D
-	 dec  l
-	 call nc,$1B1C
-	 adc  a,d
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,e
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,h
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,l
-	 ret  nc
-	 dec  e
-	 dec  de
-	 adc  a,(hl)
-	 ret  nc
-	 dec  e
-	 ld   c,$3F
-	 dec  de
-	 add  hl,de
-	 call nc,$0E08
-	 rrca
-	 dec  de
-	 ld   a,(de)
-	 call nc,$1B08
-	 add  a,a
-	 ret  nc
-	 dec  e
-	 dec  de
-	 cp   d
-	 call nc,$1BD1
-	 di
-	 call nc,$1BD1
-	 sbc  a,b
-	 call nc,$98D1
-	 or   c
-	 sbc  a,a
-	 or   d
-	 dec  de
-	 ret
-	 out  ($F6),a
-	 sbc  a,h
-	 or   h
-	 and  d
-	 or   e
-	 dec  de
-	 inc  d
-	 ret  nc
-	 ld   c,d
-	 dec  de
-	 ld   c,l
-	 jp   nc,$1B92
-	 ld   ($F7D4),a
-	 dec  de
-	 ld   bc,$F8D2
-	 dec  de
-	 or   l
-	 pop  de
-	 or   l
-	 dec  de
-	 call c,$F9D4
-	 dec  de
-	 ret
-	 out  ($F6),a
-	 dec  de
-	 halt
-	 call nc,$1BFA
-	 or   a
-	 add  hl,sp
-	 dec  de
-	 add  a,b
-	 ret  nc
-	 djnz $3DE3
-	 ld   b,$F3
-	 nop
-	 nop
-	 adc  a,h
-	 nop
-	 inc  c
-	 ld   bc,$01FC
-	 sub  a
-	 nop
-	 sub  h
-	 nop
-	 ld   b,h
-	 nop
-	 inc  (hl)
-	 ld   bc,$00B2
-	 add  a,c
-	 nop
-	 ld   e,(hl)
-	 ld   (bc),a
-	 ld   a,e
-	 nop
-	 sbc  a,l
-	 nop
-	 add  a,a
-	 nop
-	 ld   e,c
-	 nop
-	 cp   a
-	 nop
-	 xor  e
-	 nop
-	 rst  $38
-	 rst  $38
-	 dec  bc
-	 inc  b
-	 ex   (sp),hl
-	 ld   bc,$00D9
-	 call nc,$5F00
-	 ld   bc,$10DA
-	 call pe,$FC10
-	 ld   de,$1207
-	 ld   d,b
-	 nop
-	 or   a
-	 nop
-	 ld   h,(hl)
-	 ld   (bc),a
-	 ld   a,(hl)
-	 ld   (bc),a
-	 pop  de
-	 ld   bc,$05E5
-	 exx
-	 ld   bc,$0D43
-	 ld   l,l
-	 ld   bc,$01B6
-	 and  h
-	 nop
-	 adc  a,b
-	 ld   bc,$0139
-	 sub  e
-	 ld   hl,$1F10
-	 cpl
-	 inc  b
-	 and  e
-	 ld   hl,$2126
-	 ld   b,(hl)
-	 ld   hl,$2101
-	 add  hl,de
-	 ld   hl,$2188
-	 ld   h,d
-	 ld   hl,$216C
-	 pop  hl
-	 jr   nz,$3DEF
-	 ld   hl,$04A6
-	 ld   d,$12
-	 xor  d
-	 ld   hl,$21D8
-	 ld   e,$11
-	 sbc  a,$00
-	 dec  l
-	 ld   de,$20FE
-	 ld   a,$02
-	 inc  hl
-	 ld   ($00C5),hl
-	 ld   d,h
-	 ld   hl,$12B1
-	 adc  a,l
-	 ld   hl,$00E6
-	 xor  $00
-	 jp   pe,$F401
-	 ld   bc,$1F01
-	 ld   d,b
-	 inc  hl
-	 ld   h,d
-	 ld   (bc),a
-	 ex   af,af'
-	 rra
-	 scf
-	 ld   (de),a
-	 ld   c,c
-	 ld   bc,$1EF8
-	 ccf
-	 ld   bc,$0EC7
-	 or   $24
-	 or   a
-	 ld   (de),a
-	 rla
-	 ld   (bc),a
-	 jr   $3EB1
-	 ld   d,h
-	 ld   bc,$04BB
-	 jp   $1C11
-	 ld   (de),a
-	 ld   (de),a
-	 ld   (de),a
-	 and  b
-	 ld   de,$11F1
-	 ld   de,$9C0E
-	 djnz $3ECB
-	 ld   c,$DC
-	 rrca
-	 jp   z,$B80F
-	 rrca
-	 and  (hl)
-	 rrca
-	 sub  e
-	 inc  hl
-	 ld   e,b
-	 ld   de,$0220
-	 sub  l
-	 ld   de,$0E31
-	 add  a,d
-	 ld   de,$1229
-	 sbc  a,b
-	 rrca
-	 call $B710
-	 djnz $3EA5
-	 inc  c
-	 rst  $00
-	 ld   (de),a
-	 or   (hl)
-	 ld   de,$24E8
-	 xor  e
-	 ld   de,$1166
-	 inc  iyh
-	 ld   de,$4C0D
-	 dec  h
-	 jp   m,$D022
-	 ld   de,$11DB
-	 jp   c,$DA24
-	 ld   c,$ED
-	 ld   c,$18
-	 daa
-	 ld   a,$26
-	 ld   a,(bc)
-	 djnz $3F1A
-	 jr   z,$3F0F
-	 djnz $3F1A
-	 jr   z,$3F24
-	 jr   z,$3EBC
-	 nop
-	 ld   c,l
-	 ld   c,$EE
-	 rrca
-	 call m,$550F
-	 djnz $3F3B
-	 djnz $3F63
-	 djnz $3F74
-	 djnz $3F65
-	 jr   z,$3F56
-	 jr   z,$3F7A
-	 jr   z,$3F63
-	 ld   ($25D0),hl
-	 add  a,a
-	 ld   ($047E),hl
-	 or   (hl)
-	 ld   h,$5C
-	 daa
-	 add  hl,hl
-	 ld   (bc),a
-	 ld   l,e
-	 nop
-	 adc  a,b
-	 ld   de,$26E6
-	 inc  b
-	 daa
-	 jp   nc,$E226
-	 ld   hl,($26EB)
-	 add  hl,bc
-	 daa
-	 rst  $10
-	 ld   h,$F0
-	 ld   h,$FA
-	 ld   h,$DC
-	 ld   h,$F5
-	 ld   h,$FF
-	 ld   h,$E1
-	 ld   h,$E6
-	 ld   de,$2AF6
-	 in   a,($12)
-	 inc  a
-	 ld   de,$10FE
-	 ld   c,d
-	 ld   de,$110E
-	 sub  c
-	 djnz $3F76
-	 ld   h,$1D
-	 inc  hl
-	 add  a,(hl)
-	 djnz $3F66
-	 ld   h,$26
-	 inc  l
-	 ex   af,af'
-	 dec  h
-	 ld   a,l
-	 dec  l
-	 or   d
-	 inc  l
-	 add  hl,de
-	 dec  l
-	 ld   c,(hl)
-	 inc  l
-	 ret  nz
-	 dec  hl
-	 cp   e
-	 inc  h
-	 halt
-	 jr   nc,$3F92
-	 dec  d
-	 sub  c
-	 jr   nc,$3FDB
-	 jr   nc,$3F13
-	 jr   nc,$3F30
-	 jr   nc,$3FDE
-	 ld   d,$92
-	 ld   d,$EC
-	 ld   sp,$31CB
-	 ld   bc,$FD32
-	 nop
-	 add  hl,bc
-	 ld   (bc),a
-	 ld   b,$13
-	 or   b
-	 ld   ($3358),a
-	 inc  d
-	 ld   ($3206),a
-	 jp   pe,$4032
-	 ld   c,$05
-	 inc  (hl)
-	 ld   b,c
-	 ld   sp,$30E7
-	 pop  af
-	 ld   e,$A9
-	 inc  hl
-	 sub  c
-	 dec  (hl)
-	 and  d
-	 inc  (hl)
-	 jr   nz,$3F91
-	 ex   (sp),hl
-	 dec  (hl)
-	 ld   a,e
-	 ld   sp,$3189
-	 or   d
-	 dec  (hl)
-	 ld   ($D132),hl
-	 dec  (hl)
-	 call z,$9A34
-	 dec  (hl)
-	 xor  b
-	 ld   ($34BE),a
-	 inc  c
-	 jr   nc,$4016
-	 inc  (hl)
-	 pop  bc
-	 inc  sp
-	 ld   l,$33
-	 adc  a,d
-	 ld   ($327C),a
-	 ld   (hl),a
-	 inc  sp
-	 call nz,$E335
-	 ld   hl,$28AA
-	 ld   e,(hl)
-	 inc  h
-	 jp   z,$2022
-	 dec  (hl)
-	 ld   b,c
-	 dec  (hl)
-	 sub  l
-	 inc  h
-	 rlca
-	 inc  h
-	 and  l
-	 inc  (hl)
-	 rst  $28
-	 dec  (hl)
-	 exx
-	 dec  sp
-	 ld   sp,$6722
-	 cpl
-	 ld   de,$9213
-	 rra
-	 jr   nz,$3FF3
-	 cp   a
-	 ld   bc,$2DE3
-	 call m,$D63B
-	 ld   l,$52
-	 inc  (hl)
-	 ld   l,e
-	 inc  a
-	 sub  h
-	 inc  bc
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 rst  $38
-	 ld   d,e
-	 ld   d,b
-	 ld   b,c
-	 ld   b,e
-	 ld   b,l
-	 jr   nz,$4050
-	 ld   b,c
-	 ld   d,b
-	 nop
-	 ld   b,h
-	 ld   c,(hl)
-	 ld   b,c
-	 nop
-	 ex   af,af'
-	 add  hl,de
-	 add  a,b
+; $3CDA: end of preceding compiled TERSE word.
+	 DB $06 ; TERSE_EXIT (token $06)
+; $3CDB: RST 08 colon entry; cold start sets BC to the following byte.
+SPACE_ZAP_MAIN_COLON:
+	 DB $CF ; RST $08
+; $3CDC-$3DE8: original main TERSE byte-token program.
+; 8-bit token -> native target through TERSE_TOKEN_VECTORS.
+; Inline byte/word literals and absolute branch addresses follow their tokens.
+SPACE_ZAP_MAIN_THREAD:
+	 DB $F1 ; $3CDC token $F1 -> XT $2F67
+	 DB $F2 ; $3CDD token $F2 -> XT $1311
+	 DB $F3 ; $3CDE token $F3 -> XT $1F92
+	 DB $F4 ; $3CDF token $F4 -> XT $1F20
+	 DB $1B ; $3CE0 token $1B -> TERSE_LIT16
+	 DW $D024 ; inline word
+	 DB $4A ; $3CE3 token $4A -> XT $1F08
+	 DB $1B ; $3CE4 token $1B -> TERSE_LIT16
+	 DW $D00E ; inline word
+	 DB $25 ; $3CE7 token $25 -> TERSE_BYTE_FETCH
+	 DB $03 ; $3CE8 token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D05 ; 0BRANCH target $3D05
+	 DB $1B ; $3CEB token $1B -> TERSE_LIT16
+	 DW $D00E ; inline word
+	 DB $29 ; $3CEE token $29 -> XT $1F10
+	 DB $1B ; $3CEF token $1B -> TERSE_LIT16
+	 DW $D001 ; inline word
+	 DB $4A ; $3CF2 token $4A -> XT $1F08
+	 DB $1B ; $3CF3 token $1B -> TERSE_LIT16
+	 DW $D006 ; inline word
+	 DB $29 ; $3CF6 token $29 -> XT $1F10
+	 DB $1B ; $3CF7 token $1B -> TERSE_LIT16
+	 DW $D007 ; inline word
+	 DB $25 ; $3CFA token $25 -> TERSE_BYTE_FETCH
+	 DB $03 ; $3CFB token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D02 ; 0BRANCH target $3D02
+	 DB $1B ; $3CFE token $1B -> TERSE_LIT16
+	 DW $D007 ; inline word
+	 DB $53 ; $3D01 token $53 -> XT $1F18
+
+SPACE_ZAP_THREAD_3D02:
+	 DB $46 ; $3D02 token $46 -> TERSE_BRANCH_ABSOLUTE
+	 DW SPACE_ZAP_THREAD_3D25 ; BRANCH target $3D25
+
+SPACE_ZAP_THREAD_3D05:
+	 DB $1B ; $3D05 token $1B -> TERSE_LIT16
+	 DW $D001 ; inline word
+	 DB $25 ; $3D08 token $25 -> TERSE_BYTE_FETCH
+	 DB $27 ; $3D09 token $27 -> XT $0139
+	 DB $03 ; $3D0A token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D25 ; 0BRANCH target $3D25
+	 DB $1B ; $3D0D token $1B -> TERSE_LIT16
+	 DW $D012 ; inline word
+	 DB $25 ; $3D10 token $25 -> TERSE_BYTE_FETCH
+	 DB $0E ; $3D11 token $0E -> TERSE_LIT8
+	 DB $0D
+	 DB $02 ; $3D13 token $02 -> XT $010C
+	 DB $03 ; $3D14 token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D25 ; 0BRANCH target $3D25
+	 DB $1B ; $3D17 token $1B -> TERSE_LIT16
+	 DW $D013 ; inline word
+	 DB $25 ; $3D1A token $25 -> TERSE_BYTE_FETCH
+	 DB $0E ; $3D1B token $0E -> TERSE_LIT8
+	 DB $0D
+	 DB $02 ; $3D1D token $02 -> XT $010C
+	 DB $03 ; $3D1E token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D25 ; 0BRANCH target $3D25
+	 DB $1B ; $3D21 token $1B -> TERSE_LIT16
+	 DW $D024 ; inline word
+	 DB $29 ; $3D24 token $29 -> XT $1F10
+
+SPACE_ZAP_THREAD_3D25:
+	 DB $0E ; $3D25 token $0E -> TERSE_LIT8
+	 DB $10
+	 DB $21 ; $3D27 token $21 -> TERSE_PORT_IN
+	 DB $0E ; $3D28 token $0E -> TERSE_LIT8
+	 DB $04
+	 DB $4C ; $3D2A token $4C -> TERSE_BITWISE_AND
+	 DB $27 ; $3D2B token $27 -> XT $0139
+	 DB $03 ; $3D2C token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D6B ; 0BRANCH target $3D6B
+	 DB $0B ; $3D2F token $0B -> TERSE_ZERO
+	 DB $0E ; $3D30 token $0E -> TERSE_LIT8
+	 DB $09
+	 DB $09 ; $3D32 token $09 -> TERSE_ONE
+	 DB $23 ; $3D33 token $23 -> XT $016D
+	 DB $0B ; $3D34 token $0B -> TERSE_ZERO
+	 DB $1B ; $3D35 token $1B -> TERSE_LIT16
+	 DW $0800 ; inline word
+	 DB $0B ; $3D38 token $0B -> TERSE_ZERO
+	 DB $23 ; $3D39 token $23 -> XT $016D
+	 DB $F5 ; $3D3A token $F5 -> XT $01BF
+	 DB $24 ; $3D3B token $24 -> TERSE_LOOP_INDEX
+	 DB $0F ; $3D3C token $0F -> TERSE_ADD
+	 DB $25 ; $3D3D token $25 -> TERSE_BYTE_FETCH
+	 DB $0F ; $3D3E token $0F -> TERSE_ADD
+	 DB $0E ; $3D3F token $0E -> TERSE_LIT8
+	 DB $10
+	 DB $21 ; $3D41 token $21 -> TERSE_PORT_IN
+	 DB $05 ; $3D42 token $05 -> TERSE_DROP
+	 DB $26 ; $3D43 token $26 -> XT $0188
+	 DB $0E ; $3D44 token $0E -> TERSE_LIT8
+	 DB $FF
+	 DB $4C ; $3D46 token $4C -> TERSE_BITWISE_AND
+	 DB $0E ; $3D47 token $0E -> TERSE_LIT8
+	 DB $FF
+	 DB $44 ; $3D49 token $44 -> XT $00EE
+	 DB $27 ; $3D4A token $27 -> XT $0139
+	 DB $03 ; $3D4B token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D62 ; 0BRANCH target $3D62
+	 DB $1B ; $3D4E token $1B -> TERSE_LIT16
+	 DW $D432 ; inline word
+	 DB $1B ; $3D51 token $1B -> TERSE_LIT16
+	 DW $D098 ; inline word
+	 DB $10 ; $3D54 token $10 -> TERSE_STORE
+	 DB $24 ; $3D55 token $24 -> TERSE_LOOP_INDEX
+	 DB $0D ; $3D56 token $0D -> TERSE_DUP
+	 DB $0F ; $3D57 token $0F -> TERSE_ADD
+	 DB $0D ; $3D58 token $0D -> TERSE_DUP
+	 DB $0F ; $3D59 token $0F -> TERSE_ADD
+	 DB $0D ; $3D5A token $0D -> TERSE_DUP
+	 DB $0F ; $3D5B token $0F -> TERSE_ADD
+	 DB $0B ; $3D5C token $0B -> TERSE_ZERO
+	 DB $0E ; $3D5D token $0E -> TERSE_LIT8
+	 DB $0C
+	 DB $09 ; $3D5F token $09 -> TERSE_ONE
+	 DB $24 ; $3D60 token $24 -> TERSE_LOOP_INDEX
+	 DB $BF ; $3D61 token $BF -> XT $31EC
+
+SPACE_ZAP_THREAD_3D62:
+	 DB $1B ; $3D62 token $1B -> TERSE_LIT16
+	 DW $0800 ; inline word
+	 DB $0F ; $3D65 token $0F -> TERSE_ADD
+	 DB $26 ; $3D66 token $26 -> XT $0188
+
+SPACE_ZAP_THREAD_3D67:
+	 DB $0B ; $3D67 token $0B -> TERSE_ZERO
+	 DB $03 ; $3D68 token $03 -> TERSE_ZERO_BRANCH
+	 DW SPACE_ZAP_THREAD_3D67 ; 0BRANCH target $3D67
+
+SPACE_ZAP_THREAD_3D6B:
+	 DB $D0 ; $3D6B token $D0 -> XT $3591
+	 DB $F3 ; $3D6C token $F3 -> XT $1F92
+	 DB $34 ; $3D6D token $34 -> XT $219C
+	 DB $1B ; $3D6E token $1B -> TERSE_LIT16
+	 DW $D189 ; inline word
+	 DB $49 ; $3D71 token $49 -> XT $0262
+	 DB $0E ; $3D72 token $0E -> TERSE_LIT8
+	 DB $55
+	 DB $1B ; $3D74 token $1B -> TERSE_LIT16
+	 DW $D18B ; inline word
+	 DB $08 ; $3D77 token $08 -> TERSE_BYTE_STORE
+	 DB $1B ; $3D78 token $1B -> TERSE_LIT16
+	 DW $D001 ; inline word
+	 DB $4A ; $3D7B token $4A -> XT $1F08
+	 DB $1B ; $3D7C token $1B -> TERSE_LIT16
+	 DW $D42C ; inline word
+	 DB $1D ; $3D7F token $1D -> XT $0266
+	 DB $1B ; $3D80 token $1B -> TERSE_LIT16
+	 DW $D42D ; inline word
+	 DB $1C ; $3D83 token $1C -> TERSE_ZERO_WORD_AT_ADDRESS
+	 DB $1B ; $3D84 token $1B -> TERSE_LIT16
+	 DW $D08A ; inline word
+	 DB $1D ; $3D87 token $1D -> XT $0266
+	 DB $1B ; $3D88 token $1B -> TERSE_LIT16
+	 DW $D08B ; inline word
+	 DB $1D ; $3D8B token $1D -> XT $0266
+	 DB $1B ; $3D8C token $1B -> TERSE_LIT16
+	 DW $D08C ; inline word
+	 DB $1D ; $3D8F token $1D -> XT $0266
+	 DB $1B ; $3D90 token $1B -> TERSE_LIT16
+	 DW $D08D ; inline word
+	 DB $1D ; $3D93 token $1D -> XT $0266
+	 DB $1B ; $3D94 token $1B -> TERSE_LIT16
+	 DW $D08E ; inline word
+	 DB $1D ; $3D97 token $1D -> XT $0266
+	 DB $0E ; $3D98 token $0E -> TERSE_LIT8
+	 DB $3F
+	 DB $1B ; $3D9A token $1B -> TERSE_LIT16
+	 DW $D419 ; inline word
+	 DB $08 ; $3D9D token $08 -> TERSE_BYTE_STORE
+	 DB $0E ; $3D9E token $0E -> TERSE_LIT8
+	 DB $0F
+	 DB $1B ; $3DA0 token $1B -> TERSE_LIT16
+	 DW $D41A ; inline word
+	 DB $08 ; $3DA3 token $08 -> TERSE_BYTE_STORE
+	 DB $1B ; $3DA4 token $1B -> TERSE_LIT16
+	 DW $D087 ; inline word
+	 DB $1D ; $3DA7 token $1D -> XT $0266
+	 DB $1B ; $3DA8 token $1B -> TERSE_LIT16
+	 DW $D4BA ; inline word
+	 DB $D1 ; $3DAB token $D1 -> XT $34A2
+	 DB $1B ; $3DAC token $1B -> TERSE_LIT16
+	 DW $D4F3 ; inline word
+	 DB $D1 ; $3DAF token $D1 -> XT $34A2
+	 DB $1B ; $3DB0 token $1B -> TERSE_LIT16
+	 DW $D498 ; inline word
+	 DB $D1 ; $3DB3 token $D1 -> XT $34A2
+	 DB $98 ; $3DB4 token $98 -> XT $26D2
+	 DB $B1 ; $3DB5 token $B1 -> XT $2D7D
+	 DB $9F ; $3DB6 token $9F -> XT $26DC
+	 DB $B2 ; $3DB7 token $B2 -> XT $2CB2
+	 DB $1B ; $3DB8 token $1B -> TERSE_LIT16
+	 DW $D3C9 ; inline word
+	 DB $F6 ; $3DBB token $F6 -> XT $2DE3
+	 DB $9C ; $3DBC token $9C -> XT $26D7
+	 DB $B4 ; $3DBD token $B4 -> XT $2C4E
+	 DB $A2 ; $3DBE token $A2 -> XT $26E1
+	 DB $B3 ; $3DBF token $B3 -> XT $2D19
+	 DB $1B ; $3DC0 token $1B -> TERSE_LIT16
+	 DW $D014 ; inline word
+	 DB $4A ; $3DC3 token $4A -> XT $1F08
+	 DB $1B ; $3DC4 token $1B -> TERSE_LIT16
+	 DW $D24D ; inline word
+	 DB $92 ; $3DC7 token $92 -> XT $275C
+	 DB $1B ; $3DC8 token $1B -> TERSE_LIT16
+	 DW $D432 ; inline word
+	 DB $F7 ; $3DCB token $F7 -> XT $3BFC
+	 DB $1B ; $3DCC token $1B -> TERSE_LIT16
+	 DW $D201 ; inline word
+	 DB $F8 ; $3DCF token $F8 -> XT $2ED6
+	 DB $1B ; $3DD0 token $1B -> TERSE_LIT16
+	 DW $D1B5 ; inline word
+	 DB $B5 ; $3DD3 token $B5 -> XT $2BC0
+	 DB $1B ; $3DD4 token $1B -> TERSE_LIT16
+	 DW $D4DC ; inline word
+	 DB $F9 ; $3DD7 token $F9 -> XT $3452
+	 DB $1B ; $3DD8 token $1B -> TERSE_LIT16
+	 DW $D3C9 ; inline word
+	 DB $F6 ; $3DDB token $F6 -> XT $2DE3
+	 DB $1B ; $3DDC token $1B -> TERSE_LIT16
+	 DW $D476 ; inline word
+	 DB $FA ; $3DDF token $FA -> XT $3C6B
+	 DB $1B ; $3DE0 token $1B -> TERSE_LIT16
+	 DW $39B7 ; inline word
+	 DB $1B ; $3DE3 token $1B -> TERSE_LIT16
+	 DW $D080 ; inline word
+	 DB $10 ; $3DE6 token $10 -> TERSE_STORE
+	 DB $FB ; $3DE7 token $FB -> XT $0394
+	 DB $06 ; $3DE8 token $06 -> TERSE_EXIT
+
+SPACE_ZAP_MAIN_TRAILING_BYTE:
+	 DB $F3 ; byte between EXIT and vector table
+; $3DEA-$3FE9: 256 indexed TERSE native execution vectors.
+; Each byte token from BC selects one little-endian DW.
+; Derived from the official ROM. Undefined tokens remain $FFFF.
+TERSE_TOKEN_VECTORS:
+	 DW $0000	; token $00 (zero vector)
+	 DW TERSE_2DUP	; token $01
+	 DW $010C	; token $02
+	 DW TERSE_ZERO_BRANCH	; token $03
+	 DW TERSE_SWAP	; token $04
+	 DW TERSE_DROP	; token $05
+	 DW TERSE_EXIT	; token $06
+	 DW $0134	; token $07
+	 DW TERSE_BYTE_STORE	; token $08
+	 DW TERSE_ONE	; token $09
+	 DW $025E	; token $0A
+	 DW TERSE_ZERO	; token $0B
+	 DW TERSE_FETCH	; token $0C
+	 DW TERSE_DUP	; token $0D
+	 DW TERSE_LIT8	; token $0E
+	 DW TERSE_ADD	; token $0F
+	 DW TERSE_STORE	; token $10
+	 DW $FFFF	; token $11 (unassigned)
+	 DW $040B	; token $12
+	 DW TERSE_STACK_ROTATE	; token $13
+	 DW TERSE_INCREMENT	; token $14
+	 DW TERSE_DECREMENT	; token $15
+	 DW TERSE_MEMORY_COPY	; token $16
+	 DW $10DA	; token $17
+	 DW $10EC	; token $18
+	 DW $11FC	; token $19
+	 DW $1207	; token $1A
+	 DW TERSE_LIT16	; token $1B
+	 DW TERSE_ZERO_WORD_AT_ADDRESS	; token $1C
+	 DW $0266	; token $1D
+	 DW $027E	; token $1E
+	 DW TERSE_PORT_OUT	; token $1F
+	 DW $05E5	; token $20
+	 DW TERSE_PORT_IN	; token $21
+	 DW $0D43	; token $22
+	 DW $016D	; token $23
+	 DW TERSE_LOOP_INDEX	; token $24
+	 DW TERSE_BYTE_FETCH	; token $25
+	 DW $0188	; token $26
+	 DW $0139	; token $27
+	 DW $2193	; token $28
+	 DW $1F10	; token $29
+	 DW $042F	; token $2A
+	 DW $21A3	; token $2B
+	 DW $2126	; token $2C
+	 DW $2146	; token $2D
+	 DW $2101	; token $2E
+	 DW $2119	; token $2F
+	 DW $2188	; token $30
+	 DW $2162	; token $31
+	 DW $216C	; token $32
+	 DW $20E1	; token $33
+	 DW $219C	; token $34
+	 DW $04A6	; token $35
+	 DW $1216	; token $36
+	 DW $21AA	; token $37
+	 DW $21D8	; token $38
+	 DW $111E	; token $39
+	 DW TERSE_ARITH_SHIFT_RIGHT	; token $3A
+	 DW $112D	; token $3B
+	 DW $20FE	; token $3C
+	 DW $023E	; token $3D
+	 DW $2223	; token $3E
+	 DW TERSE_SUBTRACT	; token $3F
+	 DW $2154	; token $40
+	 DW $12B1	; token $41
+	 DW $218D	; token $42
+	 DW TERSE_DECREMENT_BYTE_AT_ADDRESS	; token $43
+	 DW $00EE	; token $44
+	 DW TERSE_STACK_PICK	; token $45
+	 DW TERSE_BRANCH_ABSOLUTE	; token $46
+	 DW $1F01	; token $47
+	 DW $2350	; token $48
+	 DW $0262	; token $49
+	 DW $1F08	; token $4A
+	 DW $1237	; token $4B
+	 DW TERSE_BITWISE_AND	; token $4C
+	 DW $1EF8	; token $4D
+	 DW $013F	; token $4E
+	 DW $0EC7	; token $4F
+	 DW $24F6	; token $50
+	 DW $12B7	; token $51
+	 DW $0217	; token $52
+	 DW $1F18	; token $53
+	 DW TERSE_BITWISE_OR	; token $54
+	 DW $04BB	; token $55
+	 DW $11C3	; token $56
+	 DW $121C	; token $57
+	 DW $1212	; token $58
+	 DW $11A0	; token $59
+	 DW $11F1	; token $5A
+	 DW $0E11	; token $5B
+	 DW $109C	; token $5C
+	 DW $0E26	; token $5D
+	 DW $0FDC	; token $5E
+	 DW $0FCA	; token $5F
+	 DW $0FB8	; token $60
+	 DW $0FA6	; token $61
+	 DW $2393	; token $62
+	 DW $1158	; token $63
+	 DW $0220	; token $64
+	 DW $1195	; token $65
+	 DW $0E31	; token $66
+	 DW $1182	; token $67
+	 DW $1229	; token $68
+	 DW $0F98	; token $69
+	 DW $10CD	; token $6A
+	 DW $10B7	; token $6B
+	 DW $0CE2	; token $6C
+	 DW $12C7	; token $6D
+	 DW $11B6	; token $6E
+	 DW $24E8	; token $6F
+	 DW $11AB	; token $70
+	 DW $1166	; token $71
+	 DW $24FD	; token $72
+	 DW $0D11	; token $73
+	 DW $254C	; token $74
+	 DW $22FA	; token $75
+	 DW $11D0	; token $76
+	 DW $11DB	; token $77
+	 DW $24DA	; token $78
+	 DW $0EDA	; token $79
+	 DW $0EED	; token $7A
+	 DW $2718	; token $7B
+	 DW $263E	; token $7C
+	 DW $100A	; token $7D
+	 DW $2833	; token $7E
+	 DW $1026	; token $7F
+	 DW $282F	; token $80
+	 DW $2837	; token $81
+	 DW $00CD	; token $82
+	 DW $0E4D	; token $83
+	 DW $0FEE	; token $84
+	 DW $0FFC	; token $85
+	 DW $1055	; token $86
+	 DW $1042	; token $87
+	 DW $1068	; token $88
+	 DW $1077	; token $89
+	 DW $2866	; token $8A
+	 DW $2855	; token $8B
+	 DW $2877	; token $8C
+	 DW $225E	; token $8D
+	 DW $25D0	; token $8E
+	 DW $2287	; token $8F
+	 DW $047E	; token $90
+	 DW $26B6	; token $91
+	 DW $275C	; token $92
+	 DW $0229	; token $93
+	 DW $006B	; token $94
+	 DW $1188	; token $95
+	 DW $26E6	; token $96
+	 DW $2704	; token $97
+	 DW $26D2	; token $98
+	 DW $2AE2	; token $99
+	 DW $26EB	; token $9A
+	 DW $2709	; token $9B
+	 DW $26D7	; token $9C
+	 DW $26F0	; token $9D
+	 DW $26FA	; token $9E
+	 DW $26DC	; token $9F
+	 DW $26F5	; token $A0
+	 DW $26FF	; token $A1
+	 DW $26E1	; token $A2
+	 DW $11E6	; token $A3
+	 DW $2AF6	; token $A4
+	 DW $12DB	; token $A5
+	 DW $113C	; token $A6
+	 DW $10FE	; token $A7
+	 DW $114A	; token $A8
+	 DW $110E	; token $A9
+	 DW $1091	; token $AA
+	 DW $2635	; token $AB
+	 DW $231D	; token $AC
+	 DW $1086	; token $AD
+	 DW $261F	; token $AE
+	 DW $2C26	; token $AF
+	 DW $2508	; token $B0
+	 DW $2D7D	; token $B1
+	 DW $2CB2	; token $B2
+	 DW $2D19	; token $B3
+	 DW $2C4E	; token $B4
+	 DW $2BC0	; token $B5
+	 DW $24BB	; token $B6
+	 DW $3076	; token $B7
+	 DW $1537	; token $B8
+	 DW $3091	; token $B9
+	 DW $307C	; token $BA
+	 DW $30B2	; token $BB
+	 DW $30CD	; token $BC
+	 DW $1679	; token $BD
+	 DW $1692	; token $BE
+	 DW $31EC	; token $BF
+	 DW $31CB	; token $C0
+	 DW $3201	; token $C1
+	 DW $00FD	; token $C2
+	 DW $0209	; token $C3
+	 DW $1306	; token $C4
+	 DW $32B0	; token $C5
+	 DW $3358	; token $C6
+	 DW $3214	; token $C7
+	 DW $3206	; token $C8
+	 DW $32EA	; token $C9
+	 DW $0E40	; token $CA
+	 DW $3405	; token $CB
+	 DW $3141	; token $CC
+	 DW $30E7	; token $CD
+	 DW $1EF1	; token $CE
+	 DW $23A9	; token $CF
+	 DW $3591	; token $D0
+	 DW $34A2	; token $D1
+	 DW $0120	; token $D2
+	 DW $35E3	; token $D3
+	 DW $317B	; token $D4
+	 DW $3189	; token $D5
+	 DW $35B2	; token $D6
+	 DW $3222	; token $D7
+	 DW $35D1	; token $D8
+	 DW $34CC	; token $D9
+	 DW $359A	; token $DA
+	 DW $32A8	; token $DB
+	 DW $34BE	; token $DC
+	 DW $300C	; token $DD
+	 DW $346F	; token $DE
+	 DW $33C1	; token $DF
+	 DW $332E	; token $E0
+	 DW $328A	; token $E1
+	 DW $327C	; token $E2
+	 DW $3377	; token $E3
+	 DW $35C4	; token $E4
+	 DW $21E3	; token $E5
+	 DW $28AA	; token $E6
+	 DW $245E	; token $E7
+	 DW $22CA	; token $E8
+	 DW $3520	; token $E9
+	 DW $3541	; token $EA
+	 DW $2495	; token $EB
+	 DW $2407	; token $EC
+	 DW $34A5	; token $ED
+	 DW $35EF	; token $EE
+	 DW $3BD9	; token $EF
+	 DW $2231	; token $F0
+	 DW $2F67	; token $F1
+	 DW $1311	; token $F2
+	 DW $1F92	; token $F3
+	 DW $1F20	; token $F4
+	 DW $01BF	; token $F5
+	 DW $2DE3	; token $F6
+	 DW $3BFC	; token $F7
+	 DW $2ED6	; token $F8
+	 DW $3452	; token $F9
+	 DW $3C6B	; token $FA
+	 DW $0394	; token $FB
+	 DW $FFFF	; token $FC (unassigned)
+	 DW $FFFF	; token $FD (unassigned)
+	 DW $FFFF	; token $FE (unassigned)
+	 DW $FFFF	; token $FF (unassigned)
+; $3FEA-$3FEE: original ROM padding between table and title.
+	 DB $FF,$FF,$FF,$FF,$FF
+; $3FEF-$3FFF: original ROM identification and date.
+SPACE_ZAP_TITLE:
+	 DB "SPACE ZAP",0
+
+SPACE_ZAP_DEVELOPER:
+	 DB "DNA",0
+
+SPACE_ZAP_ROM_DATE:
+	 DB $08,$19,$80 ; 08/19/80 (MM/DD/YY, packed decimal bytes)
 ;
-	 .END
+	 END

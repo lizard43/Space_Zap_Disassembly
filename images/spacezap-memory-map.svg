@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1714" viewBox="0 0 760 1714" role="img" aria-label="Space Zap Z80 64 KB memory map, ROMs, TERSE runtime and stacks"><rect width="760" height="1880" fill="#0b1725"/><rect width="760" height="122" fill="#0a1422"/>
+<text x="24" y="58" fill="#f4f6fb" font-size="43" font-weight="700" font-family="Georgia,'Times New Roman',serif">SPACE ZAP</text>
+<text x="26" y="87" fill="#9bb6cc" font-size="14" font-weight="400" letter-spacing="1.2">Z80 CPU ADDRESS SPACE  •  1980</text>
+<line x1="23" x2="737" y1="109" y2="109" stroke="#90aec7"/>
+<rect x="20" y="126" width="720" height="157" rx="16" fill="#3b4755" stroke="#b5c4d4" stroke-width="1"/>
+<text x="34" y="162" fill="#9eb8cf" font-size="16" font-weight="500" font-family="ui-monospace,Consolas,monospace">$E000–$FFFF</text><text x="207" y="162" fill="#fff" font-size="22" font-weight="700" >Unclassified upper region</text><rect x="620" y="143" width="100" height="26" rx="13" fill="#040b14" stroke="#b4c7d7"/><text x="670" y="160" fill="#d9e5f3" font-size="13" font-weight="600" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">8 KB</text>
+<text x="37" y="191" fill="#d4dfec" font-size="14" font-weight="400" >Access behavior not yet validated against the Space Zap board.</text>
+<rect x="37" y="206" width="686" height="62" rx="16" fill="#040c16" stroke="#8da0b8" stroke-width="1"/><text x="50" y="227" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">UPPER_REGION_START      equ $E000</text><text x="50" y="245" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">UPPER_REGION_END        equ $FFFF</text>
+<rect x="20" y="297" width="720" height="266" rx="16" fill="#235944" stroke="#b5c4d4" stroke-width="1"/>
+<text x="34" y="333" fill="#9eb8cf" font-size="16" font-weight="500" font-family="ui-monospace,Consolas,monospace">$D000–$DFFF</text><text x="207" y="333" fill="#e7fff3" font-size="22" font-weight="700" >TERSE RAM and stacks</text><rect x="620" y="314" width="100" height="26" rx="13" fill="#040b14" stroke="#b4c7d7"/><text x="670" y="331" fill="#d9e5f3" font-size="13" font-weight="600" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">4 KB</text>
+<text x="37" y="363" fill="#d2e9db" font-size="14" font-weight="400" >Startup places BC's working state and the two downward-growing</text>
+<text x="37" y="381" fill="#d2e9db" font-size="14" font-weight="400" >stacks in this address block; complete RAM ownership is still open.</text>
+<rect x="37" y="398" width="686" height="26" rx="5" fill="#031a19" stroke="#5fc49b"/>
+<text x="51" y="416" fill="#dbf5ec" font-size="13" font-weight="500" font-family="ui-monospace,Consolas,monospace">$D780  SP / data stack</text>
+<text x="704" y="416" fill="#9fc8b5" font-size="11" font-weight="500" text-anchor="end">initialized</text>
+<rect x="37" y="429" width="686" height="26" rx="5" fill="#031a19" stroke="#5fc49b"/>
+<text x="51" y="447" fill="#dbf5ec" font-size="13" font-weight="500" font-family="ui-monospace,Consolas,monospace">$D800  IX / control stack</text>
+<text x="704" y="447" fill="#9fc8b5" font-size="11" font-weight="500" text-anchor="end">initialized</text>
+<rect x="37" y="460" width="686" height="26" rx="5" fill="#031a19" stroke="#5fc49b"/>
+<text x="51" y="478" fill="#dbf5ec" font-size="13" font-weight="500" font-family="ui-monospace,Consolas,monospace">$D08D–$D09F  active state</text>
+<text x="704" y="478" fill="#9fc8b5" font-size="11" font-weight="500" text-anchor="end">observed</text>
+<rect x="37" y="497" width="686" height="53" rx="16" fill="#040c16" stroke="#8da0b8" stroke-width="1"/><text x="50" y="518" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">TERSE_DATA_STACK_TOP    equ $D780</text><text x="50" y="536" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">TERSE_CONTROL_STACK_TOP equ $D800</text>
+<rect x="20" y="576" width="720" height="145" rx="16" fill="#3a4755" stroke="#b5c4d4" stroke-width="1"/>
+<text x="34" y="611" fill="#9eb8cf" font-size="16" font-weight="500" font-family="ui-monospace,Consolas,monospace">$C000–$CFFF</text><text x="207" y="611" fill="#fff" font-size="22" font-weight="700" >Unclassified memory</text><rect x="620" y="592" width="100" height="26" rx="13" fill="#040b14" stroke="#b4c7d7"/><text x="670" y="609" fill="#d9e5f3" font-size="13" font-weight="600" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">4 KB</text>
+<text x="37" y="641" fill="#d0dfed" font-size="14" font-weight="400" >Physical RAM/device decode and access behavior pending validation.</text>
+<rect x="37" y="653" width="686" height="56" rx="16" fill="#040c16" stroke="#8da0b8" stroke-width="1"/><text x="50" y="674" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">REGION_START           equ $C000</text><text x="50" y="692" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">REGION_LIMIT           equ $D000</text>
+<rect x="20" y="735" width="720" height="145" rx="16" fill="#3a4755" stroke="#b5c4d4" stroke-width="1"/>
+<text x="34" y="770" fill="#9eb8cf" font-size="16" font-weight="500" font-family="ui-monospace,Consolas,monospace">$8000–$BFFF</text><text x="207" y="770" fill="#fff" font-size="22" font-weight="700" >Unclassified memory</text><rect x="620" y="751" width="100" height="26" rx="13" fill="#040b14" stroke="#b4c7d7"/><text x="670" y="768" fill="#d9e5f3" font-size="13" font-weight="600" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">16 KB</text>
+<text x="37" y="800" fill="#d0dfed" font-size="14" font-weight="400" >Do not assume ROM, RAM or mirrored graphics without board evidence.</text>
+<rect x="37" y="812" width="686" height="56" rx="16" fill="#040c16" stroke="#8da0b8" stroke-width="1"/><text x="50" y="833" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">REGION_START           equ $8000</text><text x="50" y="851" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">REGION_LIMIT           equ $C000</text>
+<rect x="20" y="893" width="720" height="150" rx="16" fill="#15546f" stroke="#b5c4d4" stroke-width="1"/>
+<text x="34" y="928" fill="#9eb8cf" font-size="16" font-weight="500" font-family="ui-monospace,Consolas,monospace">$4000–$7FFF</text><text x="207" y="928" fill="#f0faff" font-size="22" font-weight="700" >Video / graphics window</text><rect x="620" y="909" width="100" height="26" rx="13" fill="#040b14" stroke="#b4c7d7"/><text x="670" y="926" fill="#d9e5f3" font-size="13" font-weight="600" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">16 KB</text>
+<text x="37" y="958" fill="#c5dfeb" font-size="14" font-weight="400" >Astrocade-family video address region; Space Zap-specific read/write</text>
+<text x="37" y="976" fill="#c5dfeb" font-size="14" font-weight="400" >semantics require verification against the arcade hardware map.</text>
+<rect x="37" y="985" width="686" height="49" rx="16" fill="#040c16" stroke="#8da0b8" stroke-width="1"/><text x="50" y="1006" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">VIDEO_REGION_START     equ $4000</text><text x="50" y="1024" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">VIDEO_REGION_LIMIT     equ $8000</text>
+<rect x="20" y="1056" width="720" height="443" rx="16" fill="#49305e" stroke="#b5c4d4" stroke-width="1"/>
+<text x="34" y="1091" fill="#9eb8cf" font-size="16" font-weight="500" font-family="ui-monospace,Consolas,monospace">$0000–$3FFF</text><text x="207" y="1091" fill="#f2ddff" font-size="22" font-weight="700" >Program ROM / TERSE</text><rect x="620" y="1072" width="100" height="26" rx="13" fill="#040b14" stroke="#b4c7d7"/><text x="670" y="1089" fill="#d9e5f3" font-size="13" font-weight="600" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">16 KB</text>
+<text x="37" y="1122" fill="#e9d7f0" font-size="14" font-weight="400" >Four 4 KB MAME ROM sockets; indexed-token interpreter and game data.</text>
+<rect x="37" y="1146" width="335" height="84" rx="16" fill="#04101c" stroke="#978cbb" stroke-width="1"/>
+<text x="204" y="1173" fill="#e8dfff" font-size="17" font-weight="700" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">0665.xx</text>
+<text x="204" y="1194" fill="#73c3f0" font-size="12" font-weight="500" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">$3000–$3FFF</text>
+<text x="204" y="1214" fill="#a9b3c8" font-size="11" font-weight="400" text-anchor="middle">4 KB  •  CRC 3784228d</text>
+<rect x="388" y="1146" width="335" height="84" rx="16" fill="#04101c" stroke="#978cbb" stroke-width="1"/>
+<text x="555" y="1173" fill="#e8dfff" font-size="17" font-weight="700" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">0664.xx</text>
+<text x="555" y="1194" fill="#73c3f0" font-size="12" font-weight="500" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">$2000–$2FFF</text>
+<text x="555" y="1214" fill="#a9b3c8" font-size="11" font-weight="400" text-anchor="middle">4 KB  •  CRC d8193a80</text>
+<rect x="37" y="1241" width="335" height="84" rx="16" fill="#04101c" stroke="#978cbb" stroke-width="1"/>
+<text x="204" y="1268" fill="#e8dfff" font-size="17" font-weight="700" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">0663.xx</text>
+<text x="204" y="1289" fill="#73c3f0" font-size="12" font-weight="500" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">$1000–$1FFF</text>
+<text x="204" y="1309" fill="#a9b3c8" font-size="11" font-weight="400" text-anchor="middle">4 KB  •  CRC 4836ebf1</text>
+<rect x="388" y="1241" width="335" height="84" rx="16" fill="#04101c" stroke="#978cbb" stroke-width="1"/>
+<text x="555" y="1268" fill="#e8dfff" font-size="17" font-weight="700" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">0662.01</text>
+<text x="555" y="1289" fill="#73c3f0" font-size="12" font-weight="500" text-anchor="middle" font-family="ui-monospace,Consolas,monospace">$0000–$0FFF</text>
+<text x="555" y="1309" fill="#a9b3c8" font-size="11" font-weight="400" text-anchor="middle">4 KB  •  CRC a92de312</text>
+<rect x="37" y="1346" width="686" height="30" rx="15" fill="#020912" stroke="#e4be55"/>
+<text x="380" y="1367" fill="#f4ce69" font-size="13" font-weight="650" text-anchor="middle">16 KB image • 4 × 4 KB sockets</text>
+<rect x="37" y="1393" width="686" height="94" rx="16" fill="#040c16" stroke="#8da0b8" stroke-width="1"/><text x="50" y="1414" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">TERSE_COLON_ENTRY      equ $0008     ; RST $08 entry</text><text x="50" y="1432" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">TERSE_INDEXED_NEXT     equ $0035     ; 8-bit opcode dispatcher</text><text x="50" y="1450" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">TERSE_TOKEN_VECTORS    equ $3DEA     ; 256 × 16-bit native vectors</text><text x="50" y="1468" fill="#cedceb" font-size="12.5" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">TERSE_START_THREAD     equ $3CDC</text>
+<line x1="20" x2="740" y1="1517" y2="1517" stroke="#9aacc1"/>
+<rect x="20" y="1533" width="720" height="48" rx="9" fill="#050f1b" stroke="#7288a0"/>
+<text x="33" y="1552" fill="#f6c85b" font-size="14" font-weight="700" >Split access</text>
+<text x="33" y="1569" fill="#c2d2e2" font-size="12.6" font-weight="400" >Only the ROM read map is established here; graphics write semantics need verification.</text>
+<rect x="20" y="1589" width="720" height="48" rx="9" fill="#050f1b" stroke="#7288a0"/>
+<text x="33" y="1608" fill="#f6c85b" font-size="14" font-weight="700" >Interpreter</text>
+<text x="33" y="1625" fill="#c2d2e2" font-size="12.6" font-weight="400" >BC token -&gt; 16-bit vector table -&gt; native handler -&gt; JP (IY) -&gt; NEXT.</text>
+<rect x="20" y="1645" width="720" height="48" rx="9" fill="#050f1b" stroke="#7288a0"/>
+<text x="33" y="1664" fill="#f6c85b" font-size="14" font-weight="700" >Stacks</text>
+<text x="33" y="1681" fill="#c2d2e2" font-size="12.6" font-weight="400" >SP=$D780 and IX=$D800 at cold start; both grow downward.</text></svg>
