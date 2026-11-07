@@ -18,6 +18,7 @@ Space Zap is a four-direction space-defense arcade game. It runs on the Midway A
 
 | File / directory | Purpose |
 | :--- | :--- |
+| **[Active RE sprint plan](docs/SPRINT-PLAN.md)** | Remaining P0 hard RE and later WB runtime integration |
 | **[Source](Space_Zap_Disassembly.asm)** | Z80 disassembly and recovered TERSE words |
 | **[Linux build](build.sh)** / **[Windows build](build.bat)** | Assemble, package and verify |
 | **[ROMs](roms/)** | MAME files and original archive |
