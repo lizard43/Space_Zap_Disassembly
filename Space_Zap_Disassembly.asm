@@ -108,61 +108,87 @@ TERSE_LIT8:
 	 pop  hl
 	 add  hl,hl
 	 jp   $006C
+; Push 16-bit zero.
+TERSE_ZERO:
 	 ld   hl,$0000
 	 push hl
 	 jp   (iy)
+; Push 16-bit one.
+TERSE_ONE:
 	 ld   hl,$0001
 	 push hl
 	 jp   (iy)
+; ( n -- n n ) Duplicate top data-stack cell.
+TERSE_DUP:
 	 pop  hl
 	 push hl
 	 push hl
 	 jp   (iy)
-	 pop  hl
-	 pop  de
-	 push de
-	 push hl
-	 push de
-	 push hl
-	 jp   (iy)
-	 pop  hl
-	 jp   (iy)
+; ( a b -- a b a b ) Duplicate two data-stack cells.
+TERSE_2DUP:
 	 pop  hl
 	 pop  de
+	 push de
+	 push hl
+	 push de
+	 push hl
+	 jp   (iy)
+; ( n -- ) Discard top data-stack cell.
+TERSE_DROP:
+	 pop  hl
+	 jp   (iy)
+; ( a b -- b a ) Exchange top two cells.
+TERSE_SWAP:
+	 pop  hl
+	 pop  de
 	 push hl
 	 push de
 	 jp   (iy)
+; ( addr -- value ) Load little-endian 16-bit word.
+TERSE_FETCH:
 	 pop  hl
 	 ld   e,(hl)
 	 inc  hl
 	 ld   d,(hl)
 	 push de
 	 jp   (iy)
+; ( addr -- byte ) Load zero-extended byte.
+TERSE_BYTE_FETCH:
 	 pop  hl
 	 ld   e,(hl)
 	 ld   d,$00
 	 push de
 	 jp   (iy)
+; ( value addr -- ) Store little-endian 16-bit word.
+TERSE_STORE:
 	 pop  hl
 	 pop  de
 	 ld   (hl),e
 	 inc  hl
 	 ld   (hl),d
 	 jp   (iy)
+; ( value addr -- ) Store low byte.
+TERSE_BYTE_STORE:
 	 pop  hl
 	 pop  de
 	 ld   (hl),e
 	 jp   (iy)
+; ( addr -- ) Clear the addressed 16-bit word.
+TERSE_ZERO_WORD_AT_ADDRESS:
 	 pop  hl
 	 ld   (hl),$00
 	 inc  hl
 	 ld   (hl),$00
 	 jp   (iy)
+; ( a b -- a+b ) Unsigned 16-bit addition, wrapping.
+TERSE_ADD:
 	 pop  de
 	 pop  hl
 	 add  hl,de
 	 push hl
 	 jp   (iy)
+; ( a b -- a-b ) 16-bit subtraction, wrapping.
+TERSE_SUBTRACT:
 	 pop  de
 	 pop  hl
 	 xor  a
@@ -172,22 +198,32 @@ TERSE_LIT8:
 	 pop  de
 	 ld   hl,$0000
 	 jp   $00C7
+; ( n -- n-1 ) Decrement word.
+TERSE_DECREMENT:
 	 pop  hl
 	 dec  hl
 	 push hl
 	 jp   (iy)
+; ( n -- n+1 ) Increment word.
+TERSE_INCREMENT:
 	 pop  hl
 	 inc  hl
 	 push hl
 	 jp   (iy)
+; ( signed-n -- signed-n/2 ) Arithmetic signed 16-bit shift right.
+TERSE_ARITH_SHIFT_RIGHT:
 	 pop  hl
 	 sra  h
 	 rr   l
 	 push hl
 	 jp   (iy)
+; ( addr -- ) Decrement addressed byte.
+TERSE_DECREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 dec  (hl)
 	 jp   (iy)
+; ( addr -- ) Increment addressed byte.
+TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 inc  (hl)
 	 jp   (iy)
