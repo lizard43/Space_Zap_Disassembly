@@ -62,14 +62,14 @@ TERSE_INDEXED_NEXT:
 	 ld   d,(hl)
 	 ex   de,hl
 	 jp   (hl)
-; TERSE_EXIT $0050: recover parent BC from the IX control stack.
+; TERSE_EXIT $0044: recover parent BC from the IX control stack.
 TERSE_EXIT:
 	 ld   c,(ix+$00)
 	 inc  ix
 	 ld   b,(ix+$00)
 	 inc  ix
 	 jp   (iy)
-; TERSE_LIT16 $005F: consume following little-endian 16-bit literal.
+; TERSE_LIT16 $0050: consume following little-endian 16-bit literal.
 TERSE_LIT16:
 	 ld   a,(bc)
 	 inc  bc
@@ -79,7 +79,7 @@ TERSE_LIT16:
 	 ld   h,a
 	 push hl
 	 jp   (iy)
-; TERSE_LIT8 $006A: consume following unsigned byte literal.
+; TERSE_LIT8 $0059: consume following unsigned byte literal.
 TERSE_LIT8:
 	 ld   a,(bc)
 	 inc  bc
