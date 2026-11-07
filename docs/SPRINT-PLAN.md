@@ -20,6 +20,7 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [ ] Complete RAM address ownership and hardware port interaction map.
 - [x] Define confirmed video, Magic graphics, pattern-board, audio and interrupt I/O port symbols in ASM and annotate important writes; retain unresolved startup ports as explicitly unknown.
 - [x] Identify Magic pattern-mode option branches and the sound register/state clear loops, replacing local absolute branches with descriptive labels.
+- [ ] Classify mixed screen-record region `$3096–$327B` as true data/code before treating apparent I/O opcodes `$30/$55/$1B/$4B` as real hardware accesses.
 - [ ] Trace graphics and audio call chains into game-state logic, document register/RAM effects at routine boundaries, and eliminate false executable-code interpretations in graphics/sound data.
 - [ ] Assemble using original native Z80 sources and pass all four official MAME ROM SHA-1 checks.
 
