@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0013
+; RE version: v20261107-0014
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -753,6 +753,8 @@ EVENT_RAM_ADDRESS_TABLE_0336:
 NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 ld   hl,EVENT_RAM_ADDRESS_TABLE_0336
 	 ld   a,$01
+; $034B: shared entry with A=record selector, HL=record table entry.
+NATIVE_EVENT_DISPATCH_ENTRY_034B:
 	 push iy
 	 ld   ($D09E),a
 	 push iy
@@ -765,11 +767,14 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 jp   (hl)
 	 pop  iy
 	 ret
+
+; $0362: increment RAM $D093, select record table entry $033A with A=$02.
+NATIVE_EVENT_DISPATCH_RECORD_02:
 	 ld   hl,$D093
 	 inc  (hl)
 	 ld   hl,$033A
 	 ld   a,$02
-	 jp   $034B
+	 jp   NATIVE_EVENT_DISPATCH_ENTRY_034B
 	 ld   a,(iy+$0a)
 	 cp   $01
 	 ret  nc
@@ -784,7 +789,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 jp   $0391
 	 ld   a,$03
 	 ld   hl,$033E
-	 jp   $034B
+	 jp   NATIVE_EVENT_DISPATCH_ENTRY_034B
 	 push bc
 	 ld   a,($D08E)
 	 out  ($00),a
@@ -888,7 +893,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 ld   iy,($D098)
 	 ld   (iy+$02),c
 	 ld   (iy+$03),b
-	 call $0362
+	 call NATIVE_EVENT_DISPATCH_RECORD_02
 	 pop  iy
 	 jp   $0422
 	 push iy
@@ -1017,7 +1022,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 di
 	 jp   (hl)
 	 jp   $05C1
-	 call $0362
+	 call NATIVE_EVENT_DISPATCH_RECORD_02
 	 ei
 	 ld   a,($D08E)
 	 out  ($00),a
@@ -1467,7 +1472,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   (iy+$0f),$00
 	 ld   (iy+$10),$00
 	 jp   NATIVE_EVENT_RECORD_DISPATCH_0346
-	 jp   $0362
+	 jp   NATIVE_EVENT_DISPATCH_RECORD_02
 	 push bc
 	 ex   af,af'
 	 ld   a,b
@@ -1939,7 +1944,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   b,$00
 	 ld   c,(iy+$0c)
 	 cp   c
-	 jp   c,$0362
+	 jp   c,NATIVE_EVENT_DISPATCH_RECORD_02
 	 sub  c
 	 inc  b
 	 cp   c
@@ -4496,6 +4501,7 @@ ATTACK_SATELLITE_SEQUENCE:
         DW      ATTACK_SATELLITE_2
         DB      $00
         DW      ATTACK_SATELLITE_SEQUENCE
+
 ; $1EA1: HL += $24 while preserving DE.
 NATIVE_ADVANCE_RECORD_24:
         push de
@@ -4503,6 +4509,7 @@ NATIVE_ADVANCE_RECORD_24:
 	 add  hl,de
 	 pop  de
 	 ret
+
 ; $1EA8: write DE through $5B-mapped memory, preserve I.
 NATIVE_WRITE_RECORD_WORD:
 	 ld   a,i
@@ -4518,6 +4525,7 @@ NATIVE_WRITE_RECORD_WORD:
 	 pop  af
 	 ld   i,a
 	 ret
+
 ; $1EBB: write two word fields spaced $24 apart, preserving IFF.
 NATIVE_WRITE_PAIRED_RECORD_WORD:
 	 ld   a,i
@@ -4531,6 +4539,7 @@ NATIVE_WRITE_PAIRED_RECORD_WORD:
 	 jp   po,$1ECE
 	 ei
 	 ret
+
 ; $1ECF: write E through $5B-mapped memory, preserve I.
 NATIVE_WRITE_RECORD_BYTE:
 	 ld   a,i
@@ -4543,6 +4552,7 @@ NATIVE_WRITE_RECORD_BYTE:
 	 pop  af
 	 ld   i,a
 	 ret
+
 ; $1EDE: write two byte fields spaced $24 apart, preserving IFF.
 NATIVE_WRITE_PAIRED_RECORD_BYTE:
 	 ld   a,i
@@ -4724,7 +4734,7 @@ AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
 	 cp   (iy+$32)
 	 jp   z,$2002
-	 jp   $0362
+	 jp   NATIVE_EVENT_DISPATCH_RECORD_02
 	 ld   hl,$D002
 	 cp   (hl)
 	 jp   z,$20DE
@@ -4825,7 +4835,7 @@ AUDIO_NOISE_VOLUME_STEP:
 	 cp   (iy+$32)
 	 ld   (iy+$32),a
 	 jp   nz,$20DE
-	 jp   $0362
+	 jp   NATIVE_EVENT_DISPATCH_RECORD_02
 	 jp   NATIVE_EVENT_RECORD_DISPATCH_0346
 	 ld   hl,$D187
 	 ld   (hl),$00
@@ -9300,7 +9310,7 @@ TEXT_SECOND_PLAYER:
 	 scf
 	 dec  de
 	 ld   c,l
-	 jp   nc,$034B
+	 jp   nc,NATIVE_EVENT_DISPATCH_ENTRY_034B
 	 xor  e
 	 jr   c,$37F1
 	 inc  bc
