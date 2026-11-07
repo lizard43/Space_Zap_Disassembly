@@ -4495,9 +4495,9 @@ ATTACK_SATELLITE_SEQUENCE:
 	 ld   ($1900),a
 	 ld   (hl),$01
 ;==============================================================================
-; AUDIO_CLEAR_SOUND_REGISTERS  AUDIO_CLEAR_SOUND_REGISTERS:FC9
-; Clear eight sound-chip registers (AUDIO_CLEAR_SOUND_REGISTERS:0-AUDIO_CLEAR_SOUND_REGISTERS:7).
-; B counts registers; C walks backward from AUDIO_CLEAR_SOUND_REGISTERS:7 to AUDIO_CLEAR_SOUND_REGISTERS:0.
+; AUDIO_CLEAR_SOUND_REGISTERS  $1FC9
+; Clear eight sound-chip registers ($10-$17).
+; B counts registers; C walks backward from $17 to $10.
 ;==============================================================================
 AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
@@ -4549,7 +4549,7 @@ AUDIO_CLEAR_SOUND_REGISTERS:
 	 jp   nz,$20A8
 ;==============================================================================
 ; AUDIO_MASTER_OSCILLATOR_STEP  $2034
-; Advance oscillator state and write sound register AUDIO_MASTER_OSCILLATOR_STEP:0.
+; Advance oscillator state and write sound register $10.
 ; IY points to the active sound-effect state record.
 ;==============================================================================
 AUDIO_MASTER_OSCILLATOR_STEP:
@@ -4608,7 +4608,7 @@ AUDIO_MASTER_OSCILLATOR_STEP:
 	 jp   nz,$20CE
 ;==============================================================================
 ; AUDIO_NOISE_VOLUME_STEP  $20B5
-; Advance noise-envelope state and write sound register AUDIO_NOISE_VOLUME_STEP:7.
+; Advance noise-envelope state and write sound register $17.
 ; Uses IY+$24 as increment and IY+$27 as accumulator.
 ;==============================================================================
 AUDIO_NOISE_VOLUME_STEP:
@@ -4692,7 +4692,7 @@ AUDIO_NOISE_VOLUME_STEP:
 ;==============================================================================
 ; AUDIO_WRITE_REGISTER_INDEXED  $213E
 ; Write data byte to a selected sound register.
-; Input B = reverse register index; C = data. Port = AUDIO_WRITE_REGISTER_INDEXED:8-B.
+; Input B = reverse register index; C = data. Port = $18-B.
 ;==============================================================================
 AUDIO_WRITE_REGISTER_INDEXED:
 	 ld   a,$18
