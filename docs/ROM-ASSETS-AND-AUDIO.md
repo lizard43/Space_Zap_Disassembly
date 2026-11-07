@@ -49,11 +49,12 @@ The following records at `$3097–$327B` have been converted from misleading Z80
 | `$31C1` | `TEXT_BONUS_BASE` | `BONUS BASE` |
 | `$3233` | `TEXT_NEW_HIGH_SCORE` | ` N E W  H I G H ` |
 | `$3244` | `TEXT_GAME_OVER` | ` GAME OVER ` |
+| `$324F` | separator byte | `$16` |
 | `$3250` | `TEXT_PUSH_ONE_OR_TWO` | `PUSH 1 OR 2 PLAYER FOR` |
 | `$3267` | `TEXT_FIRST_PLAYER` | `1ST PLAYER` |
 | `$3272` | `TEXT_SECOND_PLAYER` | `2ND PLAYER` |
 
-Title components are separated by an original `$03` byte before `ZAP`. The separator preceding `GAME OVER` remains as its original byte. Display-text records are not terminated or padded by the reconstruction.
+Title components are separated by an original `$03` byte before `ZAP`. The separator preceding `GAME OVER` is `$0B`; the following separator at `$324F` is `$16`. Display-text records are not terminated or padded by the reconstruction.
 
 ## Bitmap sprites and animation frames
 
