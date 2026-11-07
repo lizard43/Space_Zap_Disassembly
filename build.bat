@@ -3,6 +3,11 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 echo Space Zap ROM build
 echo Input: Space_Zap_Disassembly.asm
+set "ASM_VERSION="
+for /f "tokens=4" %%V in ('findstr /B /C:"; RE version:" Space_Zap_Disassembly.asm') do set "ASM_VERSION=%%V"
+if not defined ASM_VERSION (echo ERROR: ASM version missing in source header & exit /b 1)
+echo ASM: %ASM_VERSION%
+for /f %%G in ('git rev-parse --short HEAD 2^>nul') do echo Commit: %%G
 echo.
 if not exist roms mkdir roms
 if not exist tools\zmac.exe (echo ERROR: missing tools\zmac.exe & exit /b 1)
