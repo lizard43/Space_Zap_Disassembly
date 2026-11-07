@@ -117,6 +117,7 @@ TERSE_ADD_INLINE16:
 
 ; The entry at $0076 doubles HL before entering the shared inline-add body.
 ; No vector-table token currently points to this entry.
+
 ; Push 16-bit zero.
 TERSE_ZERO:
 	 ld   hl,$0000
