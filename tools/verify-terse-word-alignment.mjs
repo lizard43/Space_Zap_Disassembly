@@ -40,101 +40,10 @@ for (const [token, name] of words) {
   assert.ok(row, `no vector row for $${token}`);
   const description = row.split('|')[3].trim();
   assert.ok(description.startsWith(name + ':'), `vector $${token}: expected ${name}, found ${description}`);
-  const sourceVector = source.split('\n').find(line =>
-    new RegExp(';\\s*token \\ Other
-  // DB comments can describe inline operands or source/debug addresses.
-  for (const line of source.split('\n')) {
-    const m = line.match(/^\s*DB\s+\$([0-9A-F]{2})\s*;\s*(.+?)\s*$/i);
-    if (!m || m[1].toUpperCase() !== token) continue;
-    const annotation = m[2].trim();
-    if (annotation === name || annotation === 'TERSE_' + name) sourceOccurrences++;
-  }
-}
-const nativeMapping = [
-  ['TERSE_LIT16','LIT'], ['TERSE_ZERO','0'], ['TERSE_ONE','1'],
-  ['TERSE_FETCH','@'], ['TERSE_BYTE_FETCH','B@'], ['TERSE_STORE','!'],
-  ['TERSE_BYTE_STORE','B!'], ['TERSE_ZERO_WORD_AT_ADDRESS','ZERO'],
-  ['TERSE_ADD','+'], ['TERSE_SUBTRACT','-'], ['TERSE_DECREMENT','1-'],
-  ['TERSE_INCREMENT','1+'], ['TERSE_BITWISE_AND','AND'],
-  ['TERSE_BITWISE_OR','OR'], ['TERSE_LOOP_INDEX','I'],
-  ['TERSE_PORT_OUT','OUTP'], ['TERSE_PORT_IN','INP'],
-  ['TERSE_DECREMENT_BYTE_AT_ADDRESS','1-B!'], ['TERSE_EQUAL','='],
-  ['TERSE_MEMORY_COPY','BMOVE'], ['TERSE_STACK_ROTATE','ROT'],
-  ['TERSE_STACK_PICK','PICK'], ['TERSE_NEGATE','MINUS'],
-  ['TERSE_UNSIGNED_GE','U>=']
-];
-for (const [symbol, name] of nativeMapping) {
-  assert.ok(source.includes(`; DNA TERSE word: ${name} (assembler symbol: ${symbol})\n${symbol}:`),
-    `missing source label correspondence for ${name} (${symbol})`);
-}
-console.log(`PASS: ${words.length} dictionary words agree with vector names and source token comments (${sourceOccurrences} occurrences).`);
-console.log(`PASS: ${nativeMapping.length} native labels carry matching TERSE vocabulary annotations.`);
-assert.ok(sourceOccurrences > 0, 'no named tokens found in source');
-console.log('ROM SHA-1 validation remains mandatory via ./build.sh.');
- + token + ' — ').test(line));
-  assert.ok(sourceVector, 'source vector missing token  Other
-  // DB comments can describe inline operands or source/debug addresses.
-  for (const line of source.split('\n')) {
-    const m = line.match(/^\s*DB\s+\$([0-9A-F]{2})\s*;\s*(.+?)\s*$/i);
-    if (!m || m[1].toUpperCase() !== token) continue;
-    const annotation = m[2].trim();
-    if (annotation === name || annotation === 'TERSE_' + name) sourceOccurrences++;
-  }
-}
-const nativeMapping = [
-  ['TERSE_LIT16','LIT'], ['TERSE_ZERO','0'], ['TERSE_ONE','1'],
-  ['TERSE_FETCH','@'], ['TERSE_BYTE_FETCH','B@'], ['TERSE_STORE','!'],
-  ['TERSE_BYTE_STORE','B!'], ['TERSE_ZERO_WORD_AT_ADDRESS','ZERO'],
-  ['TERSE_ADD','+'], ['TERSE_SUBTRACT','-'], ['TERSE_DECREMENT','1-'],
-  ['TERSE_INCREMENT','1+'], ['TERSE_BITWISE_AND','AND'],
-  ['TERSE_BITWISE_OR','OR'], ['TERSE_LOOP_INDEX','I'],
-  ['TERSE_PORT_OUT','OUTP'], ['TERSE_PORT_IN','INP'],
-  ['TERSE_DECREMENT_BYTE_AT_ADDRESS','1-B!'], ['TERSE_EQUAL','='],
-  ['TERSE_MEMORY_COPY','BMOVE'], ['TERSE_STACK_ROTATE','ROT'],
-  ['TERSE_STACK_PICK','PICK'], ['TERSE_NEGATE','MINUS'],
-  ['TERSE_UNSIGNED_GE','U>=']
-];
-for (const [symbol, name] of nativeMapping) {
-  assert.ok(source.includes(`; DNA TERSE word: ${name} (assembler symbol: ${symbol})\n${symbol}:`),
-    `missing source label correspondence for ${name} (${symbol})`);
-}
-console.log(`PASS: ${words.length} dictionary words agree with vector names and source token comments (${sourceOccurrences} occurrences).`);
-console.log(`PASS: ${nativeMapping.length} native labels carry matching TERSE vocabulary annotations.`);
-assert.ok(sourceOccurrences > 0, 'no named tokens found in source');
-console.log('ROM SHA-1 validation remains mandatory via ./build.sh.');
- + token);
+  const sourceVector = source.split('\n').find(line => line.includes('; token $' + token + ' — '));
+  assert.ok(sourceVector, 'source vector missing token $' + token);
   assert.equal(sourceVector.split(' — ').pop().trim(), name,
-    'source vector  Other
-  // DB comments can describe inline operands or source/debug addresses.
-  for (const line of source.split('\n')) {
-    const m = line.match(/^\s*DB\s+\$([0-9A-F]{2})\s*;\s*(.+?)\s*$/i);
-    if (!m || m[1].toUpperCase() !== token) continue;
-    const annotation = m[2].trim();
-    if (annotation === name || annotation === 'TERSE_' + name) sourceOccurrences++;
-  }
-}
-const nativeMapping = [
-  ['TERSE_LIT16','LIT'], ['TERSE_ZERO','0'], ['TERSE_ONE','1'],
-  ['TERSE_FETCH','@'], ['TERSE_BYTE_FETCH','B@'], ['TERSE_STORE','!'],
-  ['TERSE_BYTE_STORE','B!'], ['TERSE_ZERO_WORD_AT_ADDRESS','ZERO'],
-  ['TERSE_ADD','+'], ['TERSE_SUBTRACT','-'], ['TERSE_DECREMENT','1-'],
-  ['TERSE_INCREMENT','1+'], ['TERSE_BITWISE_AND','AND'],
-  ['TERSE_BITWISE_OR','OR'], ['TERSE_LOOP_INDEX','I'],
-  ['TERSE_PORT_OUT','OUTP'], ['TERSE_PORT_IN','INP'],
-  ['TERSE_DECREMENT_BYTE_AT_ADDRESS','1-B!'], ['TERSE_EQUAL','='],
-  ['TERSE_MEMORY_COPY','BMOVE'], ['TERSE_STACK_ROTATE','ROT'],
-  ['TERSE_STACK_PICK','PICK'], ['TERSE_NEGATE','MINUS'],
-  ['TERSE_UNSIGNED_GE','U>=']
-];
-for (const [symbol, name] of nativeMapping) {
-  assert.ok(source.includes(`; DNA TERSE word: ${name} (assembler symbol: ${symbol})\n${symbol}:`),
-    `missing source label correspondence for ${name} (${symbol})`);
-}
-console.log(`PASS: ${words.length} dictionary words agree with vector names and source token comments (${sourceOccurrences} occurrences).`);
-console.log(`PASS: ${nativeMapping.length} native labels carry matching TERSE vocabulary annotations.`);
-assert.ok(sourceOccurrences > 0, 'no named tokens found in source');
-console.log('ROM SHA-1 validation remains mandatory via ./build.sh.');
- + token + ' differs from dictionary');
+    'source vector $' + token + ' differs from dictionary');
   // Only complete, named token comments are vocabulary annotations. Other
   // DB comments can describe inline operands or source/debug addresses.
   for (const line of source.split('\n')) {
