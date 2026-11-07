@@ -7,15 +7,18 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0009
+; RE version: v20261107-0010
 ;*******************************************************************************
 
 	 ORG 0000H
 
+; $0000: CPU reset vector. Dispatch into TERSE_COLD_START ($0015).
+; The two trailing NOPs occupy the original bytes before RST $08 entry.
+TERSE_RESET_VECTOR:
 	 nop
 	 nop
 	 di
-	 jp   $0015
+	 jp   TERSE_COLD_START
 	 nop
 	 nop
 
@@ -43,7 +46,7 @@ TERSE_COLD_START:
 	 ld   ix,$D800
 	 ld   sp,$D780
 	 ld   bc,$3CDC
-	 ld   iy,$0035
+	 ld   iy,TERSE_INDEXED_NEXT
 
 ; TERSE_INDEXED_NEXT $0035: BC reads one-byte token, indexes 256
 ; 16-bit handler addresses at $3DEA. This is not direct-address NEXT.
@@ -95,7 +98,7 @@ TERSE_LIT8:
 	 inc  bc
 	 ld   h,a
 	 push hl
-	 jp   $0050
+	 jp   TERSE_LIT16
 
 ; TERSE_ADD_INLINE16 $006B, token $94: ( n -- n+offset ).
 ; Fetch a little-endian signed/unsigned 16-bit inline displacement from BC,
@@ -471,7 +474,7 @@ TERSE_ZERO_BRANCH:
 	 inc  bc
 	 inc  bc
 	 jp   (iy)
-	 jp   $01F4
+	 jp   TERSE_BRANCH_ABSOLUTE
 	 ld   a,(ix+$00)
 	 ld   (ix+$02),a
 	 ld   a,(ix+$01)
@@ -744,7 +747,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 ld   ($D09E),a
 	 push iy
 	 pop  de
-	 call $028C
+	 call NATIVE_ATOMIC_COMPARE_UPDATE
 	 ld   a,l
 	 or   h
 	 jp   z,$035F
@@ -788,7 +791,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 ld   ($D09A),ix
 	 ld   hl,$0336
 	 push iy
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 pop  iy
 	 ld   a,l
 	 or   h
@@ -817,7 +820,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 pop  iy
 	 jp   (iy)
 	 jp   $0407
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 pop  iy
 	 jp   $0422
 	 ld   (de),a
@@ -842,7 +845,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 cpl
 	 bit  3,a
 	 jp   nz,$044F
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 ld   a,($D089)
 	 dec  a
 	 ld   (iy+$0b),a
@@ -855,7 +858,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 or   a
 	 sbc  hl,de
 	 jp   nz,$0470
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 pop  iy
 	 jp   $0422
 	 pop  iy
@@ -868,7 +871,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 ld   iy,($D098)
 	 ld   (iy+$02),c
 	 ld   (iy+$03),b
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 pop  iy
 	 jp   $0422
 	 push iy
@@ -889,7 +892,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 push bc
 	 bit  3,(iy+$04)
 	 jp   z,$04D3
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 ld   a,($D089)
 	 dec  a
 	 ld   (iy+$0b),a
@@ -932,7 +935,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 or   a
 	 jp   nz,$0520
 	 ld   hl,$033E
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 ld   a,l
 	 or   h
 	 jp   nz,$0547
@@ -971,7 +974,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 cp   b
 	 jp   nc,$0578
 	 ld   hl,$033A
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 ld   a,l
 	 or   h
 	 jp   $057B
@@ -990,7 +993,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 jp   $0598
 	 bit  0,(iy+$04)
 	 jp   z,$05A1
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 jp   $05C7
 	 ld   a,($D08C)
 	 out  ($00),a
@@ -1073,7 +1076,7 @@ NATIVE_EVENT_RECORD_DISPATCH_0346:
 	 or   a
 	 jp   nz,$0643
 	 ld   hl,$0342
-	 call $02DF
+	 call NATIVE_ATOMIC_RECORD_CHECK
 	 ld   a,l
 	 or   h
 	 jp   nz,$066A
@@ -1407,7 +1410,7 @@ REDRAW_SAVED_OBJECT:
 	 ld   h,(iy+$2f)
 	 ld   l,(iy+$2e)
 	 bit  7,h
-	 call nz,$026A
+	 call nz,NATIVE_NEGATE_HL
 	 bit  7,d
 	 call nz,$0274
 	 or   a
@@ -1453,7 +1456,7 @@ REDRAW_SAVED_OBJECT:
 	 jp   z,$0905
 	 ld   (iy+$0f),$00
 	 ld   (iy+$10),$00
-	 jp   $0346
+	 jp   NATIVE_EVENT_RECORD_DISPATCH_0346
 	 jp   $0362
 	 push bc
 	 ex   af,af'
@@ -2303,7 +2306,7 @@ REDRAW_SAVED_OBJECT:
 	 sla  e
 	 rl   d
 	 ret
-	 call $026A
+	 call NATIVE_NEGATE_HL
 	 ld   de,$0063
 	 add  hl,de
 	 xor  a
@@ -2332,7 +2335,7 @@ REDRAW_SAVED_OBJECT:
 	 or   a
 	 ld   de,$0063
 	 sbc  hl,de
-	 call $026A
+	 call NATIVE_NEGATE_HL
 	 ret
 	 ld   hl,($D098)
 	 ld   de,$000F
@@ -2777,7 +2780,7 @@ REDRAW_SAVED_OBJECT:
 	 call $1279
 	 push hl
 	 jp   (iy)
-	 call $0346
+	 call NATIVE_EVENT_RECORD_DISPATCH_0346
 	 jp   $036E
 	 push iy
 	 push bc
@@ -4803,7 +4806,7 @@ AUDIO_NOISE_VOLUME_STEP:
 	 ld   (iy+$32),a
 	 jp   nz,$20DE
 	 jp   $0362
-	 jp   $0346
+	 jp   NATIVE_EVENT_RECORD_DISPATCH_0346
 	 ld   hl,$D187
 	 ld   (hl),$00
 	 ld   hl,$1FF8

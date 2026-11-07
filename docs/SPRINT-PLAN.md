@@ -7,7 +7,9 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [x] Identify indexed NEXT, colon entry, EXIT, LIT8/LIT16 and 256 vector slots.
 - [x] Recover the major middle-ROM and startup compiled TERSE programs.
 - [x] Recover native token $94 inline 16-bit addition and correct 12 misdecoded inline operands.
+- [x] Convert confirmed numeric JP/CALL references to existing Z80 routine labels, including reset-to-TERSE_COLD_START; label reset vector without changing machine instructions.
 - [ ] Audit vector-referenced native routines; classify true entry points, shared internal branches, inline data, and code joins. Record meaningful, evidence-backed names.
+- [ ] Whole-ROM hard RE: resolve remaining numeric JP/CALL/branch targets to existing descriptive labels where the address is proven; recover raw executable Z80 and TERSE code, preserve real DB/DW data, annotate register/stack contracts, and maintain blank-line section formatting. Do not assign semantic names solely from reference frequency.
 - [ ] Establish stack effects, inline operands, control stack, RAM and I/O side effects for every actually used token. Update ASM and Forth-style dictionary together.
 - [ ] Finish mixed bytecode/native/data classification in the $21xx–$2Axx area, especially $28AA onward; decode operands and branch targets before assigning instructions.
 - [ ] Reconstruct game control: attract/start, credits, input, firing, object motion, collision, score, sound and interrupts.

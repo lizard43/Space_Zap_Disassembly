@@ -9,6 +9,7 @@ The first 16 KB of Space Zap is a Z80 game program with a full
 | Code/data | Address | Verified interpretation |
 | --- | --- | --- |
 | Colon entry | `$0008` | Preserve previous BC on IX, POP BC from Z80 RST return address, resume IY |
+| CPU reset | `$0000` | Enter `TERSE_COLD_START` via a native Z80 jump; original padding bytes retained |
 | Cold startup | `$0015` | Set arcade I/O, IX=`$D800`, SP=`$D780`, BC=`$3CDC`, IY=`$0035` |
 | Indexed NEXT | `$0035` | Consume **one byte**, double index, select a two-byte native handler address at `$3DEA` |
 | EXIT | `$0044` | Restore prior BC through IX, return to IY |
