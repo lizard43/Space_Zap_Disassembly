@@ -440,6 +440,7 @@ TERSE_SMALL_COLON_0216:
 	 DB $05 ; TERSE_DROP
 TERSE_SMALL_021E_EXIT:
 	 DB $06 ; TERSE_EXIT
+
 TERSE_SMALL_COLON_0220:
 	 rst  $08
 	 DB $01 ; TERSE_2DUP
@@ -495,11 +496,13 @@ TERSE_SMALL_COLON_025E:
 	 DB $04 ; TERSE_SWAP
 	 DB $08 ; indexed native vector $08
 	 DB $06 ; TERSE_EXIT
+
 TERSE_SMALL_COLON_0262:
 	 rst  $08
 	 DB $09 ; native token $09
 	 DB $0A ; native token $0A
 	 DB $06 ; TERSE_EXIT
+
 TERSE_SMALL_COLON_0266:
 	 rst  $08
 	 DB $0B ; TERSE_ZERO
@@ -3551,6 +3554,7 @@ FONT_LETTER_Z:
 ;*******************************************************************************
 ALIEN_SHIP_DESTROY_1:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_1_HEADER:
         DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
         DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
@@ -3573,6 +3577,7 @@ ALIEN_SHIP_DESTROY_1_HEADER:
 ;*******************************************************************************
 ALIEN_SHIP_DESTROY_2:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_2_HEADER:
         DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
         DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
@@ -3595,6 +3600,7 @@ ALIEN_SHIP_DESTROY_2_HEADER:
 ;*******************************************************************************
 ALIEN_SHIP_DESTROY_3:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_3_HEADER:
         DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
         DB      $00,$80,$02,$00,$00 ; . . . . 2 . . . . . . 2 . . . . . . . .
@@ -3618,6 +3624,7 @@ ALIEN_SHIP_DESTROY_3_HEADER:
 ;*******************************************************************************
 ALIEN_SHIP_DESTROY_4:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
+
 ALIEN_SHIP_DESTROY_4_HEADER:
         DB      $05,$0A ; Bitmap size: 5 bytes/row, 10 rows
         DB      $00,$02,$00,$00,$08 ; . . . . . . . 2 . . . . . . . . . . 2 .
@@ -3668,6 +3675,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE:
 ;*******************************************************************************
 ALIEN_SHIP_VERTICAL:
         DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
+
 ALIEN_SHIP_VERTICAL_HEADER:
         DB      $02,$0C ; Bitmap size: 2 bytes/row, 12 rows
         DB      $40,$00 ; 1 . . . . . . .
@@ -3692,6 +3700,7 @@ ALIEN_SHIP_VERTICAL_HEADER:
 ;*******************************************************************************
 ALIEN_SHIP_HORIZONTAL:
         DB      $07,$08 ; Hotspot offsets: X = 7, Y = 8
+
 ALIEN_SHIP_HORIZONTAL_HEADER:
         DB      $03,$07 ; Bitmap size: 3 bytes/row, 7 rows
         DB      $03,$00,$00 ; . . . 3 . . . . . . . .
@@ -3716,6 +3725,7 @@ ALIEN_SHIP_HORIZONTAL_HEADER:
 ;*******************************************************************************
 LASER_BASE_BODY:
         DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+
 LASER_BASE_BODY_HEADER:
         DB      $06,$15 ; Bitmap size: 6 bytes/row, 21 rows
         DB      $55,$55,$55,$5A,$40,$00 ; 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 1 . . . . . . .
@@ -3749,6 +3759,7 @@ LASER_BASE_BODY_HEADER:
 ;*******************************************************************************
 LASER_BASE_BODY_DESTROY:
         DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
+
 LASER_BASE_BODY_DESTROY_HEADER:
         DB      $06,$15 ; Bitmap size: 6 bytes/row, 21 rows
         DB      $00,$00,$00,$08,$D0,$00 ; . . . . . . . . . . . . . . 2 . 3 1 . . . . . .
@@ -3782,6 +3793,7 @@ LASER_BASE_BODY_DESTROY_HEADER:
 ;*******************************************************************************
 LASER_TURRET_VERTICAL:
         DB      $07,$09 ; Hotspot offsets: X = 7, Y = 9
+
 LASER_TURRET_VERTICAL_HEADER:
         DB      $05,$13 ; Bitmap size: 5 bytes/row, 19 rows
         DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
@@ -3813,6 +3825,7 @@ LASER_TURRET_VERTICAL_HEADER:
 ;*******************************************************************************
 LASER_TURRET_VERTICAL_FIRE:
         DB      $07,$04 ; Hotspot offsets: X = 7, Y = 4
+
 LASER_TURRET_VERTICAL_FIRE_HEADER:
         DB      $05,$10 ; Bitmap size: 5 bytes/row, 16 rows
         DB      $00,$0F,$00,$00,$00 ; . . . . . . 3 3 . . . . . . . . . . . .
@@ -3841,6 +3854,7 @@ LASER_TURRET_VERTICAL_FIRE_HEADER:
 ;*******************************************************************************
 LASER_TURRET_HORIZONTAL:
         DB      $07,$07 ; Hotspot offsets: X = 7, Y = 7
+
 LASER_TURRET_HORIZONTAL_HEADER:
         DB      $05,$0E ; Bitmap size: 5 bytes/row, 14 rows
         DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
@@ -3867,6 +3881,7 @@ LASER_TURRET_HORIZONTAL_HEADER:
 ;*******************************************************************************
 LASER_TURRET_HORIZONTAL_FIRE:
         DB      $05,$07 ; Hotspot offsets: X = 5, Y = 7
+
 LASER_TURRET_HORIZONTAL_FIRE_HEADER:
         DB      $05,$0E ; Bitmap size: 5 bytes/row, 14 rows
         DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
@@ -3890,11 +3905,13 @@ LASER_TURRET_VERTICAL_IDLE_SEQUENCE:
         DW      LASER_TURRET_VERTICAL
         DB      $00
         DW      LASER_TURRET_VERTICAL_IDLE_SEQUENCE
+
 LASER_TURRET_HORIZONTAL_IDLE_SEQUENCE:
         DB      $FF
         DW      LASER_TURRET_HORIZONTAL
         DB      $00
         DW      LASER_TURRET_HORIZONTAL_IDLE_SEQUENCE
+
 LASER_TURRET_VERTICAL_FIRE_SEQUENCE:
         DB      $0E
         DW      LASER_TURRET_VERTICAL_FIRE
@@ -3902,6 +3919,7 @@ LASER_TURRET_VERTICAL_FIRE_SEQUENCE:
         DW      LASER_TURRET_VERTICAL
         DB      $00
         DW      LASER_TURRET_VERTICAL_FIRE_SEQUENCE
+
 LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE:
         DB      $0E
         DW      LASER_TURRET_HORIZONTAL_FIRE
@@ -3919,6 +3937,7 @@ LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE:
 ;*******************************************************************************
 SPACE_MINE_1:
         DB      $02,$02 ; Hotspot offsets: X = 2, Y = 2
+
 SPACE_MINE_1_HEADER:
         DB      $02,$04 ; Bitmap size: 2 bytes/row, 4 rows
         DB      $14,$00 ; . 1 1 . . . . .
@@ -3935,6 +3954,7 @@ SPACE_MINE_1_HEADER:
 ;*******************************************************************************
 SPACE_MINE_2:
         DB      $03,$03 ; Hotspot offsets: X = 3, Y = 3
+
 SPACE_MINE_2_HEADER:
         DB      $03,$06 ; Bitmap size: 3 bytes/row, 6 rows
         DB      $07,$00,$00 ; . . 1 3 . . . . . . . .
@@ -3953,6 +3973,7 @@ SPACE_MINE_2_HEADER:
 ;*******************************************************************************
 SPACE_MINE_3:
         DB      $04,$04 ; Hotspot offsets: X = 4, Y = 4
+
 SPACE_MINE_3_HEADER:
         DB      $03,$08 ; Bitmap size: 3 bytes/row, 8 rows
         DB      $03,$C0,$00 ; . . . 3 3 . . . . . . .
@@ -3973,6 +3994,7 @@ SPACE_MINE_3_HEADER:
 ;*******************************************************************************
 SPACE_MINE_4:
         DB      $04,$05 ; Hotspot offsets: X = 4, Y = 5
+
 SPACE_MINE_4_HEADER:
         DB      $04,$09 ; Bitmap size: 4 bytes/row, 9 rows
         DB      $01,$70,$00,$00 ; . . . 1 1 3 . . . . . . . . . .
@@ -3994,6 +4016,7 @@ SPACE_MINE_4_HEADER:
 ;*******************************************************************************
 SPACE_MINE_5:
         DB      $05,$06 ; Hotspot offsets: X = 5, Y = 6
+
 SPACE_MINE_5_HEADER:
         DB      $04,$0B ; Bitmap size: 4 bytes/row, 11 rows
         DB      $00,$D4,$00,$00 ; . . . . 3 1 1 . . . . . . . . .
@@ -4021,6 +4044,7 @@ SPACE_MINE_GROW_SEQUENCE:
         DW      SPACE_MINE_5
         DB      $00
         DW      SPACE_MINE_GROW_SEQUENCE
+
 SPACE_MINE_FAST_GROW_SEQUENCE:
         DB      $09
         DW      SPACE_MINE_1
@@ -4044,6 +4068,7 @@ SPACE_MINE_FAST_GROW_SEQUENCE:
 ;*******************************************************************************
 LASER_BASE_DESTROY_1:
         DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
+
 LASER_BASE_DESTROY_1_HEADER:
         DB      $04,$0C ; Bitmap size: 4 bytes/row, 12 rows
         DB      $00,$C0,$04,$00 ; . . . . 3 . . . . . 1 . . . . .
@@ -4068,6 +4093,7 @@ LASER_BASE_DESTROY_1_HEADER:
 ;*******************************************************************************
 LASER_BASE_DESTROY_2:
         DB      $0A,$08 ; Hotspot offsets: X = 10, Y = 8
+
 LASER_BASE_DESTROY_2_HEADER:
         DB      $05,$11 ; Bitmap size: 5 bytes/row, 17 rows
         DB      $01,$00,$00,$00,$00 ; . . . 1 . . . . . . . . . . . . . . . .
@@ -4097,6 +4123,7 @@ LASER_BASE_DESTROY_2_HEADER:
 ;*******************************************************************************
 LASER_BASE_DESTROY_3:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_3_HEADER:
         DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
         DB      $00,$00,$80,$00,$00,$00 ; . . . . . . . . 2 . . . . . . . . . . . . . . .
@@ -4133,6 +4160,7 @@ LASER_BASE_DESTROY_3_HEADER:
 ;*******************************************************************************
 LASER_BASE_DESTROY_4:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_4_HEADER:
         DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
         DB      $80,$00,$08,$00,$00,$80 ; 2 . . . . . . . . . 2 . . . . . . . . . 2 . . .
@@ -4168,6 +4196,7 @@ LASER_BASE_DESTROY_4_HEADER:
 ;*******************************************************************************
 LASER_BASE_DESTROY_5:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_5_HEADER:
         DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
         DB      $00,$00,$04,$03,$00,$00 ; . . . . . . . . . . 1 . . . . 3 . . . . . . . .
@@ -4203,6 +4232,7 @@ LASER_BASE_DESTROY_5_HEADER:
 ;*******************************************************************************
 LASER_BASE_DESTROY_6:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
+
 LASER_BASE_DESTROY_6_HEADER:
         DB      $06,$17 ; Bitmap size: 6 bytes/row, 23 rows
         DB      $00,$00,$C0,$00,$00,$00 ; . . . . . . . . 3 . . . . . . . . . . . . . . .
@@ -4256,6 +4286,7 @@ LASER_BASE_DESTROY_SEQUENCE:
 ;*******************************************************************************
 ATTACK_SATELLITE_1:
         DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+
 ATTACK_SATELLITE_1_HEADER:
         DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
         DB      $00,$01,$00,$00,$00 ; . . . . . . . 1 . . . . . . . . . . . .
@@ -4279,6 +4310,7 @@ ATTACK_SATELLITE_1_HEADER:
 ;*******************************************************************************
 ATTACK_SATELLITE_2:
         DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+
 ATTACK_SATELLITE_2_HEADER:
         DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
         DB      $00,$02,$00,$00,$00 ; . . . . . . . 2 . . . . . . . . . . . .
@@ -4302,6 +4334,7 @@ ATTACK_SATELLITE_2_HEADER:
 ;*******************************************************************************
 ATTACK_SATELLITE_3:
         DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
+
 ATTACK_SATELLITE_3_HEADER:
         DB      $05,$0B ; Bitmap size: 5 bytes/row, 11 rows
         DB      $00,$03,$00,$00,$00 ; . . . . . . . 3 . . . . . . . . . . . .
@@ -5632,56 +5665,67 @@ TERSE_COLON_26D2:
 	 DB $1B ; LIT16
 	 DW $D299 ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26D7:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D2E5 ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26DC:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D331 ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26E1:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D37D ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26E6:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D18D ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26EB:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D18E ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26F0:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D18F ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26F5:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D190 ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26FA:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D1A1 ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_26FF:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D1A2 ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_2704:
 	 RST $08
 	 DB $1B ; LIT16
 	 DW $D19F ; address/value
 	 DB $06 ; TERSE_EXIT
+
 TERSE_COLON_2709:
 	 RST $08
 	 DB $1B ; LIT16
@@ -7723,12 +7767,14 @@ TERSE_THREAD_308D:
 	 DB $17 ; $308E token -> native $10DA
 	 DB $B8 ; $308F token -> native $1537
 	 DB $06 ; $3090 token -> native $0044
+
 TERSE_COLON_3091:
 	 RST $08
 	 DB $0E ; $3092 token -> native $0059
 	 DB $40 ; LIT8
 	 DB $54 ; $3094 token -> native $0154
 	 DB $06 ; $3095 token -> native $0044
+
 SPACE_ZAP_SCREEN_TEXT_PREFIX:
 	 DB $11 ; original byte preceding MIDWAY copyright string
 ; $3097  @ 1980 MIDWAY MFG
@@ -7740,6 +7786,7 @@ TEXT_SPACE_TITLE:
 	 DB "SPACE"
 ; Title separator and remaining three letters.
 	 DB $03
+
 TEXT_ZAP_TITLE:
 	 DB "ZAP"
 	 rst  $08
@@ -7981,6 +8028,7 @@ TEXT_BONUS_BASE:
 TEXT_NEW_HIGH_SCORE:
 	 DB " N E W  H I G H "
 	 DB $0B ; separator byte
+
 TEXT_GAME_OVER:
 	 DB " GAME OVER "
 ; $3250  PUSH 1 OR 2 PLAYER FOR
@@ -9805,9 +9853,11 @@ SPACE_ZAP_MAIN_THREAD:
 	 DB $1B ; $3CFE token $1B -> TERSE_LIT16
 	 DW $D007 ; inline word
 	 DB $53 ; $3D01 token $53 -> XT $1F18
+
 SPACE_ZAP_THREAD_3D02:
 	 DB $46 ; $3D02 token $46 -> TERSE_BRANCH_ABSOLUTE
 	 DW SPACE_ZAP_THREAD_3D25 ; BRANCH target $3D25
+
 SPACE_ZAP_THREAD_3D05:
 	 DB $1B ; $3D05 token $1B -> TERSE_LIT16
 	 DW $D001 ; inline word
@@ -9834,6 +9884,7 @@ SPACE_ZAP_THREAD_3D05:
 	 DB $1B ; $3D21 token $1B -> TERSE_LIT16
 	 DW $D024 ; inline word
 	 DB $29 ; $3D24 token $29 -> XT $1F10
+
 SPACE_ZAP_THREAD_3D25:
 	 DB $0E ; $3D25 token $0E -> TERSE_LIT8
 	 DB $10 ; inline byte
@@ -9891,15 +9942,18 @@ SPACE_ZAP_THREAD_3D25:
 	 DB $09 ; $3D5F token $09 -> TERSE_ONE
 	 DB $24 ; $3D60 token $24 -> TERSE_LOOP_INDEX
 	 DB $BF ; $3D61 token $BF -> XT $31EC
+
 SPACE_ZAP_THREAD_3D62:
 	 DB $1B ; $3D62 token $1B -> TERSE_LIT16
 	 DW $0800 ; inline word
 	 DB $0F ; $3D65 token $0F -> TERSE_ADD
 	 DB $26 ; $3D66 token $26 -> XT $0188
+
 SPACE_ZAP_THREAD_3D67:
 	 DB $0B ; $3D67 token $0B -> TERSE_ZERO
 	 DB $03 ; $3D68 token $03 -> TERSE_ZERO_BRANCH
 	 DW SPACE_ZAP_THREAD_3D67 ; 0BRANCH target $3D67
+
 SPACE_ZAP_THREAD_3D6B:
 	 DB $D0 ; $3D6B token $D0 -> XT $3591
 	 DB $F3 ; $3D6C token $F3 -> XT $1F92
@@ -10000,6 +10054,7 @@ SPACE_ZAP_THREAD_3D6B:
 	 DB $10 ; $3DE6 token $10 -> TERSE_STORE
 	 DB $FB ; $3DE7 token $FB -> XT $0394
 	 DB $06 ; $3DE8 token $06 -> TERSE_EXIT
+
 SPACE_ZAP_MAIN_TRAILING_BYTE:
 	 DB $F3 ; byte between EXIT and vector table
 ; $3DEA-$3FE9: 256 indexed TERSE native execution vectors.
@@ -10267,8 +10322,10 @@ TERSE_TOKEN_VECTORS:
 ; $3FEF-$3FFF: original ROM identification and date.
 SPACE_ZAP_TITLE:
 	 DB "SPACE ZAP",0
+
 SPACE_ZAP_DEVELOPER:
 	 DB "DNA",0
+
 SPACE_ZAP_ROM_DATE:
 	 DB $08,$19,$80 ; 08/19/80 (MM/DD/YY, packed decimal bytes)
 ;
