@@ -11,6 +11,7 @@ This is a working plan, not a frozen revision or preservation checkpoint. Contin
 - [ ] Audit vector-referenced native routines; classify true entry points, shared internal branches, inline data, and code joins. Record meaningful, evidence-backed names.
 - [x] Identify the five `$1EA1–$1EDE` native byte/word access routines, original 36-byte record stride, port `$5B` side effects, and resolve 37 symbolic call sites.
 - [x] Resolve event record selector path `$034B/$0362`: shared dispatch entry plus record-2 counter increment `$D093`; replace six `$0362` call/jump sites and `$034B` references.
+- [x] Audit existing main block headers for meaningful operational effects; prioritize DI at reset and omit padding commentary. Identify native record-count entry at $036E and resolve its callers.
 - [ ] Whole-ROM hard RE: resolve remaining numeric JP/CALL/branch targets to existing descriptive labels where the address is proven; recover raw executable Z80 and TERSE code, preserve real DB/DW data, annotate register/stack contracts, and maintain blank-line section formatting. Do not assign semantic names solely from reference frequency.
 - [ ] Establish stack effects, inline operands, control stack, RAM and I/O side effects for every actually used token. Update ASM and Forth-style dictionary together.
 - [x] Decode the complete `$28AA–$2AE0` 567-byte colon program into 269 TERSE token instructions, including 13 four-target native dispatch tables, typed literal/branch operands, and validated internal branch targets.
