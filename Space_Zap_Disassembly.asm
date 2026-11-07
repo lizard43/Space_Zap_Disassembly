@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0006
+; RE version: v20261107-0007
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -458,8 +458,11 @@ TERSE_SMALL_0227_DROP:
 	 DB $05 ; TERSE_DROP
 	 DB $06 ; TERSE_EXIT
 
-; $0229: native two-cell comparison and branch helper.
-NATIVE_COMPARE_TWO_CELLS_0229:
+; $0229, token $93: ( a b -- ) if equal; ( a b -- a ) if unequal.
+; Compare b against a; equal advances BC past an inline 16-bit branch address.
+; Unequal loads BC from that inline little-endian address and preserves a.
+; The unequal path has a different stack effect from the equal path.
+TERSE_COMPARE_BRANCH_NE:
 	 pop  hl
 	 pop  de
 	 or   a
@@ -6293,9 +6296,8 @@ TERSE_COLON_2AF6:
 	 DW $D195 ; LIT16
 	 DB $08 ; $2AFF -> $00B2
 	 DB $09 ; $2B00 -> $0081
-	 DB $93 ; $2B01 -> $0229
-	 DB $2C ; $2B02 -> $2126
-	 DB $2B ; $2B03 -> $21A3
+	 DB $93 ; $2B01 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2B2C ; inline branch-on-not-equal target for token $93
 	 DB $0B ; $2B04 -> $007B
 	 DB $94 ; $2B05 -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
@@ -6335,9 +6337,8 @@ TERSE_THREAD_2B29:
 	 DW TERSE_THREAD_2BBF ; BRANCH
 	 DB $0E ; $2B2C -> $0059
 	 DB $02 ; LIT8
-	 DB $93 ; $2B2E -> $0229
-	 DB $5B ; $2B2F -> $0E11
-	 DB $2B ; $2B30 -> $21A3
+	 DB $93 ; $2B2E -> TERSE_COMPARE_BRANCH_NE
+	 DW $2B5B ; inline branch-on-not-equal target for token $93
 	 DB $0B ; $2B31 -> $007B
 	 DB $94 ; $2B32 -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
@@ -6379,9 +6380,8 @@ TERSE_THREAD_2B58:
 	 DW TERSE_THREAD_2BBF ; BRANCH
 	 DB $0E ; $2B5B -> $0059
 	 DB $03 ; LIT8
-	 DB $93 ; $2B5D -> $0229
-	 DB $8B ; $2B5E -> $2855
-	 DB $2B ; $2B5F -> $21A3
+	 DB $93 ; $2B5D -> TERSE_COMPARE_BRANCH_NE
+	 DW $2B8B ; inline branch-on-not-equal target for token $93
 	 DB $0B ; $2B60 -> $007B
 	 DB $94 ; $2B61 -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
@@ -6423,9 +6423,8 @@ TERSE_THREAD_2B88:
 	 DW TERSE_THREAD_2BBF ; BRANCH
 	 DB $0E ; $2B8B -> $0059
 	 DB $04 ; LIT8
-	 DB $93 ; $2B8D -> $0229
-	 DB $BE ; $2B8E -> $1692
-	 DB $2B ; $2B8F -> $21A3
+	 DB $93 ; $2B8D -> TERSE_COMPARE_BRANCH_NE
+	 DW $2BBE ; inline branch-on-not-equal target for token $93
 	 DB $0B ; $2B90 -> $007B
 	 DB $94 ; $2B91 -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
@@ -7257,9 +7256,8 @@ TERSE_THREAD_2EFE:
 	 DW $D18A ; LIT16
 	 DB $25 ; $2F01 -> $00A4
 	 DB $09 ; $2F02 -> $0081
-	 DB $93 ; $2F03 -> $0229
-	 DB $13 ; $2F04 -> $01E3
-	 DB $2F ; $2F05 -> $2119
+	 DB $93 ; $2F03 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2F13 ; inline branch-on-not-equal target for token $93
 	 DB $0B ; $2F06 -> $007B
 	 DB $17 ; $2F07 -> $10DA
 	 DB $0E ; $2F08 -> $0059
@@ -7273,9 +7271,8 @@ TERSE_THREAD_2EFE:
 	 DW TERSE_THREAD_2F44 ; BRANCH
 	 DB $0E ; $2F13 -> $0059
 	 DB $02 ; LIT8
-	 DB $93 ; $2F15 -> $0229
-	 DB $25 ; $2F16 -> $00A4
-	 DB $2F ; $2F17 -> $2119
+	 DB $93 ; $2F15 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2F25 ; inline branch-on-not-equal target for token $93
 	 DB $0E ; $2F18 -> $0059
 	 DB $10 ; LIT8
 	 DB $17 ; $2F1A -> $10DA
@@ -7289,9 +7286,8 @@ TERSE_THREAD_2EFE:
 	 DW TERSE_THREAD_2F44 ; BRANCH
 	 DB $0E ; $2F25 -> $0059
 	 DB $03 ; LIT8
-	 DB $93 ; $2F27 -> $0229
-	 DB $38 ; $2F28 -> $21D8
-	 DB $2F ; $2F29 -> $2119
+	 DB $93 ; $2F27 -> TERSE_COMPARE_BRANCH_NE
+	 DW $2F38 ; inline branch-on-not-equal target for token $93
 	 DB $0B ; $2F2A -> $007B
 	 DB $17 ; $2F2B -> $10DA
 	 DB $1B ; $2F2C -> $0050
