@@ -121,9 +121,9 @@ Major ROM landmarks:
 | `$0008` | TERSE colon entry |
 | `$0015` | Cold initialization |
 | `$0035` | Indexed-token TERSE NEXT |
-| `$0050` | TERSE EXIT |
-| `$005F` | 16-bit inline literal |
-| `$006A` | 8-bit inline literal |
+| `$0044` | TERSE EXIT |
+| `$0050` | 16-bit inline literal |
+| `$0059` | 8-bit inline literal |
 | `$3CDC` | Initial compiled token stream |
 | `$3DEA` | Start of the 256-entry native handler vector table |
 | `$3FEF` | `SPACE ZAP` title / `DNA` identification tail |
