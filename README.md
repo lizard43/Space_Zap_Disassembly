@@ -24,7 +24,7 @@ The Astrocade home cartridge **Space Fortress** (1981), programmed by Bob Ogdon,
 
 | Path | Contents |
 | --- | --- |
-| `Space_Zap_Disassembly.asm` | Historical Z80 assembly/disassembly, structured graphic data, initial TERSE labels |
+| `Space_Zap_Disassembly.asm` | Historical Z80 assembly/disassembly, structured graphic data, initial TERSE labels; 256 typed DW vector slots and ROM-tail data |
 | `build.sh` | Linux zmac build, four ROM split, MAME ZIP and SHA-1 verification |
 | `build.bat` | Windows zmac build and the same ROM checksum verification |
 | `tools/zmac.exe` | Bundled Windows assembler |
@@ -181,7 +181,7 @@ baseline and reproducible build scripts. This is **not yet** a
 Sea Wolf II-level complete hard RE: reachable native words,
 token dictionaries, all branch/inline operands, unused data,
 interrupts, sound, RAM ownership and hardware control paths still
-need exhaustive recovery and testing.
+need exhaustive recovery and testing. The 256 vector entries are now typed\nin the assembly, while their native-word meanings still require tracing.
 
 The next substantial work belongs in the original Z80 source, with
 symbolic calls/data references, meaningful ROM-word names and typed
