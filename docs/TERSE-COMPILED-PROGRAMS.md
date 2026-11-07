@@ -18,6 +18,14 @@ previous BC instruction pointer. Native primitives resume at `JP (IY)`.
 The `DW` directives for branches refer to **TERSE byte-stream labels**,
 not Z80 instruction targets.
 
+## P0 correction: native inline-address arithmetic (2026-11-07)
+
+Token `$94` points to the native routine at `$006B`. This routine pops one data-stack cell, reads **two inline bytes from BC**, adds the resulting little-endian word to the popped value modulo 65536, and pushes the result. Its contract is `( n -- n+offset )` with an inline 16-bit displacement. This is not an ordinary zero-operand TERSE primitive.
+
+Twelve occurrences within the decoded `$2B05–$2BE8` game-control streams are corrected from three misleading `DB` token records to `DB $94` followed by `DW $D1A9` or `DW $D1A4`. The original bytes are unchanged. These values appear to be RAM addresses when added to zero, but usage-specific semantics require caller tracing.
+
+There is a second native entry at `$0076` that doubles the popped cell before falling into the shared inline-add code at `$006C`; this entry is not directly listed in the 256-token vector inventory. Do not misidentify it as another directly indexed token without evidence.
+
 ## Middle-ROM bytecode and native routines
 
 The original ROM region **`$270D–$2AE0` (980 bytes)** is now expressed as
