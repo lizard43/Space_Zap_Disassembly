@@ -15,7 +15,7 @@ echo Created: Space_Zap_Disassembly.bin
 echo Created: Space_Zap_Disassembly.lst
 echo.
 echo [2/4] Split the image into four 4 KB ROMs
-powershell -NoProfile -Command "$b=[IO.File]::ReadAllBytes('Space_Zap_Disassembly.bin'); if($b.Length -ne 16384){throw 'compiled image too small'}; $n=@('0662.01','0663.xx','0664.xx','0665.xx'); for($i=0;$i -lt 4;$i++){$p=New-Object byte[] 4096;[Array]::Copy($b,($i*4096),$p,0,4096);[IO.File]::WriteAllBytes(('roms\'+$n[$i]),$p)}"
+powershell -NoProfile -Command "$b=[IO.File]::ReadAllBytes('Space_Zap_Disassembly.bin'); if($b.Length -ne 16384){throw 'assembled image size does not match the 16384-byte ROM image'}; $n=@('0662.01','0663.xx','0664.xx','0665.xx'); for($i=0;$i -lt 4;$i++){$p=New-Object byte[] 4096;[Array]::Copy($b,($i*4096),$p,0,4096);[IO.File]::WriteAllBytes(('roms\'+$n[$i]),$p)}"
 if errorlevel 1 exit /b 1
 echo Created: roms\0662.01
 echo Created: roms\0663.xx
