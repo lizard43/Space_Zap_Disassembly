@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0004
+; RE version: v20261107-0005
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -7810,6 +7810,8 @@ TEXT_NEW_HIGH_SCORE:
 
 TEXT_GAME_OVER:
 	 DB " GAME OVER "
+	 DB $16 ; original screen-text separator at $324F
+
 ; $3250  PUSH 1 OR 2 PLAYER FOR
 TEXT_PUSH_ONE_OR_TWO:
 	 DB "PUSH 1 OR 2 PLAYER FOR"
