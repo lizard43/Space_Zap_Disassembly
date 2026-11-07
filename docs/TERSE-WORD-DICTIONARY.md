@@ -6,41 +6,49 @@ A programmer's dictionary of **recovered** TERSE execution words in the original
 
 See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector inventory](TERSE-TOKEN-VECTORS.md), and [compiled TERSE programs](TERSE-COMPILED-PROGRAMS.md).
 
+## Historical DNA word names
+
+The names in this dictionary use the original vocabulary of the DNA *TERSE Standard Glossary* (21 September 1981) **where the Space Zap native implementation and stack effects support the same operation**. These are verified *standard TERSE equivalents*. The actual spellings in lost August 1980 Space Zap source are not independently established by a compiled token stream. ROM token and native addresses are unchanged.
+
+Native Z80 labels such as `TERSE_FETCH` are assembler identifiers, **not competing names for TERSE words**. Unmatched words retain descriptive temporary labels until proven. Crucially, `0` pushes a zero; `ZERO` clears a 16-bit memory cell at a supplied address. `EXIT`, `LIT8`, `ADD_INLINE16`, `COMPARE_BRANCH_NE`, branch handlers and indexed dispatch retain provisional names because their precise historical source vocabulary is not demonstrated. The 16-bit inline literal is standard TERSE `LIT` semantics, while its native assembler label remains `TERSE_LIT16`.
+
+The `BMOVE` equivalence reflects native `LDIR` and the documented three-cell byte-copy contract. Overlap direction and zero-count edge behavior require direct comparison before asserting full behavior equivalence.
+
 ## Quick reference
 
 | Word | Token | Native | Stack effect | Purpose |
 | :--- | :---: | :---: | :--- | :--- |
 | [`EXIT`](#exit) | `$06` | `$0044` | `( R: caller-ip -- )` | Return from a colon definition, restoring the caller's threaded instruction pointer. |
-| [`LIT16`](#lit16) | `$1B` | `$0050` | `( -- n )` | Push the little-endian 16-bit word following this token. |
+| [`LIT`](#lit-16-bit-inline-literal) | `$1B` | `$0050` | `( -- n )` | Push the little-endian 16-bit word following this token. |
 | [`LIT8`](#lit8) | `$0E` | `$0059` | `( -- u )` | Push the unsigned byte following this token, zero-extended. |
-| [`ZERO`](#zero) | `$0B` | `$007B` | `( -- 0 )` | Push the 16-bit constant zero. |
-| [`ONE`](#one) | `$09` | `$0081` | `( -- 1 )` | Push the 16-bit constant one. |
+| [`0`](#0) | `$0B` | `$007B` | `( -- 0 )` | Push the 16-bit constant zero. |
+| [`1`](#1) | `$09` | `$0081` | `( -- 1 )` | Push the 16-bit constant one. |
 | [`DUP`](#dup) | `$0D` | `$0087` | `( n -- n n )` | Duplicate the top data-stack cell. |
 | [`2DUP`](#2dup) | `$01` | `$008C` | `( a b -- a b a b )` | Duplicate the top two cells in order. |
 | [`DROP`](#drop) | `$05` | `$0094` | `( n -- )` | Discard the top data-stack cell. |
 | [`SWAP`](#swap) | `$04` | `$0097` | `( a b -- b a )` | Exchange the top two data-stack cells. |
-| [`FETCH`](#fetch) | `$0C` | `$009D` | `( addr -- n )` | Read a little-endian 16-bit word from memory. |
-| [`BYTE_FETCH`](#byte-fetch) | `$25` | `$00A4` | `( addr -- u )` | Read a single memory byte and zero-extend it. |
-| [`STORE`](#store) | `$10` | `$00AB` | `( n addr -- )` | Write a little-endian 16-bit word to memory. |
-| [`BYTE_STORE`](#byte-store) | `$08` | `$00B2` | `( n addr -- )` | Write the low eight bits of n to memory. |
-| [`ZERO_WORD_AT_ADDRESS`](#zero-word-at-address) | `$1C` | `$00B7` | `( addr -- )` | Clear the addressed two-byte word. |
-| [`ADD`](#add) | `$0F` | `$00BF` | `( a b -- a+b )` | Add two 16-bit stack cells with wraparound. |
-| [`SUBTRACT`](#subtract) | `$3F` | `$00C5` | `( a b -- a-b )` | Subtract the top cell from the next cell. |
-| [`DECREMENT`](#decrement) | `$15` | `$00D4` | `( n -- n-1 )` | Decrement a 16-bit cell. |
-| [`INCREMENT`](#increment) | `$14` | `$00D9` | `( n -- n+1 )` | Increment a 16-bit cell. |
+| [`@`](#fetch) | `$0C` | `$009D` | `( addr -- n )` | Read a little-endian 16-bit word from memory. |
+| [`B@`](#b) | `$25` | `$00A4` | `( addr -- u )` | Read a single memory byte and zero-extend it. |
+| [`!`](#store) | `$10` | `$00AB` | `( n addr -- )` | Write a little-endian 16-bit word to memory. |
+| [`B!`](#b) | `$08` | `$00B2` | `( n addr -- )` | Write the low eight bits of n to memory. |
+| [`ZERO`](#zero) | `$1C` | `$00B7` | `( addr -- )` | Clear the addressed two-byte word. |
+| [`+`](#add) | `$0F` | `$00BF` | `( a b -- a+b )` | Add two 16-bit stack cells with wraparound. |
+| [`-`](#subtract) | `$3F` | `$00C5` | `( a b -- a-b )` | Subtract the top cell from the next cell. |
+| [`1-`](#1) | `$15` | `$00D4` | `( n -- n-1 )` | Decrement a 16-bit cell. |
+| [`1+`](#1) | `$14` | `$00D9` | `( n -- n+1 )` | Increment a 16-bit cell. |
 | [`ARITH_SHIFT_RIGHT`](#arith-shift-right) | `$3A` | `$00DE` | `( signed-n -- signed-n>>1 )` | Arithmetic shift of a signed 16-bit cell; sign bit is retained. |
-| [`BITWISE_AND`](#bitwise-and) | `$4C` | `$0149` | `( a b -- a&b )` | Bitwise AND of two 16-bit cells. |
-| [`BITWISE_OR`](#bitwise-or) | `$54` | `$0154` | `( a b -- a|b )` | Bitwise OR of two 16-bit cells. |
-| [`LOOP_INDEX`](#loop-index) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
-| [`PORT_OUT`](#port-out) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
-| [`PORT_IN`](#port-in) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
-| [`DECREMENT_BYTE_AT_ADDRESS`](#decrement-byte-at-address) | `$43` | `$00E6` | `( addr -- )` | Decrement the byte stored at addr, wrapping modulo 256. |
-| [`EQUAL`](#equal) | `$44` | `$00EE` | `( a b -- flag )` | Return 1 if two 16-bit cells are equal, otherwise 0. |
-| [`MEMORY_COPY`](#memory-copy) | `$16` | `$015F` | `( src dest count -- )` | Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy. |
-| [`STACK_ROTATE`](#stack-rotate) | `$13` | `$01E3` | `( a b c -- b c a )` | Rotate the three top stack cells with the deepest moved to the top. |
-| [`STACK_PICK`](#stack-pick) | `$45` | `$01EA` | `( index -- value )` | Fetch a 1-based indexed cell from the remaining data stack, leaving the indexed value on top. |
-| [`NEGATE`](#negate) | `$82` | `$00CD` | `( n -- -n )` | Two's-complement via subtraction from zero. |
-| [`UNSIGNED_GE`](#unsigned_ge) | `$C2` | `$00FD` | `( a b -- flag )` | Unsigned greater/equal comparison. |
+| [`AND`](#and) | `$4C` | `$0149` | `( a b -- a&b )` | Bitwise AND of two 16-bit cells. |
+| [`OR`](#or) | `$54` | `$0154` | `( a b -- a|b )` | Bitwise OR of two 16-bit cells. |
+| [`I`](#i) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
+| [`OUTP`](#outp) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
+| [`INP`](#inp) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
+| [`1-B!`](#1b) | `$43` | `$00E6` | `( addr -- )` | Decrement the byte stored at addr, wrapping modulo 256. |
+| [`=`](#equal) | `$44` | `$00EE` | `( a b -- flag )` | Return 1 if two 16-bit cells are equal, otherwise 0. |
+| [`BMOVE`](#bmove) | `$16` | `$015F` | `( src dest count -- )` | Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy. |
+| [`ROT`](#rot) | `$13` | `$01E3` | `( a b c -- b c a )` | Rotate the three top stack cells with the deepest moved to the top. |
+| [`PICK`](#pick) | `$45` | `$01EA` | `( index -- value )` | Fetch a 1-based indexed cell from the remaining data stack, leaving the indexed value on top. |
+| [`MINUS`](#minus) | `$82` | `$00CD` | `( n -- -n )` | Two's-complement via subtraction from zero. |
+| [`U>=`](#u) | `$C2` | `$00FD` | `( a b -- flag )` | Unsigned greater/equal comparison. |
 | [`INDEXED_DISPATCH`](#indexed-dispatch) | `$3D` | `$023E` | `( index -- )` | Indexed native target table, inline end address. |
 | [`COMPARE_BRANCH_NE`](#compare-branch-ne) | `$93` | `$0229` | `( a b -- )` equal; `( a b -- a )` unequal | Compare two cells; on inequality branch to inline 16-bit thread address, retaining a. |
 | [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
@@ -49,7 +57,7 @@ See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector invent
 
 ## Recovered words
 
-### DECREMENT_BYTE_AT_ADDRESS
+### 1-B!
 
 **Token:** `$43` · **Native:** `$00E6` · **Stack:** `( addr -- )`
 
@@ -63,7 +71,7 @@ Decrement the byte stored at addr, wrapping modulo 256.
     JP (IY)
 ```
 
-### EQUAL
+### =
 
 **Token:** `$44` · **Native:** `$00EE` · **Stack:** `( a b -- flag )`
 
@@ -81,7 +89,7 @@ Compare the top two 16-bit cells by subtraction. Push 1 if equal; otherwise push
     JP (IY)
 ```
 
-### NEGATE
+### MINUS
 
 **Token:** `$82` · **Native:** `$00CD` · **Stack:** `( n -- -n )`
 
@@ -93,7 +101,7 @@ Pop a cell and compute `0-n` modulo 65536 through the existing subtraction body 
     JP $00C7
 ```
 
-### UNSIGNED_GE
+### U>=
 
 **Token:** `$C2` · **Native:** `$00FD` · **Stack:** `( a b -- flag )`
 
@@ -111,14 +119,14 @@ Return 1 if unsigned `a>=b`, otherwise 0. The `SBC HL,DE` carry flag identifies 
     JP (IY)
 ```
 
-### INCREMENT_BYTE_AT_ADDRESS (native helper, not indexed token $44)
+### 1+B! (native helper, not indexed token $44)
 
 **Native entry:** `$00EA` · **Stack:** `( addr -- )`.
 
 Increment the byte at the given address modulo 256. The previously published token binding was incorrect: token `$44` selects `$00EE` (EQUAL), four bytes after this helper.
 
 
-### MEMORY_COPY
+### BMOVE
 
 **Token:** `$16` · **Native:** `$015F` · **Stack:** `( src dest count -- )`
 
@@ -139,7 +147,7 @@ Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy.
     JP (IY)
 ```
 
-### STACK_ROTATE
+### ROT
 
 **Token:** `$13` · **Native:** `$01E3` · **Stack:** `( a b c -- b c a )`
 
@@ -156,7 +164,7 @@ Rotate the three top stack cells with the deepest moved to the top.
     JP (IY)
 ```
 
-### STACK_PICK
+### PICK
 
 **Token:** `$45` · **Native:** `$01EA` · **Stack:** `( index -- value )`
 
@@ -237,7 +245,7 @@ Pop top cell b to HL, then a to DE. Compare b against a. If equal, consume the f
 
 Pop one 16-bit stack cell, read the next two bytes from the active BC thread as a little-endian 16-bit displacement, add that displacement to the cell modulo 65536, and push the result. BC advances by two bytes. The inline displacement is **not** two subsequent TERSE tokens.
 
-**Example:** `ZERO ADD_INLINE16 $D1A9` leaves `$D1A9` on the data stack.
+**Example:** `0 ADD_INLINE16 $D1A9` leaves `$D1A9` on the data stack.
 
 **Original native implementation** (`TERSE_ADD_INLINE16`):
 
@@ -274,7 +282,7 @@ Return from a colon definition, restoring the caller's threaded instruction poin
     JP (IY)
 ```
 
-### LIT16
+### LIT (16-bit inline literal)
 
 **Native:** `$0050` · **Token:** `$1B` · **Stack:** `( -- n )`
 
@@ -314,13 +322,13 @@ Push the unsigned byte following this token, zero-extended.
     JP (IY)
 ```
 
-### ZERO
+### 0
 
 **Native:** `$007B` · **Token:** `$0B` · **Stack:** `( -- 0 )`
 
 Push the 16-bit constant zero.
 
-**Example:** `ZERO  ( -- 0 )`
+**Example:** `0  ( -- 0 )`
 
 **Original native implementation** (`TERSE_ZERO`):
 
@@ -330,13 +338,13 @@ Push the 16-bit constant zero.
     JP (IY)
 ```
 
-### ONE
+### 1
 
 **Native:** `$0081` · **Token:** `$09` · **Stack:** `( -- 1 )`
 
 Push the 16-bit constant one.
 
-**Example:** `ONE  ( -- 1 )`
+**Example:** `1  ( -- 1 )`
 
 **Original native implementation** (`TERSE_ONE`):
 
@@ -416,13 +424,13 @@ Exchange the top two data-stack cells.
     JP (IY)
 ```
 
-### FETCH
+### @
 
 **Native:** `$009D` · **Token:** `$0C` · **Stack:** `( addr -- n )`
 
 Read a little-endian 16-bit word from memory.
 
-**Example:** `$D180 FETCH  ( -- word at $D180 )`
+**Example:** `$D180 @  ( -- word at $D180 )`
 
 **Original native implementation** (`TERSE_FETCH`):
 
@@ -435,13 +443,13 @@ Read a little-endian 16-bit word from memory.
     JP (IY)
 ```
 
-### BYTE_FETCH
+### B@
 
 **Native:** `$00A4` · **Token:** `$25` · **Stack:** `( addr -- u )`
 
 Read a single memory byte and zero-extend it.
 
-**Example:** `$D180 BYTE_FETCH`
+**Example:** `$D180 B@`
 
 **Original native implementation** (`TERSE_BYTE_FETCH`):
 
@@ -453,13 +461,13 @@ Read a single memory byte and zero-extend it.
     JP (IY)
 ```
 
-### STORE
+### !
 
 **Native:** `$00AB` · **Token:** `$10` · **Stack:** `( n addr -- )`
 
 Write a little-endian 16-bit word to memory.
 
-**Example:** `$1234 $D180 STORE`
+**Example:** `$1234 $D180 !`
 
 **Original native implementation** (`TERSE_STORE`):
 
@@ -472,13 +480,13 @@ Write a little-endian 16-bit word to memory.
     JP (IY)
 ```
 
-### BYTE_STORE
+### B!
 
 **Native:** `$00B2` · **Token:** `$08` · **Stack:** `( n addr -- )`
 
 Write the low eight bits of n to memory.
 
-**Example:** `$003F $D180 BYTE_STORE`
+**Example:** `$003F $D180 B!`
 
 **Original native implementation** (`TERSE_BYTE_STORE`):
 
@@ -489,13 +497,13 @@ Write the low eight bits of n to memory.
     JP (IY)
 ```
 
-### ZERO_WORD_AT_ADDRESS
+### ZERO
 
 **Native:** `$00B7` · **Token:** `$1C` · **Stack:** `( addr -- )`
 
 Clear the addressed two-byte word.
 
-**Example:** `$D180 ZERO_WORD_AT_ADDRESS`
+**Example:** `$D180 ZERO`
 
 **Original native implementation** (`TERSE_ZERO_WORD_AT_ADDRESS`):
 
@@ -507,13 +515,13 @@ Clear the addressed two-byte word.
     JP (IY)
 ```
 
-### ADD
+### +
 
 **Native:** `$00BF` · **Token:** `$0F` · **Stack:** `( a b -- a+b )`
 
 Add two 16-bit stack cells with wraparound.
 
-**Example:** `2 3 ADD  ( -- 5 )`
+**Example:** `2 3 +  ( -- 5 )`
 
 **Original native implementation** (`TERSE_ADD`):
 
@@ -525,13 +533,13 @@ Add two 16-bit stack cells with wraparound.
     JP (IY)
 ```
 
-### SUBTRACT
+### -
 
 **Native:** `$00C5` · **Token:** `$3F` · **Stack:** `( a b -- a-b )`
 
 Subtract the top cell from the next cell.
 
-**Example:** `8 3 SUBTRACT  ( -- 5 )`
+**Example:** `8 3 -  ( -- 5 )`
 
 **Original native implementation** (`TERSE_SUBTRACT`):
 
@@ -544,13 +552,13 @@ Subtract the top cell from the next cell.
     JP (IY)
 ```
 
-### DECREMENT
+### 1-
 
 **Native:** `$00D4` · **Token:** `$15` · **Stack:** `( n -- n-1 )`
 
 Decrement a 16-bit cell.
 
-**Example:** `5 DECREMENT  ( -- 4 )`
+**Example:** `5 1-  ( -- 4 )`
 
 **Original native implementation** (`TERSE_DECREMENT`):
 
@@ -561,13 +569,13 @@ Decrement a 16-bit cell.
     JP (IY)
 ```
 
-### INCREMENT
+### 1+
 
 **Native:** `$00D9` · **Token:** `$14` · **Stack:** `( n -- n+1 )`
 
 Increment a 16-bit cell.
 
-**Example:** `5 INCREMENT  ( -- 6 )`
+**Example:** `5 1+  ( -- 6 )`
 
 **Original native implementation** (`TERSE_INCREMENT`):
 
@@ -596,13 +604,13 @@ Arithmetic shift of a signed 16-bit cell; sign bit is retained.
     JP (IY)
 ```
 
-### BITWISE_AND
+### AND
 
 **Native:** `$0149` · **Token:** `$4C` · **Stack:** `( a b -- a&b )`
 
 Bitwise AND of two 16-bit cells.
 
-**Example:** `$00F0 $00AA BITWISE_AND  ( -- $00A0 )`
+**Example:** `$00F0 $00AA AND  ( -- $00A0 )`
 
 **Original native implementation** (`TERSE_BITWISE_AND`):
 
@@ -619,13 +627,13 @@ Bitwise AND of two 16-bit cells.
     JP (IY)
 ```
 
-### BITWISE_OR
+### OR
 
 **Native:** `$0154` · **Token:** `$54` · **Stack:** `( a b -- a|b )`
 
 Bitwise OR of two 16-bit cells.
 
-**Example:** `$0010 $0003 BITWISE_OR  ( -- $0013 )`
+**Example:** `$0010 $0003 OR  ( -- $0013 )`
 
 **Original native implementation** (`TERSE_BITWISE_OR`):
 
@@ -642,13 +650,13 @@ Bitwise OR of two 16-bit cells.
     JP (IY)
 ```
 
-### LOOP_INDEX
+### I
 
 **Native:** `$01B6` · **Token:** `$24` · **Stack:** `( -- index )`
 
 Push current counted-loop index from the IX control frame.
 
-**Example:** `LOOP_INDEX  ( -- current index )`
+**Example:** `I  ( -- current index )`
 
 **Original native implementation** (`TERSE_LOOP_INDEX`):
 
@@ -659,13 +667,13 @@ Push current counted-loop index from the IX control frame.
     JP (IY)
 ```
 
-### PORT_OUT
+### OUTP
 
 **Native:** `$01D1` · **Token:** `$1F` · **Stack:** `( value port -- )`
 
 Send the low data byte to a Z80 I/O port.
 
-**Example:** `$000F $0010 PORT_OUT`
+**Example:** `$000F $0010 OUTP`
 
 **Original native implementation** (`TERSE_PORT_OUT`):
 
@@ -678,13 +686,13 @@ Send the low data byte to a Z80 I/O port.
     JP (IY)
 ```
 
-### PORT_IN
+### INP
 
 **Native:** `$01D9` · **Token:** `$21` · **Stack:** `( port -- byte )`
 
 Read a Z80 I/O port and zero-extend the result.
 
-**Example:** `$0010 PORT_IN`
+**Example:** `$0010 INP`
 
 **Original native implementation** (`TERSE_PORT_IN`):
 
@@ -737,6 +745,21 @@ Jump to the inline absolute thread address if flag is zero; otherwise skip its t
     INC BC
     JP (IY)
 ```
+
+## DNA standard vocabulary correspondence
+
+| DNA standard word | Space Zap token | Native entry | Verified semantics |
+| --- | --- | --- | --- |
+| `@`, `B@`, `!`, `B!` | `$0C`, `$25`, `$10`, `$08` | `$009D`, `$00A4`, `$00AB`, `$00B2` | Word/byte memory access |
+| `+`, `-`, `1+`, `1-` | `$0F`, `$3F`, `$14`, `$15` | `$00BF`, `$00C5`, `$00D9`, `$00D4` | 16-bit arithmetic |
+| `0`, `1`, `ZERO` | `$0B`, `$09`, `$1C` | `$007B`, `$0081`, `$00B7` | Constants versus memory clear |
+| `AND`, `OR`, `=`, `U>=` | `$4C`, `$54`, `$44`, `$C2` | `$0149`, `$0154`, `$00EE`, `$00FD` | Bitwise and comparison |
+| `ROT`, `PICK`, `I` | `$13`, `$45`, `$24` | `$01E3`, `$01EA`, `$01B6` | Stack and loop frame |
+| `INP`, `OUTP` | `$21`, `$1F` | `$01D9`, `$01D1` | Z80 port operations |
+| `MINUS`, `1-B!` | `$82`, `$43` | `$00CD`, `$00E6` | Negation and byte decrement |
+| `BMOVE` | `$16` | `$015F` | Byte move, edge cases under review |
+
+**Naming not proven:** `EXIT` is a colon-return implementation; the DNA BNF's `CODE ... NEXT` and interpreter NEXT must not be assumed to denote its original source spelling. Neither `LIT8` nor the specialized inline branches have a verified source-level name. See [TERSE source grammar](TERSE-SOURCE-GRAMMAR.md).
 
 ## Native-address tokens still being recovered
 
