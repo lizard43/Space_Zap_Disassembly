@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0021
+; RE version: v20261107-0022
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -596,10 +596,7 @@ TERSE_SMALL_COLON_0266:
 	 DB $0A ; native token $0A
 	 DB $06 ; TERSE_EXIT
 
-;==============================================================================
-; NATIVE_NEGATE_HL ($026A)
 ; Two's-complement HL; restore AF before returning to native caller.
-;==============================================================================
 NATIVE_NEGATE_HL:
 	 push af
 	 ld   a,h
@@ -612,10 +609,7 @@ NATIVE_NEGATE_HL:
 	 pop  af
 	 ret
 
-;==============================================================================
-; NATIVE_NEGATE_DE ($0273)
 ; Two's-complement DE while preserving AF.
-;==============================================================================
 NATIVE_NEGATE_DE:
 	 push af
 	 ld   a,d
@@ -628,19 +622,13 @@ NATIVE_NEGATE_DE:
 	 pop  af
 	 ret
 
-;==============================================================================
-; TERSE_COLON_027E: original thirteen-byte TERSE threaded word.
 ; Indexed token cells and one literal byte; no Z80 instruction stream.
-;==============================================================================
 TERSE_COLON_027E:
 	 RST $08
 	 DB $0C,$0D,$0E,$04,$0F,$04,$01,$10,$0E,$02,$0F,$10,$06
 
-;==============================================================================
-; NATIVE_ATOMIC_COMPARE_UPDATE ($028C)
 ; Compare expected two-byte fields and update the active record under DI.
 ; Preserves interrupt-enable state through saved AF; returns status in HL.
-;==============================================================================
 NATIVE_ATOMIC_COMPARE_UPDATE:
 	 ld   a,i
 	 push af
@@ -695,11 +683,8 @@ NATIVE_ATOMIC_COMPARE_UPDATE:
 	 ei
 	 ret
 
-;==============================================================================
-; NATIVE_ATOMIC_RECORD_CHECK ($02DF)
 ; Compare and update an indexed two-word record with interrupts masked.
 ; Return status in HL; original interrupt-enable state restored.
-;==============================================================================
 NATIVE_ATOMIC_RECORD_CHECK:
 	 ld   a,i
 	 push af
@@ -754,10 +739,7 @@ NATIVE_ATOMIC_RECORD_CHECK:
 	 out  (VIDEO_PALETTE_0),a
 	 jp   $032E
 
-;==============================================================================
-; EVENT_RAM_ADDRESS_TABLE_0336 ($0336-$0345)
 ; Eight little-endian RAM addresses passed to the native record handlers.
-;==============================================================================
 EVENT_RAM_ADDRESS_TABLE_0336:
 	 DW $D0A1,$D0D7,$D0D9,$D10F
 	 DW $D111,$D12F,$D131,$D14F
@@ -1153,11 +1135,7 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 	 ei
 	 ret
 
-;*******************************************************************************
-; MAGIC_DRAW_BITMAP
-;
 ; Configures and starts a Magic/DNA bitmap transfer.
-;
 ; Input:
 ;   B  XPAND value
 ;   C  Magic control and transform flags
@@ -1165,10 +1143,8 @@ NATIVE_EVENT_RECORD_COUNT_LIMIT:
 ;   E  Bitmap width in bytes
 ;   HL Destination address
 ;   IX Source bitmap address
-;
 ; Bit 2 is cleared before the Magic register write. Bits 6 and 7 select the
 ; horizontal and vertical hardware transforms used by Space Zap.
-;*******************************************************************************
 MAGIC_DRAW_BITMAP:
 	 ld   a,b
 	 out  (VIDEO_EXPAND_COLORS),a
@@ -1238,12 +1214,8 @@ MAGIC_COMMIT_PATTERN_MODE:
 	 out  (PATTERN_HEIGHT_START),a ; initiates the pattern transfer
 	 ret
 
-;*******************************************************************************
-; DRAW_SPRITE_FROM_HEADER
-;
 ; Reads the width and height at IX, advances IX to the packed bitmap, and enters
 ; MAGIC_DRAW_BITMAP. Object-record callers pass object address + 2.
-;*******************************************************************************
 DRAW_SPRITE_FROM_HEADER:
 	 ld   e,(ix+$00)
 	 inc  ix
@@ -3659,28 +3631,19 @@ FONT_LETTER_Z:
 	 jp   nz,$1695
 	 jp   (iy)
 
-;*******************************************************************************
 ; SPRITE OBJECT RECORDS - PACKED 2BPP
-;*******************************************************************************
 ;   +0  Horizontal hotspot offset
 ;   +1  Vertical hotspot offset
 ;   +2  Bitmap width in bytes
 ;   +3  Bitmap height in rows
 ;   +4  Packed 2bpp bitmap data
-;
 ; Each bitmap byte stores four pixels, most-significant pair first. The shared
 ; object draw path advances past the two hotspot bytes before reading the
 ; width/height header.
 ; Inline pixels use "." for value 0 and "1" through "3" for the color index.
-;*******************************************************************************
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_1
-;
 ; Alien ship destruction animation, frame 1.
-; Object record: $16AE; bitmap header: $16B0.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_1:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
 
@@ -3697,14 +3660,9 @@ ALIEN_SHIP_DESTROY_1_HEADER:
         DB      $00,$08,$00,$00,$00 ; . . . . . . 2 . . . . . . . . . . . . .
         DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
 
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_2
-;
 ; Alien ship destruction animation, frame 2.
-; Object record: $16E4; bitmap header: $16E6.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_2:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
 
@@ -3721,14 +3679,9 @@ ALIEN_SHIP_DESTROY_2_HEADER:
         DB      $30,$82,$0E,$30,$00 ; . 3 . . 2 . . 2 . . 3 2 . 3 . . . . . .
         DB      $00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . .
 
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_3
-;
 ; Alien ship destruction animation, frame 3.
-; Object record: $171A; bitmap header: $171C.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_3:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
 
@@ -3745,14 +3698,9 @@ ALIEN_SHIP_DESTROY_3_HEADER:
         DB      $08,$02,$00,$04,$00 ; . . 2 . . . . 2 . . . . . . 1 . . . . .
         DB      $04,$02,$00,$00,$10 ; . . 1 . . . . 2 . . . . . . . . . 1 . .
  
-;*******************************************************************************
-; ALIEN_SHIP_DESTROY_4
-;
 ; Alien ship destruction animation, frame 4.
-; Object record: $1750; bitmap header: $1752.
 ; Hotspot offsets: X = 16, Y = 4.
 ; Bitmap: 20 x 10 pixels, 5 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_DESTROY_4:
         DB      $10,$04 ; Hotspot offsets: X = 16, Y = 4
 
@@ -3769,14 +3717,9 @@ ALIEN_SHIP_DESTROY_4_HEADER:
         DB      $00,$10,$00,$00,$00 ; . . . . . 1 . . . . . . . . . . . . . .
         DB      $80,$00,$00,$80,$00 ; 2 . . . . . . . . . . . 2 . . . . . . .
 
-;*******************************************************************************
-; BLANK
-;
 ; Blank replacement object used to remove an animated frame.
-; Object record: $1786; bitmap header: $1788.
 ; Hotspot offsets: X = 0, Y = 0.
 ; Bitmap: 4 x 1 pixels, 1 byte per row.
-;*******************************************************************************
 BLANK:
         DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
 
@@ -3800,14 +3743,9 @@ ALIEN_SHIP_DESTROY_SEQUENCE:
         DB      $00
         DW      ALIEN_SHIP_DESTROY_SEQUENCE
 
-;*******************************************************************************
-; ALIEN_SHIP_VERTICAL
-;
 ; Alien ship oriented for vertical approaches.
-; Object record: $179D; bitmap header: $179F.
 ; Hotspot offsets: X = 8, Y = 6.
 ; Bitmap: 8 x 12 pixels, 2 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_VERTICAL:
         DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
 
@@ -3826,14 +3764,9 @@ ALIEN_SHIP_VERTICAL_HEADER:
         DB      $30,$00 ; . 3 . . . . . .
         DB      $40,$00 ; 1 . . . . . . .
 
-;*******************************************************************************
-; ALIEN_SHIP_HORIZONTAL
-;
 ; Alien ship oriented for horizontal approaches.
-; Object record: $17B9; bitmap header: $17BB.
 ; Hotspot offsets: X = 7, Y = 8.
 ; Bitmap: 12 x 7 pixels, 3 bytes per row.
-;*******************************************************************************
 ALIEN_SHIP_HORIZONTAL:
         DB      $07,$08 ; Hotspot offsets: X = 7, Y = 8
 
@@ -3852,14 +3785,9 @@ ALIEN_SHIP_HORIZONTAL_HEADER:
 	 ld   bc,$0100
 	 jr   c,$17CC
 
-;*******************************************************************************
-; LASER_BASE_BODY
-;
 ; Intact center laser-base body.
-; Object record: $17DC; bitmap header: $17DE.
 ; Hotspot offsets: X = 0, Y = 0.
 ; Bitmap: 24 x 21 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_BODY:
         DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
 
@@ -3887,14 +3815,9 @@ LASER_BASE_BODY_HEADER:
         DB      $00,$00,$05,$AA,$AA,$40 ; . . . . . . . . . . 1 1 2 2 2 2 2 2 2 2 1 . . .
         DB      $00,$00,$01,$55,$55,$40 ; . . . . . . . . . . . 1 1 1 1 1 1 1 1 1 1 . . .
 
-;*******************************************************************************
-; LASER_BASE_BODY_DESTROY
-;
 ; Damaged center laser-base body.
-; Object record: $185E; bitmap header: $1860.
 ; Hotspot offsets: X = 0, Y = 0.
 ; Bitmap: 24 x 21 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_BODY_DESTROY:
         DB      $00,$00 ; Hotspot offsets: X = 0, Y = 0
 
@@ -3922,14 +3845,9 @@ LASER_BASE_BODY_DESTROY_HEADER:
         DB      $00,$40,$00,$00,$00,$00 ; . . . . 1 . . . . . . . . . . . . . . . . . . .
         DB      $00,$00,$00,$00,$00,$00 ; . . . . . . . . . . . . . . . . . . . . . . . .
 
-;*******************************************************************************
-; LASER_TURRET_VERTICAL
-;
 ; Laser turret oriented vertically.
-; Object record: $18E0; bitmap header: $18E2.
 ; Hotspot offsets: X = 7, Y = 9.
 ; Bitmap: 20 x 19 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_VERTICAL:
         DB      $07,$09 ; Hotspot offsets: X = 7, Y = 9
 
@@ -3955,14 +3873,9 @@ LASER_TURRET_VERTICAL_HEADER:
         DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
         DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
 
-;*******************************************************************************
-; LASER_TURRET_VERTICAL_FIRE
-;
 ; Vertical laser-turret firing frame.
-; Object record: $1943; bitmap header: $1945.
 ; Hotspot offsets: X = 7, Y = 4.
 ; Bitmap: 20 x 16 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_VERTICAL_FIRE:
         DB      $07,$04 ; Hotspot offsets: X = 7, Y = 4
 
@@ -3985,14 +3898,9 @@ LASER_TURRET_VERTICAL_FIRE_HEADER:
         DB      $80,$15,$40,$20,$00 ; 2 . . . . 1 1 1 1 . . . . 2 . . . . . .
         DB      $00,$05,$00,$00,$00 ; . . . . . . 1 1 . . . . . . . . . . . .
 
-;*******************************************************************************
-; LASER_TURRET_HORIZONTAL
-;
 ; Laser turret oriented horizontally.
-; Object record: $1997; bitmap header: $1999.
 ; Hotspot offsets: X = 7, Y = 7.
 ; Bitmap: 20 x 14 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_HORIZONTAL:
         DB      $07,$07 ; Hotspot offsets: X = 7, Y = 7
 
@@ -4013,14 +3921,9 @@ LASER_TURRET_HORIZONTAL_HEADER:
         DB      $00,$00,$AB,$C0,$00 ; . . . . . . . . 2 2 2 3 3 . . . . . . .
         DB      $00,$00,$0A,$A8,$00 ; . . . . . . . . . . 2 2 2 2 2 . . . . .
 
-;*******************************************************************************
-; LASER_TURRET_HORIZONTAL_FIRE
-;
 ; Horizontal laser-turret firing frame.
-; Object record: $19E1; bitmap header: $19E3.
 ; Hotspot offsets: X = 5, Y = 7.
 ; Bitmap: 20 x 14 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_TURRET_HORIZONTAL_FIRE:
         DB      $05,$07 ; Hotspot offsets: X = 5, Y = 7
 
@@ -4071,14 +3974,9 @@ LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE:
         DB      $00
         DW      LASER_TURRET_HORIZONTAL_FIRE_SEQUENCE
 
-;*******************************************************************************
-; SPACE_MINE_1
-;
 ; Incoming space mine, growth stage 1.
-; Object record: $1A49; bitmap header: $1A4B.
 ; Hotspot offsets: X = 2, Y = 2.
 ; Bitmap: 8 x 4 pixels, 2 bytes per row.
-;*******************************************************************************
 SPACE_MINE_1:
         DB      $02,$02 ; Hotspot offsets: X = 2, Y = 2
 
@@ -4089,14 +3987,9 @@ SPACE_MINE_1_HEADER:
         DB      $77,$00 ; 1 3 1 3 . . . .
         DB      $1C,$00 ; . 1 3 . . . . .
 
-;*******************************************************************************
-; SPACE_MINE_2
-;
 ; Incoming space mine, growth stage 2.
-; Object record: $1A55; bitmap header: $1A57.
 ; Hotspot offsets: X = 3, Y = 3.
 ; Bitmap: 12 x 6 pixels, 3 bytes per row.
-;*******************************************************************************
 SPACE_MINE_2:
         DB      $03,$03 ; Hotspot offsets: X = 3, Y = 3
 
@@ -4109,14 +4002,9 @@ SPACE_MINE_2_HEADER:
         DB      $3D,$40,$00 ; . 3 3 1 1 . . . . . . .
         DB      $0D,$00,$00 ; . . 3 1 . . . . . . . .
 
-;*******************************************************************************
-; SPACE_MINE_3
-;
 ; Incoming space mine, growth stage 3.
-; Object record: $1A6B; bitmap header: $1A6D.
 ; Hotspot offsets: X = 4, Y = 4.
 ; Bitmap: 12 x 8 pixels, 3 bytes per row.
-;*******************************************************************************
 SPACE_MINE_3:
         DB      $04,$04 ; Hotspot offsets: X = 4, Y = 4
 
@@ -4131,14 +4019,9 @@ SPACE_MINE_3_HEADER:
         DB      $0D,$50,$00 ; . . 3 1 1 1 . . . . . .
         DB      $01,$40,$00 ; . . . 1 1 . . . . . . .
 
-;*******************************************************************************
-; SPACE_MINE_4
-;
 ; Incoming space mine, growth stage 4.
-; Object record: $1A87; bitmap header: $1A89.
 ; Hotspot offsets: X = 4, Y = 5.
 ; Bitmap: 16 x 9 pixels, 4 bytes per row.
-;*******************************************************************************
 SPACE_MINE_4:
         DB      $04,$05 ; Hotspot offsets: X = 4, Y = 5
 
@@ -4154,14 +4037,9 @@ SPACE_MINE_4_HEADER:
         DB      $07,$74,$00,$00 ; . . 1 3 1 3 1 . . . . . . . . .
         DB      $03,$D0,$00,$00 ; . . . 3 3 1 . . . . . . . . . .
 
-;*******************************************************************************
-; SPACE_MINE_5
-;
 ; Incoming space mine, growth stage 5.
-; Object record: $1AAF; bitmap header: $1AB1.
 ; Hotspot offsets: X = 5, Y = 6.
 ; Bitmap: 16 x 11 pixels, 4 bytes per row.
-;*******************************************************************************
 SPACE_MINE_5:
         DB      $05,$06 ; Hotspot offsets: X = 5, Y = 6
 
@@ -4208,14 +4086,9 @@ SPACE_MINE_FAST_GROW_SEQUENCE:
         DB      $00
         DW      SPACE_MINE_GROW_SEQUENCE
 
-;*******************************************************************************
-; LASER_BASE_DESTROY_1
-;
 ; Laser-base destruction animation, frame 1.
-; Object record: $1B03; bitmap header: $1B05.
 ; Hotspot offsets: X = 8, Y = 6.
 ; Bitmap: 16 x 12 pixels, 4 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_1:
         DB      $08,$06 ; Hotspot offsets: X = 8, Y = 6
 
@@ -4234,14 +4107,9 @@ LASER_BASE_DESTROY_1_HEADER:
         DB      $00,$0F,$C0,$00 ; . . . . . . 3 3 3 . . . . . . .
         DB      $00,$03,$00,$00 ; . . . . . . . 3 . . . . . . . .
 
-;*******************************************************************************
-; LASER_BASE_DESTROY_2
-;
 ; Laser-base destruction animation, frame 2.
-; Object record: $1B37; bitmap header: $1B39.
 ; Hotspot offsets: X = 10, Y = 8.
 ; Bitmap: 20 x 17 pixels, 5 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_2:
         DB      $0A,$08 ; Hotspot offsets: X = 10, Y = 8
 
@@ -4265,14 +4133,9 @@ LASER_BASE_DESTROY_2_HEADER:
         DB      $04,$00,$00,$40,$40 ; . . 1 . . . . . . . . . 1 . . . 1 . . .
         DB      $50,$00,$00,$40,$00 ; 1 1 . . . . . . . . . . 1 . . . . . . .
 
-;*******************************************************************************
-; LASER_BASE_DESTROY_3
-;
 ; Laser-base destruction animation, frame 3.
-; Object record: $1B90; bitmap header: $1B92.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_3:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
 
@@ -4303,14 +4166,9 @@ LASER_BASE_DESTROY_3_HEADER:
         DB      $00,$02,$00,$28,$00,$00 ; . . . . . . . 2 . . . . . 2 2 . . . . . . . . .
 	 ld   h,(hl)
 
-;*******************************************************************************
-; LASER_BASE_DESTROY_4
-;
 ; Laser-base destruction animation, frame 4.
-; Object record: $1C1F; bitmap header: $1C21.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_4:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
 
@@ -4340,14 +4198,9 @@ LASER_BASE_DESTROY_4_HEADER:
         DB      $00,$00,$80,$00,$02,$00 ; . . . . . . . . 2 . . . . . . . . . . 2 . . . .
         DB      $00,$00,$00,$00,$00,$80 ; . . . . . . . . . . . . . . . . . . . . 2 . . .
 
-;*******************************************************************************
-; LASER_BASE_DESTROY_5
-;
 ; Laser-base destruction animation, frame 5.
-; Object record: $1CAD; bitmap header: $1CAF.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_5:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
 
@@ -4377,14 +4230,9 @@ LASER_BASE_DESTROY_5_HEADER:
         DB      $00,$04,$00,$10,$C0,$00 ; . . . . . . 1 . . . . . . 1 . . 3 . . . . . . .
         DB      $00,$00,$12,$0C,$00,$00 ; . . . . . . . . . 1 . 2 . . 3 . . . . . . . . .
 
-;*******************************************************************************
-; LASER_BASE_DESTROY_6
-;
 ; Laser-base destruction animation, frame 6.
-; Object record: $1D3B; bitmap header: $1D3D.
 ; Hotspot offsets: X = 12, Y = 11.
 ; Bitmap: 24 x 23 pixels, 6 bytes per row.
-;*******************************************************************************
 LASER_BASE_DESTROY_6:
         DB      $0C,$0B ; Hotspot offsets: X = 12, Y = 11
 
@@ -4433,14 +4281,9 @@ LASER_BASE_DESTROY_SEQUENCE:
         DB      $00
         DW      LASER_BASE_DESTROY_SEQUENCE
 
-;*******************************************************************************
-; ATTACK_SATELLITE_1
-;
 ; Attack-satellite animation, frame 1.
-; Object record: $1DE1; bitmap header: $1DE3.
 ; Hotspot offsets: X = 7, Y = 5.
 ; Bitmap: 20 x 11 pixels, 5 bytes per row.
-;*******************************************************************************
 ATTACK_SATELLITE_1:
         DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
 
@@ -4458,14 +4301,9 @@ ATTACK_SATELLITE_1_HEADER:
         DB      $C0,$05,$40,$0C,$00 ; 3 . . . . . 1 1 1 . . . . . 3 . . . . .
         DB      $00,$01,$00,$00,$00 ; . . . . . . . 1 . . . . . . . . . . . .
 
-;*******************************************************************************
-; ATTACK_SATELLITE_2
-;
 ; Attack-satellite animation, frame 2.
-; Object record: $1E1C; bitmap header: $1E1E.
 ; Hotspot offsets: X = 7, Y = 5.
 ; Bitmap: 20 x 11 pixels, 5 bytes per row.
-;*******************************************************************************
 ATTACK_SATELLITE_2:
         DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
 
@@ -4483,14 +4321,9 @@ ATTACK_SATELLITE_2_HEADER:
         DB      $00,$0A,$80,$00,$00 ; . . . . . . 2 2 2 . . . . . . . . . . .
         DB      $00,$02,$00,$00,$00 ; . . . . . . . 2 . . . . . . . . . . . .
 
-;*******************************************************************************
-; ATTACK_SATELLITE_3
-;
 ; Attack-satellite animation, frame 3.
-; Object record: $1E57; bitmap header: $1E59.
 ; Hotspot offsets: X = 7, Y = 5.
 ; Bitmap: 20 x 11 pixels, 5 bytes per row.
-;*******************************************************************************
 ATTACK_SATELLITE_3:
         DB      $07,$05 ; Hotspot offsets: X = 7, Y = 5
 
@@ -4722,7 +4555,6 @@ AUDIO_STATE_INIT_1FC3:
 	 LD (HL),$01
 
 ; Clear sound registers $17..$10 and sound-state bytes at DE+$1A.
-;==============================================================================
 AUDIO_CLEAR_SOUND_REGISTERS:
 	 xor  a
 	 ld   bc,$0818 ; eight sound registers, starting after $17
@@ -4774,9 +4606,7 @@ AUDIO_CLEAR_NEXT_STATE_BYTE:
 	 dec  (iy+$20)
 	 jp   nz,$20A8
 
-;==============================================================================
 ; Advance the oscillator using IY sound state; write sound port $10.
-;==============================================================================
 AUDIO_MASTER_OSCILLATOR_STEP:
 	 ld   l,(iy+$1f)
 	 ld   c,SOUND_MASTER_FREQUENCY
@@ -4832,9 +4662,7 @@ AUDIO_MASTER_OSCILLATOR_STEP:
 	 dec  (iy+$25)
 	 jp   nz,$20CE
 
-;==============================================================================
 ; Advance IY noise-envelope accumulator and write noise volume ($17).
-;==============================================================================
 AUDIO_NOISE_VOLUME_STEP:
 	 ld   c,SOUND_NOISE_VOLUME
 	 ld   a,(iy+$27)
@@ -4914,9 +4742,7 @@ AUDIO_NOISE_VOLUME_STEP:
 	 exx
 	 jp   (iy)
 
-;==============================================================================
 ; Write sound register ($18-B) using data C; preserves input index in B.
-;==============================================================================
 AUDIO_WRITE_REGISTER_INDEXED:
 	 ld   a,$18
 	 sub  b
