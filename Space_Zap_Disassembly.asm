@@ -6068,7 +6068,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 jr   z,$2930
 	 jr   z,$2932
 	 jr   z,$2930
-	 jr   z,$29A2
+	 DB $28,$7F ; original TERSE token/operand at $2921
 	 dec  de
 	 sub  a
 	 pop  de
@@ -7015,7 +7015,7 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 	 ld   c,(hl)
 	 daa
 	 inc  bc
-	 dec  ixl
+	 DB $DD,$2D ; 16-bit TERSE 0BRANCH target $2DDD
 	 dec  bc
 	 rla
 	 ld   c,$55
