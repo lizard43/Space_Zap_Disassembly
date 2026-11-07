@@ -4,19 +4,18 @@ cd /d "%~dp0"
 echo Space Zap ROM build
 echo Input: Space_Zap_Disassembly.asm
 echo.
-if not exist zout mkdir zout
 if not exist roms mkdir roms
 if not exist tools\zmac.exe (echo ERROR: missing tools\zmac.exe & exit /b 1)
 echo [1/4] Assemble the 16 KB program image
-echo ^> tools\zmac.exe --oo cim,lst Space_Zap_Disassembly.asm
-tools\zmac.exe --oo cim,lst Space_Zap_Disassembly.asm
+echo ^> tools\zmac.exe -o Space_Zap_Disassembly.bin Space_Zap_Disassembly.asm
+tools\zmac.exe -o Space_Zap_Disassembly.bin Space_Zap_Disassembly.asm
 if errorlevel 1 exit /b 1
-if not exist zout\Space_Zap_Disassembly.cim (echo ERROR: missing assembled image & exit /b 1)
-echo Created: zout\Space_Zap_Disassembly.cim
-echo Created: zout\Space_Zap_Disassembly.lst
+if not exist Space_Zap_Disassembly.bin (echo ERROR: missing assembled image & exit /b 1)
+echo Created: Space_Zap_Disassembly.bin
+echo Created: Space_Zap_Disassembly.lst
 echo.
 echo [2/4] Split the image into four 4 KB ROMs
-powershell -NoProfile -Command "$b=[IO.File]::ReadAllBytes('zout\Space_Zap_Disassembly.cim'); if($b.Length -lt 16384){throw 'compiled image too small'}; $n=@('0662.01','0663.xx','0664.xx','0665.xx'); for($i=0;$i -lt 4;$i++){$p=New-Object byte[] 4096;[Array]::Copy($b,($i*4096),$p,0,4096);[IO.File]::WriteAllBytes(('roms\'+$n[$i]),$p)}"
+powershell -NoProfile -Command "$b=[IO.File]::ReadAllBytes('Space_Zap_Disassembly.bin'); if($b.Length -ne 16384){throw 'compiled image too small'}; $n=@('0662.01','0663.xx','0664.xx','0665.xx'); for($i=0;$i -lt 4;$i++){$p=New-Object byte[] 4096;[Array]::Copy($b,($i*4096),$p,0,4096);[IO.File]::WriteAllBytes(('roms\'+$n[$i]),$p)}"
 if errorlevel 1 exit /b 1
 echo Created: roms\0662.01
 echo Created: roms\0663.xx
