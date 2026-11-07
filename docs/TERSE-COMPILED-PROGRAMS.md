@@ -192,6 +192,20 @@ The full original-source assembly test uses zmac v1.3 and
 compares all four generated ROM SHA-1 values in `build.sh`
 and `build.bat`.
 
+## Native $1EA1–$1EDE record-access helpers
+
+Five established native routines operate on paired structures separated by `$24` (36) bytes. The helper at `$1EA1` advances HL by this stride while retaining DE. The writer at `$1EA8` stores E and D into consecutive bytes while issuing `OUT ($5B),$A5`, saving and restoring I. The byte writer at `$1ECF` writes E with the same port/I sequencing. Wrappers at `$1EBB` and `$1EDE` write two corresponding 16-bit and 8-bit fields, respectively, with interrupt-state handling.
+
+| Address | ASM label | Native operation |
+| --- | --- | --- |
+| `$1EA1` | `NATIVE_ADVANCE_RECORD_24` | Advance HL by $24 |
+| `$1EA8` | `NATIVE_WRITE_RECORD_WORD` | Controlled 16-bit write |
+| `$1EBB` | `NATIVE_WRITE_PAIRED_RECORD_WORD` | Two word writes, $24 apart |
+| `$1ECF` | `NATIVE_WRITE_RECORD_BYTE` | Controlled 8-bit write |
+| `$1EDE` | `NATIVE_WRITE_PAIRED_RECORD_BYTE` | Two byte writes, $24 apart |
+
+The source has 37 converted `CALL`/`JP` references across these entries. The application meaning of the paired records remains unproven; the names describe verified register and memory operations.
+
 ## Recovered original $28AA colon program
 
 The original `$28AA–$2AE0` span is a single `RST $08` colon definition, now represented in `Space_Zap_Disassembly.asm` as `TERSE_COLON_28AA`. A byte-preserving parse yields **269 indexed token instructions**, **13 native indexed dispatch tables**, and **26 absolute TERSE branches**. The parsing consumes all 567 original bytes and every internal branch destination aligns with a token instruction; the fall-through at `$2AE1` is the following EXIT.
