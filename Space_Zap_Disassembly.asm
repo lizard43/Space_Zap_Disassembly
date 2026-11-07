@@ -1,20 +1,15 @@
-;*****************************
-; Space Zap
-;*****************************
+;*******************************************************************************
+; SPACE ZAP (1980)
+;*******************************************************************************
+; Four-direction space-defense arcade game for Midway Astrocade hardware.
 ;
-; Sprite object record
-; --------------------
-;   +0  Horizontal hotspot offset
-;   +1  Vertical hotspot offset
-;   +2  Bitmap width in bytes
-;   +3  Bitmap height in rows
-;   +4  Packed 2bpp bitmap data
-;
-; Each bitmap byte stores four pixels, most-significant pair first. The shared
-; object draw path advances past the two hotspot bytes before reading the
-; width/height header.
-; Inline pixels use "." for value 0 and "1" through "3" for the color index.
-;
+; Developer : Dave Nutting Associates (DNA)
+; Publisher : Midway Manufacturing
+; CPU       : Z80
+; Software  : TERSE indexed-byte interpreter and native Z80 routines
+; RE version: v20261107-0001
+;*******************************************************************************
+
 	 ORG 0000H
 
 	 nop
@@ -3532,6 +3527,20 @@ FONT_LETTER_Z:
 	 xor  a
 	 jp   nz,$1695
 	 jp   (iy)
+;*******************************************************************************
+; SPRITE OBJECT RECORDS - PACKED 2BPP
+;*******************************************************************************
+;   +0  Horizontal hotspot offset
+;   +1  Vertical hotspot offset
+;   +2  Bitmap width in bytes
+;   +3  Bitmap height in rows
+;   +4  Packed 2bpp bitmap data
+;
+; Each bitmap byte stores four pixels, most-significant pair first. The shared
+; object draw path advances past the two hotspot bytes before reading the
+; width/height header.
+; Inline pixels use "." for value 0 and "1" through "3" for the color index.
+;*******************************************************************************
 ;*******************************************************************************
 ; ALIEN_SHIP_DESTROY_1
 ;
