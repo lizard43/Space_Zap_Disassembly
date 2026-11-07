@@ -16,7 +16,8 @@ echo "+ $ZMAC_BIN -o Space_Zap_Disassembly.bin Space_Zap_Disassembly.asm"
 IMAGE=Space_Zap_Disassembly.bin
 LISTING=Space_Zap_Disassembly.lst
 [[ -s "$IMAGE" && -s "$LISTING" ]] || { echo "ERROR: missing assembled image/listing" >&2; exit 1; }
-[[ "$(wc -c < "$IMAGE")" -eq 16384 ]] || { echo "ERROR: compiled image too small" >&2; exit 1; }
+image_size="$(wc -c < "$IMAGE")"
+[[ "$image_size" -eq 16384 ]] || { echo "ERROR: assembled image is ${image_size} bytes (expected 16384)" >&2; exit 1; }
 echo "Created: $IMAGE"
 echo "Created: $LISTING"
 echo
