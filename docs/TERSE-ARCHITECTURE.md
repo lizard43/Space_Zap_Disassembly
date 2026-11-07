@@ -121,46 +121,40 @@ are deliberately marked provisional in the figure. Do not
 carry provisional address labels into hardware documentation
 as proven decode.
 
-## Hard-RE work plan and progress
+## Native source recovery
 
-The starting `Space_Zap_Disassembly.asm` is predominantly a machine
-disassembly using raw numeric addresses, with existing useful
-graphic/object structures and inline 2bpp pixel plots. It is not
-fully recovered source. Merely changing randomly disassembled bytes
-into code labels would be misleading and could silently change ROMs.
+The maintained Z80 source now has named and documented TERSE primitives
+for literals, stacks, arithmetic, logic, memory, ports, branches and loop
+indexes. The indexed 256-entry native vector table is explicit `DW` data;
+entries resolving to identified primitive labels are symbolic.
 
-Completed in this checkpoint:
-- Identified the startup TERSE registers, byte-token dispatcher,
-  colon entry, EXIT, LIT16 and LIT8 in the original assembly.
-- Added in-source semantic labels without changing any emitted bytes.
-- Preserved and referenced existing structured sprite and inline
-  pixel data rather than flattening it back into opcodes.
-- Established original MAME member names and known SHA-1 values.
-- Added Linux/Windows build scripts following the four-stage
-  Sea Wolf II build pattern and failing on ROM SHA-1 mismatches.
-- Produced controlled SVG architecture and address-map figures.
+The following complete original-ROM assets are represented as named data
+in the assembly:
 
-Open for subsequent byte-exact RE passes:
-- Decode all **256 handler-table slots** and distinguish valid entries,
-  repeated targets, sentinel values and data-dependent behavior.
-- Trace all reachable native handlers, naming by proven function and
-  stack/port side effects, not guessed historical source spelling.
-- **DONE:** recover original `SPACE ZAP` / `DNA` signature and trailer as\n  typed ROM bytes rather than false executable instructions.\n- Identify mixed source regions still shown as ordinary Z80 mnemonics
-  even when they are actually threaded tokens, pointers, sprite
-  records or tables; convert each *bounded* region to typed
-  `DB`/`DW` with labels, preserving byte identity.
-- Recover TERSE application token streams from `$3CDC`, including
-  embedded literals, branch targets and shared native words.
-- Audit game state, interrupts, input/coin, sound, graphics and
-  magic RAM semantics against the service manual and actual CPU map.
-- Compare kernel primitive semantics and original code sequences
-  with Sea Wolf II, Gorf, Coloring Book, Cosmic Raiders and Extra Bases.
-- Validate both builds on actual Linux and Windows zmac, then run
-  `mame -verifyroms spacezap` and a gameplay smoke test.
+- 37-glyph, 8×10 pixel font (`$13C4–$1535`), with an inline 1bpp pixel plot
+  for each row.
+- Screen text records at `$3097–$327B`, including credit/coin prompts,
+  both player titles, scoring and game-over messages.
+- Original 2bpp bitmap sprite/animation records.
+- ROM title, `DNA` identification and `08/19/80` date at `$3FEF–$3FFF`.
 
-**Interpretation:** The evidence supports *TERSE-family, byte-token
-threaded Space Zap*, not a demonstration that its ROM contains the
-original host-side compiler or named developer dictionary.
+The original arcade sound-chip routines include the eight-register reset
+at `$1FC9`, oscillator step at `$2034`, noise-envelope step at `$20B5`,
+and indexed register writer at `$213E`. These are labeled in source;
+their hardware/parameter contracts are in [ROM assets and audio](ROM-ASSETS-AND-AUDIO.md).
+
+### Remaining code recovery
+
+- Decode compiled byte-token programs, including branches, inline literals,
+  vocabulary references and nested execution.
+- Split and label the remaining native game-state, interrupt, input, display,
+  scoring and coin handling code into callable routines.
+- Replace the rest of the invalid instruction streams with typed tables,
+  graphics or TERSE thread bytes.
+- Resolve all native-table target semantics and native-word stack contracts.
+- Complete the RAM and I/O ownership map.
+- Assemble the modified source using native zmac and compare all four
+  generated ROM SHA-1 hashes against the original MAME set.
 
 ## ROM data and console adaptation notes
 
