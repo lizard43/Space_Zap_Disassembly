@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0003
+; RE version: v20261107-0004
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -517,6 +517,7 @@ TERSE_SMALL_COLON_0266:
 ; Two's-complement HL; restore AF before returning to native caller.
 ;==============================================================================
 NATIVE_NEGATE_HL:
+	 push af
 	 ld   a,h
 	 cpl
 	 ld   h,a
