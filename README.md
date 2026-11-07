@@ -89,4 +89,3 @@ Space Zap uses a **one-byte indexed-token TERSE** system. BC points to a byte st
 ## References
 
 - [Original Space Zap parts and operating manual](docs/Space_Zap_Parts_and_Operating_Manual_(Oct_1980).pdf)
-- [TERSE signature scanning](https://github.com/lizard43/TERSE/blob/main/TERSE_Signature_Scanning.md)
