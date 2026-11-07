@@ -35,10 +35,12 @@ See [architecture](TERSE-ARCHITECTURE.md), [complete indexed-token vector invent
 | [`PORT_OUT`](#port-out) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
 | [`PORT_IN`](#port-in) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
 | [`DECREMENT_BYTE_AT_ADDRESS`](#decrement-byte-at-address) | `$43` | `$00E6` | `( addr -- )` | Decrement the byte stored at addr, wrapping modulo 256. |
-| [`INCREMENT_BYTE_AT_ADDRESS`](#increment-byte-at-address) | `$44` | `$00EE` | `( addr -- )` | Increment the byte stored at addr, wrapping modulo 256. |
+| [`EQUAL`](#equal) | `$44` | `$00EE` | `( a b -- flag )` | Return 1 if two 16-bit cells are equal, otherwise 0. |
 | [`MEMORY_COPY`](#memory-copy) | `$16` | `$015F` | `( src dest count -- )` | Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy. |
 | [`STACK_ROTATE`](#stack-rotate) | `$13` | `$01E3` | `( a b c -- b c a )` | Rotate the three top stack cells with the deepest moved to the top. |
 | [`STACK_PICK`](#stack-pick) | `$45` | `$01EA` | `( index -- value )` | Fetch a 1-based indexed cell from the remaining data stack, leaving the indexed value on top. |
+| [`NEGATE`](#negate) | `$82` | `$00CD` | `( n -- -n )` | Two's-complement via subtraction from zero. |
+| [`UNSIGNED_GE`](#unsigned_ge) | `$C2` | `$00FD` | `( a b -- flag )` | Unsigned greater/equal comparison. |
 | [`INDEXED_DISPATCH`](#indexed-dispatch) | `$3D` | `$023E` | `( index -- )` | Indexed native target table, inline end address. |
 | [`COMPARE_BRANCH_NE`](#compare-branch-ne) | `$93` | `$0229` | `( a b -- )` equal; `( a b -- a )` unequal | Compare two cells; on inequality branch to inline 16-bit thread address, retaining a. |
 | [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
@@ -61,19 +63,60 @@ Decrement the byte stored at addr, wrapping modulo 256.
     JP (IY)
 ```
 
-### INCREMENT_BYTE_AT_ADDRESS
+### EQUAL
 
-**Token:** `$44` · **Native:** `$00EE` · **Stack:** `( addr -- )`
+**Token:** `$44` · **Native:** `$00EE` · **Stack:** `( a b -- flag )`
 
-Increment the byte stored at addr, wrapping modulo 256.
-
-**Native Z80:**
+Compare the top two 16-bit cells by subtraction. Push 1 if equal; otherwise push 0. The native branch at `$00F6` skips the `INC HL` instruction on inequality and enters the shared push/continuation tail at `$00FA`.
 
 ```z80
+    POP DE
     POP HL
-    INC (HL)
+    XOR A
+    SBC HL,DE
+    LD HL,$0000
+    JP NZ,$00FA
+    INC HL
+    PUSH HL
     JP (IY)
 ```
+
+### NEGATE
+
+**Token:** `$82` · **Native:** `$00CD` · **Stack:** `( n -- -n )`
+
+Pop a cell and compute `0-n` modulo 65536 through the existing subtraction body at `$00C7`.
+
+```z80
+    POP DE
+    LD HL,$0000
+    JP $00C7
+```
+
+### UNSIGNED_GE
+
+**Token:** `$C2` · **Native:** `$00FD` · **Stack:** `( a b -- flag )`
+
+Return 1 if unsigned `a>=b`, otherwise 0. The `SBC HL,DE` carry flag identifies `a<b`.
+
+```z80
+    POP DE
+    POP HL
+    XOR A
+    SBC HL,DE
+    LD HL,$0000
+    JP C,$0109
+    INC HL
+    PUSH HL
+    JP (IY)
+```
+
+### INCREMENT_BYTE_AT_ADDRESS (native helper, not indexed token $44)
+
+**Native entry:** `$00EA` · **Stack:** `( addr -- )`.
+
+Increment the byte at the given address modulo 256. The previously published token binding was incorrect: token `$44` selects `$00EE` (EQUAL), four bytes after this helper.
+
 
 ### MEMORY_COPY
 
