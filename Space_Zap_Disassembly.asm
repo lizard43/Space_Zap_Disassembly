@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0010
+; RE version: v20261107-0011
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -220,6 +220,8 @@ TERSE_SUBTRACT:
 	 sbc  hl,de
 	 push hl
 	 jp   (iy)
+; $00CD, token $82: NEGATE ( n -- -n ), reuse shared subtraction body.
+TERSE_NEGATE:
 	 pop  de
 	 ld   hl,$0000
 	 jp   $00C7
@@ -253,12 +255,16 @@ TERSE_DECREMENT_BYTE_AT_ADDRESS:
 	 dec  (hl)
 	 jp   (iy)
 
-; ( addr -- ) Increment addressed byte.
-; $00EE, token $44: ( addr -- ) increment the addressed RAM byte.
+; $00EA: increment byte at address (addr -- ). Not token $44.
+; The token $44 vector points to the *following* equality primitive at $00EE.
 TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 inc  (hl)
 	 jp   (iy)
+
+; $00EE, token $44: equality comparison, ( a b -- flag ).
+; Return 1 when a=b, otherwise 0. The branch joins the shared PUSH HL tail.
+TERSE_EQUAL:
 	 pop  de
 	 pop  hl
 	 xor  a
@@ -268,6 +274,10 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 inc  hl
 	 push hl
 	 jp   (iy)
+
+; $00FD, token $C2: unsigned 16-bit greater-than-or-equal, ( a b -- flag ).
+; Carry from a-b means a<b; return 0 on carry and 1 otherwise.
+TERSE_UNSIGNED_GE:
 	 pop  de
 	 pop  hl
 	 xor  a
