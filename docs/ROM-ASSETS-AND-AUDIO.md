@@ -67,6 +67,16 @@ The maintained source already has packed **2bpp** object records: hotspot offset
 The sprite decoder reads the record header and passes packed pixels to `MAGIC_DRAW_BITMAP`. Sprite-row comments in the assembly show 2bpp color indexes `0–3`. The 8×10 font above is a separate **1bpp** representation.
 
 
+## Original cabinet hardware and diagnostics
+
+The [October 1980 Space Zap service manual](Space_Zap_Parts_and_Operating_Manual_(Oct_1980).pdf) is the primary source for cabinet behavior. Its *RAM-ROM Test* pages 4–5 (PDF pages 6–7) specify a service switch on the audio-amplifier assembly, separate screen-RAM, static-RAM and ROM checks, and a modified test on power-up or door slam. An unsuccessful RAM test can prevent normal gameplay.
+
+The ASM now labels the corresponding native screen-RAM test at `$2F67` and the following static-RAM test as `NATIVE_SCREEN_RAM_TEST` and `NATIVE_STATIC_RAM_TEST`. The code writes/checks `$4000–$7FFF` screen memory and `$D000–$D7FF` static RAM, respectively. The screen test writes color-table registers on mismatch; the static test uses `OUT ($5B),$A5` before protected-memory writes. These are **observed code effects**, consistent with the manual's visible error indications. The full ROM diagnostic call chain remains to be traced.
+
+The accompanying `SpaceZap-pinouts.txt` identifies game-board P1 pins 1–5 as player 2 directions/fire and pins 8–12 as player 1 directions/fire. Game-board P2 carries coin 1/2 (pins 1/2), test (3), door slam (4), one/two-player select (5/6), audio (8/9), coin meters (10/12), and video (15/16). These are cabinet connector assignments, **not yet proven Z80 input-port bits**. The source should use semantic bit labels only after tracing the original CPU/game-board decoding.
+
+Original schematics are in the same manual: CPU board on printed pages 42 and 44 (PDF pages 44 and 46), pattern board on printed page 46 (PDF page 48), plus cabinet wiring on printed pages 34–36 (PDF pages 36–38). Do not infer that an unmapped emulator port is meaningless on the original board.
+
 ## Recovered Space Zap I/O operations
 
 The ASM defines hardware port constants near the top of the source and uses them at direct `IN`/`OUT` call sites. The same numerical port can have different meanings when read versus written (for example, `$08` selects video mode on write but returns video intercept feedback on read; `$10–$12` are custom I/O input ports on read and sound registers on write).
@@ -83,7 +93,7 @@ The ASM defines hardware port constants near the top of the source and uses them
 | `$78–$7E` | Pattern-board source, mode, skip, destination, width, height/start |
 | `$F8,$FA,$FB,$FF` | Written during cold start; hardware function not established from the Space Zap machine's currently mapped MAME I/O handlers |
 
-The native source distinguishes **confirmed register semantics** from port-number observations for unresolved cold-start outputs. Hardware map cross-check: MAME `src/mame/bally/astrocde.cpp` and `src/mame/bally/astrocde_v.cpp`. Startup writes to `$F8/$FA/$FB/$FF` are not represented by a named Space Zap-specific handler in the MAME I/O map inspected here, so no stronger behavior is claimed.
+The native source distinguishes **confirmed board register semantics** from unresolved startup addresses. The original cabinet schematics take precedence over MAME for interpreting physical I/O decoding. The `$F8/$FA/$FB/$FF` startup writes need a direct address-decode trace on the game/CPU boards before functional names are assigned.
 
 ## Astrocade sound hardware and native routines
 
