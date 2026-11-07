@@ -2727,150 +2727,151 @@ REDRAW_SAVED_OBJECT:
 	 pop  de
 	 ld   (hl),e
 	 jp   (iy)
-	 rst  $08
-	 dec  de
-	 ld   l,$03
-	 dec  de
-	 sbc  a,a
-	 ret  nc
-	 djnz $1335
-	 sbc  a,b
-	 ret  nc
-	 inc  e
-	 dec  de
-	 ret  c
-	 inc  b
-	 dec  de
-	 add  a,h
-	 ret  nc
-	 djnz $1333
-	 ld   h,h
-	 dec  de
-	 adc  a,b
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 sub  c
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  d
-	 ret  nc
-	 dec  e
-	 dec  de
-	 jp   p,$1B05
-	 add  a,b
-	 ret  nc
-	 djnz $1348
-	 ret  z
-	 dec  de
-	 add  a,(hl)
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 sub  b
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  e
-	 ret  nc
-	 dec  e
-	 dec  de
-	 ld   (hl),e
-	 ld   b,$1B
-	 add  a,d
-	 ret  nc
-	 djnz $135D
-	 ld   ($871B),a
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 sub  l
-	 ret  nc
-	 dec  e
-	 ld   c,$19
-	 dec  de
-	 adc  a,a
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 adc  a,c
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  (hl)
-	 ret  nc
-	 dec  e
-	 dec  de
-	 sub  a
-	 ret  nc
-	 dec  e
-	 dec  de
-	 ld   (hl),$03
-	 ld   e,$1B
-	 ld   a,($1E03)
-	 dec  de
-	 ld   a,$03
-	 ld   e,$1B
-	 ld   b,d
-	 inc  bc
-	 ld   e,$0E
-	 jr   z,$138B
-	 add  hl,bc
-	 rra
-	 add  hl,bc
-	 ld   c,$08
-	 rra
-	 ld   c,$4A
-	 dec  de
-	 adc  a,l
-	 ret  nc
-	 ex   af,af'
-	 ld   c,$F5
-	 dec  de
-	 adc  a,d
-	 ret  nc
-	 ex   af,af'
-	 ld   c,$07
-	 dec  de
-	 adc  a,e
-	 ret  nc
-	 ex   af,af'
-	 ld   c,$94
-	 dec  de
-	 adc  a,h
-	 ret  nc
-	 ex   af,af'
-	 dec  de
-	 adc  a,(hl)
-	 ret  nc
-	 dec  e
-	 ld   c,$C8
-	 ld   c,$0A
-	 rra
-	 ld   c,$70
-	 ld   c,$04
-	 rra
-	 ld   c,$53
-	 ld   c,$05
-	 rra
-	 ld   c,$E6
-	 ld   c,$06
-	 rra
-	 ld   c,$6F
-	 ld   c,$07
-	 rra
-	 jr   nz,$13C0
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
-	 nop
+; $1311–$13B9: TERSE colon program and inline operands.
+; $13BA–$13C3: ten padding bytes before 8x10 character font.
+TERSE_COLON_1311:
+	 RST $08
+TERSE_THREAD_1312:
+	 DB $1B ; $1312 token $1B => native $0050
+	 DW $032E ; inline 16-bit literal
+	 DB $1B ; $1315 token $1B => native $0050
+	 DW $D09F ; inline 16-bit literal
+	 DB $10 ; $1318 token $10 => native $00AB
+	 DB $1B ; $1319 token $1B => native $0050
+	 DW $D098 ; inline 16-bit literal
+	 DB $1C ; $131C token $1C => native $00B7
+	 DB $1B ; $131D token $1B => native $0050
+	 DW $04D8 ; inline 16-bit literal
+	 DB $1B ; $1320 token $1B => native $0050
+	 DW $D084 ; inline 16-bit literal
+	 DB $10 ; $1323 token $10 => native $00AB
+	 DB $0E ; $1324 token $0E => native $0059
+	 DB $64 ; inline byte
+	 DB $1B ; $1326 token $1B => native $0050
+	 DW $D088 ; inline 16-bit literal
+	 DB $08 ; $1329 token $08 => native $00B2
+	 DB $1B ; $132A token $1B => native $0050
+	 DW $D091 ; inline 16-bit literal
+	 DB $1D ; $132D token $1D => native $0266
+	 DB $1B ; $132E token $1B => native $0050
+	 DW $D092 ; inline 16-bit literal
+	 DB $1D ; $1331 token $1D => native $0266
+	 DB $1B ; $1332 token $1B => native $0050
+	 DW $05F2 ; inline 16-bit literal
+	 DB $1B ; $1335 token $1B => native $0050
+	 DW $D080 ; inline 16-bit literal
+	 DB $10 ; $1338 token $10 => native $00AB
+	 DB $0E ; $1339 token $0E => native $0059
+	 DB $C8 ; inline byte
+	 DB $1B ; $133B token $1B => native $0050
+	 DW $D086 ; inline 16-bit literal
+	 DB $08 ; $133E token $08 => native $00B2
+	 DB $1B ; $133F token $1B => native $0050
+	 DW $D090 ; inline 16-bit literal
+	 DB $1D ; $1342 token $1D => native $0266
+	 DB $1B ; $1343 token $1B => native $0050
+	 DW $D093 ; inline 16-bit literal
+	 DB $1D ; $1346 token $1D => native $0266
+	 DB $1B ; $1347 token $1B => native $0050
+	 DW $0673 ; inline 16-bit literal
+	 DB $1B ; $134A token $1B => native $0050
+	 DW $D082 ; inline 16-bit literal
+	 DB $10 ; $134D token $10 => native $00AB
+	 DB $0E ; $134E token $0E => native $0059
+	 DB $32 ; inline byte
+	 DB $1B ; $1350 token $1B => native $0050
+	 DW $D087 ; inline 16-bit literal
+	 DB $08 ; $1353 token $08 => native $00B2
+	 DB $1B ; $1354 token $1B => native $0050
+	 DW $D095 ; inline 16-bit literal
+	 DB $1D ; $1357 token $1D => native $0266
+	 DB $0E ; $1358 token $0E => native $0059
+	 DB $19 ; inline byte
+	 DB $1B ; $135A token $1B => native $0050
+	 DW $D08F ; inline 16-bit literal
+	 DB $08 ; $135D token $08 => native $00B2
+	 DB $1B ; $135E token $1B => native $0050
+	 DW $D089 ; inline 16-bit literal
+	 DB $1D ; $1361 token $1D => native $0266
+	 DB $1B ; $1362 token $1B => native $0050
+	 DW $D096 ; inline 16-bit literal
+	 DB $1D ; $1365 token $1D => native $0266
+	 DB $1B ; $1366 token $1B => native $0050
+	 DW $D097 ; inline 16-bit literal
+	 DB $1D ; $1369 token $1D => native $0266
+	 DB $1B ; $136A token $1B => native $0050
+	 DW $0336 ; inline 16-bit literal
+	 DB $1E ; $136D token $1E => native $027E
+	 DB $1B ; $136E token $1B => native $0050
+	 DW $033A ; inline 16-bit literal
+	 DB $1E ; $1371 token $1E => native $027E
+	 DB $1B ; $1372 token $1B => native $0050
+	 DW $033E ; inline 16-bit literal
+	 DB $1E ; $1375 token $1E => native $027E
+	 DB $1B ; $1376 token $1B => native $0050
+	 DW $0342 ; inline 16-bit literal
+	 DB $1E ; $1379 token $1E => native $027E
+	 DB $0E ; $137A token $0E => native $0059
+	 DB $28 ; inline byte
+	 DB $0E ; $137C token $0E => native $0059
+	 DB $09 ; inline byte
+	 DB $1F ; $137E token $1F => native $01D1
+	 DB $09 ; $137F token $09 => native $0081
+	 DB $0E ; $1380 token $0E => native $0059
+	 DB $08 ; inline byte
+	 DB $1F ; $1382 token $1F => native $01D1
+	 DB $0E ; $1383 token $0E => native $0059
+	 DB $4A ; inline byte
+	 DB $1B ; $1385 token $1B => native $0050
+	 DW $D08D ; inline 16-bit literal
+	 DB $08 ; $1388 token $08 => native $00B2
+	 DB $0E ; $1389 token $0E => native $0059
+	 DB $F5 ; inline byte
+	 DB $1B ; $138B token $1B => native $0050
+	 DW $D08A ; inline 16-bit literal
+	 DB $08 ; $138E token $08 => native $00B2
+	 DB $0E ; $138F token $0E => native $0059
+	 DB $07 ; inline byte
+	 DB $1B ; $1391 token $1B => native $0050
+	 DW $D08B ; inline 16-bit literal
+	 DB $08 ; $1394 token $08 => native $00B2
+	 DB $0E ; $1395 token $0E => native $0059
+	 DB $94 ; inline byte
+	 DB $1B ; $1397 token $1B => native $0050
+	 DW $D08C ; inline 16-bit literal
+	 DB $08 ; $139A token $08 => native $00B2
+	 DB $1B ; $139B token $1B => native $0050
+	 DW $D08E ; inline 16-bit literal
+	 DB $1D ; $139E token $1D => native $0266
+	 DB $0E ; $139F token $0E => native $0059
+	 DB $C8 ; inline byte
+	 DB $0E ; $13A1 token $0E => native $0059
+	 DB $0A ; inline byte
+	 DB $1F ; $13A3 token $1F => native $01D1
+	 DB $0E ; $13A4 token $0E => native $0059
+	 DB $70 ; inline byte
+	 DB $0E ; $13A6 token $0E => native $0059
+	 DB $04 ; inline byte
+	 DB $1F ; $13A8 token $1F => native $01D1
+	 DB $0E ; $13A9 token $0E => native $0059
+	 DB $53 ; inline byte
+	 DB $0E ; $13AB token $0E => native $0059
+	 DB $05 ; inline byte
+	 DB $1F ; $13AD token $1F => native $01D1
+	 DB $0E ; $13AE token $0E => native $0059
+	 DB $E6 ; inline byte
+	 DB $0E ; $13B0 token $0E => native $0059
+	 DB $06 ; inline byte
+	 DB $1F ; $13B2 token $1F => native $01D1
+	 DB $0E ; $13B3 token $0E => native $0059
+	 DB $6F ; inline byte
+	 DB $0E ; $13B5 token $0E => native $0059
+	 DB $07 ; inline byte
+	 DB $1F ; $13B7 token $1F => native $01D1
+	 DB $20 ; $13B8 token $20 => native $05E5
+	 DB $06 ; $13B9 token $06 => native $0044
+TERSE_FONT_PADDING:
+	 DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 ; $13C4-$1535: 8x10 monochrome character bitmaps.
 ; Each glyph consists of ten rows; bit 7 is the leftmost pixel.
 SCREEN_FONT_8X10:
