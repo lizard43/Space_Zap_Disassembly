@@ -21,34 +21,34 @@ The `BMOVE` equivalence reflects native `LDIR` and the documented three-cell byt
 | [`EXIT`](#exit) | `$06` | `$0044` | `( R: caller-ip -- )` | Return from a colon definition, restoring the caller's threaded instruction pointer. |
 | [`LIT`](#lit-16-bit-inline-literal) | `$1B` | `$0050` | `( -- n )` | Push the little-endian 16-bit word following this token. |
 | [`LIT8`](#lit8) | `$0E` | `$0059` | `( -- u )` | Push the unsigned byte following this token, zero-extended. |
-| [`0`](#0) | `$0B` | `$007B` | `( -- 0 )` | Push the 16-bit constant zero. |
-| [`1`](#1) | `$09` | `$0081` | `( -- 1 )` | Push the 16-bit constant one. |
+| [`0`](#token-0b) | `$0B` | `$007B` | `( -- 0 )` | Push the 16-bit constant zero. |
+| [`1`](#token-09) | `$09` | `$0081` | `( -- 1 )` | Push the 16-bit constant one. |
 | [`DUP`](#dup) | `$0D` | `$0087` | `( n -- n n )` | Duplicate the top data-stack cell. |
 | [`2DUP`](#2dup) | `$01` | `$008C` | `( a b -- a b a b )` | Duplicate the top two cells in order. |
 | [`DROP`](#drop) | `$05` | `$0094` | `( n -- )` | Discard the top data-stack cell. |
 | [`SWAP`](#swap) | `$04` | `$0097` | `( a b -- b a )` | Exchange the top two data-stack cells. |
-| [`@`](#fetch) | `$0C` | `$009D` | `( addr -- n )` | Read a little-endian 16-bit word from memory. |
-| [`B@`](#b) | `$25` | `$00A4` | `( addr -- u )` | Read a single memory byte and zero-extend it. |
-| [`!`](#store) | `$10` | `$00AB` | `( n addr -- )` | Write a little-endian 16-bit word to memory. |
-| [`B!`](#b) | `$08` | `$00B2` | `( n addr -- )` | Write the low eight bits of n to memory. |
+| [`@`](#token-0c) | `$0C` | `$009D` | `( addr -- n )` | Read a little-endian 16-bit word from memory. |
+| [`B@`](#token-25) | `$25` | `$00A4` | `( addr -- u )` | Read a single memory byte and zero-extend it. |
+| [`!`](#token-10) | `$10` | `$00AB` | `( n addr -- )` | Write a little-endian 16-bit word to memory. |
+| [`B!`](#token-08) | `$08` | `$00B2` | `( n addr -- )` | Write the low eight bits of n to memory. |
 | [`ZERO`](#zero) | `$1C` | `$00B7` | `( addr -- )` | Clear the addressed two-byte word. |
-| [`+`](#add) | `$0F` | `$00BF` | `( a b -- a+b )` | Add two 16-bit stack cells with wraparound. |
-| [`-`](#subtract) | `$3F` | `$00C5` | `( a b -- a-b )` | Subtract the top cell from the next cell. |
-| [`1-`](#1) | `$15` | `$00D4` | `( n -- n-1 )` | Decrement a 16-bit cell. |
-| [`1+`](#1) | `$14` | `$00D9` | `( n -- n+1 )` | Increment a 16-bit cell. |
+| [`+`](#token-0f) | `$0F` | `$00BF` | `( a b -- a+b )` | Add two 16-bit stack cells with wraparound. |
+| [`-`](#token-3f) | `$3F` | `$00C5` | `( a b -- a-b )` | Subtract the top cell from the next cell. |
+| [`1-`](#token-15) | `$15` | `$00D4` | `( n -- n-1 )` | Decrement a 16-bit cell. |
+| [`1+`](#token-14) | `$14` | `$00D9` | `( n -- n+1 )` | Increment a 16-bit cell. |
 | [`ARITH_SHIFT_RIGHT`](#arith-shift-right) | `$3A` | `$00DE` | `( signed-n -- signed-n>>1 )` | Arithmetic shift of a signed 16-bit cell; sign bit is retained. |
 | [`AND`](#and) | `$4C` | `$0149` | `( a b -- a&b )` | Bitwise AND of two 16-bit cells. |
 | [`OR`](#or) | `$54` | `$0154` | `( a b -- a|b )` | Bitwise OR of two 16-bit cells. |
 | [`I`](#i) | `$24` | `$01B6` | `( -- index )` | Push current counted-loop index from the IX control frame. |
 | [`OUTP`](#outp) | `$1F` | `$01D1` | `( value port -- )` | Send the low data byte to a Z80 I/O port. |
 | [`INP`](#inp) | `$21` | `$01D9` | `( port -- byte )` | Read a Z80 I/O port and zero-extend the result. |
-| [`1-B!`](#1b) | `$43` | `$00E6` | `( addr -- )` | Decrement the byte stored at addr, wrapping modulo 256. |
-| [`=`](#equal) | `$44` | `$00EE` | `( a b -- flag )` | Return 1 if two 16-bit cells are equal, otherwise 0. |
+| [`1-B!`](#token-43) | `$43` | `$00E6` | `( addr -- )` | Decrement the byte stored at addr, wrapping modulo 256. |
+| [`=`](#token-44) | `$44` | `$00EE` | `( a b -- flag )` | Return 1 if two 16-bit cells are equal, otherwise 0. |
 | [`BMOVE`](#bmove) | `$16` | `$015F` | `( src dest count -- )` | Copy count bytes from src to dest using Z80 LDIR; zero count skips the copy. |
 | [`ROT`](#rot) | `$13` | `$01E3` | `( a b c -- b c a )` | Rotate the three top stack cells with the deepest moved to the top. |
 | [`PICK`](#pick) | `$45` | `$01EA` | `( index -- value )` | Fetch a 1-based indexed cell from the remaining data stack, leaving the indexed value on top. |
 | [`MINUS`](#minus) | `$82` | `$00CD` | `( n -- -n )` | Two's-complement via subtraction from zero. |
-| [`U>=`](#u) | `$C2` | `$00FD` | `( a b -- flag )` | Unsigned greater/equal comparison. |
+| [`U>=`](#token-c2) | `$C2` | `$00FD` | `( a b -- flag )` | Unsigned greater/equal comparison. |
 | [`INDEXED_DISPATCH`](#indexed-dispatch) | `$3D` | `$023E` | `( index -- )` | Indexed native target table, inline end address. |
 | [`COMPARE_BRANCH_NE`](#compare-branch-ne) | `$93` | `$0229` | `( a b -- )` equal; `( a b -- a )` unequal | Compare two cells; on inequality branch to inline 16-bit thread address, retaining a. |
 | [`ADD_INLINE16`](#add-inline16) | `$94` | `$006B` | `( n -- n+offset )` | Consume an inline 16-bit displacement and add it to the stack top modulo 65536. |
@@ -57,7 +57,7 @@ The `BMOVE` equivalence reflects native `LDIR` and the documented three-cell byt
 
 ## Recovered words
 
-### 1-B!
+### 1-B! — token $43
 
 **Token:** `$43` · **Native:** `$00E6` · **Stack:** `( addr -- )`
 
@@ -71,7 +71,7 @@ Decrement the byte stored at addr, wrapping modulo 256.
     JP (IY)
 ```
 
-### =
+### = — token $44
 
 **Token:** `$44` · **Native:** `$00EE` · **Stack:** `( a b -- flag )`
 
@@ -101,7 +101,7 @@ Pop a cell and compute `0-n` modulo 65536 through the existing subtraction body 
     JP $00C7
 ```
 
-### U>=
+### U>= — token $C2
 
 **Token:** `$C2` · **Native:** `$00FD` · **Stack:** `( a b -- flag )`
 
@@ -322,7 +322,7 @@ Push the unsigned byte following this token, zero-extended.
     JP (IY)
 ```
 
-### 0
+### 0 — token $0B
 
 **Native:** `$007B` · **Token:** `$0B` · **Stack:** `( -- 0 )`
 
@@ -338,7 +338,7 @@ Push the 16-bit constant zero.
     JP (IY)
 ```
 
-### 1
+### 1 — token $09
 
 **Native:** `$0081` · **Token:** `$09` · **Stack:** `( -- 1 )`
 
@@ -424,7 +424,7 @@ Exchange the top two data-stack cells.
     JP (IY)
 ```
 
-### @
+### @ — token $0C
 
 **Native:** `$009D` · **Token:** `$0C` · **Stack:** `( addr -- n )`
 
@@ -443,7 +443,7 @@ Read a little-endian 16-bit word from memory.
     JP (IY)
 ```
 
-### B@
+### B@ — token $25
 
 **Native:** `$00A4` · **Token:** `$25` · **Stack:** `( addr -- u )`
 
@@ -461,7 +461,7 @@ Read a single memory byte and zero-extend it.
     JP (IY)
 ```
 
-### !
+### ! — token ### 0
 
 **Native:** `$00AB` · **Token:** `$10` · **Stack:** `( n addr -- )`
 
@@ -480,7 +480,7 @@ Write a little-endian 16-bit word to memory.
     JP (IY)
 ```
 
-### B!
+### B! — token $08
 
 **Native:** `$00B2` · **Token:** `$08` · **Stack:** `( n addr -- )`
 
@@ -515,7 +515,7 @@ Clear the addressed two-byte word.
     JP (IY)
 ```
 
-### +
+### + — token $0F
 
 **Native:** `$00BF` · **Token:** `$0F` · **Stack:** `( a b -- a+b )`
 
@@ -533,7 +533,7 @@ Add two 16-bit stack cells with wraparound.
     JP (IY)
 ```
 
-### -
+### - — token $3F
 
 **Native:** `$00C5` · **Token:** `$3F` · **Stack:** `( a b -- a-b )`
 
@@ -552,7 +552,7 @@ Subtract the top cell from the next cell.
     JP (IY)
 ```
 
-### 1-
+### 1- — token ### 5
 
 **Native:** `$00D4` · **Token:** `$15` · **Stack:** `( n -- n-1 )`
 
@@ -569,7 +569,7 @@ Decrement a 16-bit cell.
     JP (IY)
 ```
 
-### 1+
+### 1+ — token ### 4
 
 **Native:** `$00D9` · **Token:** `$14` · **Stack:** `( n -- n+1 )`
 
