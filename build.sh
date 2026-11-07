@@ -20,15 +20,7 @@ IMAGE=Space_Zap_Disassembly.bin
 LISTING=Space_Zap_Disassembly.lst
 [[ -s "$IMAGE" && -s "$LISTING" ]] || { echo "ERROR: missing assembled image/listing" >&2; exit 1; }
 image_size="$(wc -c < "$IMAGE")"
-if [[ "$image_size" -ne 16384 ]]; then
-    echo "ERROR: assembled image is ${image_size} bytes (expected 16384)" >&2
-    if [[ -s roms/0662.01 && -s roms/0663.xx && -s roms/0664.xx && -s roms/0665.xx ]]; then
-        if command -v node >/dev/null 2>&1; then
-            node tools/rom-diff.mjs "$IMAGE" roms/0662.01 roms/0663.xx roms/0664.xx roms/0665.xx >&2
-        fi
-    fi
-    exit 1
-fi
+[[ "$image_size" -eq 16384 ]] || { echo "ERROR: ROM size ${image_size} bytes; expected 16384" >&2; exit 1; }
 echo "Created: $IMAGE"
 echo "Created: $LISTING"
 echo
