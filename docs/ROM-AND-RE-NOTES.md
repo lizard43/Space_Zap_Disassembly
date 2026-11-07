@@ -70,7 +70,7 @@ that produced repeated zmac v1.3 `Value error` messages.
   graphics or TERSE thread bytes.
 - Resolve all native-table target semantics and native-word stack contracts.
 - Complete the RAM and I/O ownership map.
-- Assemble the modified source using native zmac and compare all four
+- Assemble the complete 16 KB source using native zmac and compare all four
   generated ROM SHA-1 hashes against the original MAME set.
 
 ## ROM data and console adaptation notes
