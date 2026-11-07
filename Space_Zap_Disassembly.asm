@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0019
+; RE version: v20261107-0020
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -7912,8 +7912,7 @@ TERSE_THREAD_2F62:
 	 DW TERSE_THREAD_2EE0 ; 0BRANCH
 	 DB $06 ; $2F66 -> $0044
 
-; Screen-RAM test: exercise $4000-$7FFF; palette writes signal failures.
-; Cabinet service mode runs memory tests; see the original operator manual.
+; Test $4000-$7FFF screen RAM; use palette writes to signal failures.
 NATIVE_SCREEN_RAM_TEST:
 	 in   a,(IO_INPUT_0)
 	 bit  2,a
@@ -7960,8 +7959,9 @@ NATIVE_SCREEN_RAM_TEST:
 	 or   h
 	 exx
 	 jp   nz,$2F75
-; Static-RAM test: exercise $D000-$D7FF via protected-RAM writes.
-; Interrupts are disabled while the test changes the Z80 I register.
+
+; Test $D000-$D7FF static RAM using protected-RAM writes.
+; Disable interrupts and clear I before the test.
 NATIVE_STATIC_RAM_TEST:
 	 exx
 	 di
