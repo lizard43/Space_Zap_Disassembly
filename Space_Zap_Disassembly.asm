@@ -7,7 +7,7 @@
 ; Publisher : Midway Manufacturing
 ; CPU       : Z80
 ; Software  : TERSE indexed-byte interpreter and native Z80 routines
-; RE version: v20261107-0024
+; RE version: v20261107-0026
 ;*******************************************************************************
 
 	 ORG 0000H
@@ -99,6 +99,7 @@ TERSE_EXIT:
 	 jp   (iy)
 
 ; LIT16: push the next little-endian 16-bit value from the BC thread.
+; DNA TERSE word: LIT (assembler symbol: TERSE_LIT16)
 TERSE_LIT16:
 	 ld   a,(bc)
 	 inc  bc
@@ -147,12 +148,14 @@ TERSE_DOUBLE_ADD_INLINE:
 	 jp   TERSE_ADD_INLINE_BODY
 
 ; ( -- 0 ) Push zero.
+; DNA TERSE word: 0 (assembler symbol: TERSE_ZERO)
 TERSE_ZERO:
 	 ld   hl,$0000
 	 push hl
 	 jp   (iy)
 
 ; ( -- 1 ) Push one.
+; DNA TERSE word: 1 (assembler symbol: TERSE_ONE)
 TERSE_ONE:
 	 ld   hl,$0001
 	 push hl
@@ -189,6 +192,7 @@ TERSE_SWAP:
 	 jp   (iy)
 
 ; ( addr -- value ) Load little-endian 16-bit word.
+; DNA TERSE word: @ (assembler symbol: TERSE_FETCH)
 TERSE_FETCH:
 	 pop  hl
 	 ld   e,(hl)
@@ -198,6 +202,7 @@ TERSE_FETCH:
 	 jp   (iy)
 
 ; ( addr -- byte ) Load zero-extended byte.
+; DNA TERSE word: B@ (assembler symbol: TERSE_BYTE_FETCH)
 TERSE_BYTE_FETCH:
 	 pop  hl
 	 ld   e,(hl)
@@ -206,6 +211,7 @@ TERSE_BYTE_FETCH:
 	 jp   (iy)
 
 ; ( value addr -- ) Store little-endian 16-bit word.
+; DNA TERSE word: ! (assembler symbol: TERSE_STORE)
 TERSE_STORE:
 	 pop  hl
 	 pop  de
@@ -215,6 +221,7 @@ TERSE_STORE:
 	 jp   (iy)
 
 ; ( value addr -- ) Store low byte.
+; DNA TERSE word: B! (assembler symbol: TERSE_BYTE_STORE)
 TERSE_BYTE_STORE:
 	 pop  hl
 	 pop  de
@@ -222,6 +229,7 @@ TERSE_BYTE_STORE:
 	 jp   (iy)
 
 ; ( addr -- ) Clear the addressed 16-bit word.
+; DNA TERSE word: ZERO (assembler symbol: TERSE_ZERO_WORD_AT_ADDRESS)
 TERSE_ZERO_WORD_AT_ADDRESS:
 	 pop  hl
 	 ld   (hl),$00
@@ -230,6 +238,7 @@ TERSE_ZERO_WORD_AT_ADDRESS:
 	 jp   (iy)
 
 ; ( a b -- a+b ) Unsigned 16-bit addition, wrapping.
+; DNA TERSE word: + (assembler symbol: TERSE_ADD)
 TERSE_ADD:
 	 pop  de
 	 pop  hl
@@ -238,6 +247,7 @@ TERSE_ADD:
 	 jp   (iy)
 
 ; ( a b -- a-b ) 16-bit subtraction, wrapping.
+; DNA TERSE word: - (assembler symbol: TERSE_SUBTRACT)
 TERSE_SUBTRACT:
 	 pop  de
 	 pop  hl
@@ -246,12 +256,14 @@ TERSE_SUBTRACT:
 	 push hl
 	 jp   (iy)
 ; ( n -- -n ) Negate a 16-bit cell.
+; DNA TERSE word: MINUS (assembler symbol: TERSE_NEGATE)
 TERSE_NEGATE:
 	 pop  de
 	 ld   hl,$0000
 	 jp   $00C7
 
 ; ( n -- n-1 ) Decrement word.
+; DNA TERSE word: 1- (assembler symbol: TERSE_DECREMENT)
 TERSE_DECREMENT:
 	 pop  hl
 	 dec  hl
@@ -259,6 +271,7 @@ TERSE_DECREMENT:
 	 jp   (iy)
 
 ; ( n -- n+1 ) Increment word.
+; DNA TERSE word: 1+ (assembler symbol: TERSE_INCREMENT)
 TERSE_INCREMENT:
 	 pop  hl
 	 inc  hl
@@ -274,6 +287,7 @@ TERSE_ARITH_SHIFT_RIGHT:
 	 jp   (iy)
 
 ; ( addr -- ) Decrement the byte at addr.
+; DNA TERSE word: 1-B! (assembler symbol: TERSE_DECREMENT_BYTE_AT_ADDRESS)
 TERSE_DECREMENT_BYTE_AT_ADDRESS:
 	 pop  hl
 	 dec  (hl)
@@ -286,6 +300,7 @@ TERSE_INCREMENT_BYTE_AT_ADDRESS:
 	 jp   (iy)
 
 ; ( a b -- flag ) Push 1 if the values are equal, otherwise 0.
+; DNA TERSE word: = (assembler symbol: TERSE_EQUAL)
 TERSE_EQUAL:
 	 pop  de
 	 pop  hl
@@ -298,6 +313,7 @@ TERSE_EQUAL:
 	 jp   (iy)
 
 ; ( a b -- flag ) Unsigned greater-or-equal comparison.
+; DNA TERSE word: U>= (assembler symbol: TERSE_UNSIGNED_GE)
 TERSE_UNSIGNED_GE:
 	 pop  de
 	 pop  hl
@@ -348,6 +364,7 @@ TERSE_UNSIGNED_GE:
 	 jp   (iy)
 
 ; ( a b -- a AND b ) 16-bit bitwise AND.
+; DNA TERSE word: AND (assembler symbol: TERSE_BITWISE_AND)
 TERSE_BITWISE_AND:
 	 pop  de
 	 pop  hl
@@ -361,6 +378,7 @@ TERSE_BITWISE_AND:
 	 jp   (iy)
 
 ; ( a b -- a OR b ) 16-bit bitwise OR.
+; DNA TERSE word: OR (assembler symbol: TERSE_BITWISE_OR)
 TERSE_BITWISE_OR:
 	 pop  de
 	 pop  hl
@@ -374,6 +392,7 @@ TERSE_BITWISE_OR:
 	 jp   (iy)
 
 ; ( src dest count -- ) Copy count bytes with LDIR.
+; DNA TERSE word: BMOVE (assembler symbol: TERSE_MEMORY_COPY)
 TERSE_MEMORY_COPY:
 	 exx
 	 pop  bc
@@ -418,6 +437,7 @@ TERSE_MEMORY_COPY:
 	 jp   (iy)
 
 ; ( -- index ) Push active counted-loop index from the IX frame.
+; DNA TERSE word: I (assembler symbol: TERSE_LOOP_INDEX)
 TERSE_LOOP_INDEX:
 	 ld   l,(ix+$00)
 	 ld   h,(ix+$01)
@@ -444,6 +464,7 @@ TERSE_ADD_TO_MEMORY_WORD:
 	 jp   (iy)
 
 ; ( value port -- ) Write the low data byte through the variable I/O port in C.
+; DNA TERSE word: OUTP (assembler symbol: TERSE_PORT_OUT)
 TERSE_PORT_OUT:
 	 exx
 	 pop  bc
@@ -453,6 +474,7 @@ TERSE_PORT_OUT:
 	 jp   (iy)
 
 ; ( port -- byte ) Read variable I/O port through C, returning zero-extended result.
+; DNA TERSE word: INP (assembler symbol: TERSE_PORT_IN)
 TERSE_PORT_IN:
 	 exx
 	 pop  bc
@@ -463,6 +485,7 @@ TERSE_PORT_IN:
 	 jp   (iy)
 
 ; ( a b c -- b c a ) Rotate the top three cells.
+; DNA TERSE word: ROT (assembler symbol: TERSE_STACK_ROTATE)
 TERSE_STACK_ROTATE:
 	 pop  de
 	 pop  hl
@@ -472,6 +495,7 @@ TERSE_STACK_ROTATE:
 	 jp   (iy)
 
 ; ( index -- value ) Copy indexed stack cell (1-based).
+; DNA TERSE word: PICK (assembler symbol: TERSE_STACK_PICK)
 TERSE_STACK_PICK:
 	 pop  hl
 	 dec  hl
@@ -2845,142 +2869,142 @@ OBJECT_CHECK_BOUNDARIES:
 TERSE_COLON_1311:
 	 RST $08
 TERSE_THREAD_1312:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $032E
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D09F
-	 DB $10 ; STORE
-	 DB $1B ; LIT16
+	 DB $10 ; !
+	 DB $1B ; LIT
 	 DW $D098
-	 DB $1C ; ZERO_WORD_AT_ADDRESS
-	 DB $1B ; LIT16
+	 DB $1C ; ZERO
+	 DB $1B ; LIT
 	 DW $04D8
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D084
-	 DB $10 ; STORE
+	 DB $10 ; !
 	 DB $0E ; LIT8
 	 DB $64
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D088
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D091
 	 DB $1D ; TOKEN_$1D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D092
 	 DB $1D ; TOKEN_$1D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $05F2
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D080
-	 DB $10 ; STORE
+	 DB $10 ; !
 	 DB $0E ; LIT8
 	 DB $C8
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D086
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D090
 	 DB $1D ; TOKEN_$1D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D093
 	 DB $1D ; TOKEN_$1D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $0673
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D082
-	 DB $10 ; STORE
+	 DB $10 ; !
 	 DB $0E ; LIT8
 	 DB $32
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D087
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D095
 	 DB $1D ; TOKEN_$1D
 	 DB $0E ; LIT8
 	 DB $19
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D08F
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D089
 	 DB $1D ; TOKEN_$1D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D096
 	 DB $1D ; TOKEN_$1D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D097
 	 DB $1D ; TOKEN_$1D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $0336
 	 DB $1E ; TOKEN_$1E
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $033A
 	 DB $1E ; TOKEN_$1E
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $033E
 	 DB $1E ; TOKEN_$1E
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $0342
 	 DB $1E ; TOKEN_$1E
 	 DB $0E ; LIT8
 	 DB $28
 	 DB $0E ; LIT8
 	 DB $09
-	 DB $1F ; PORT_OUT
-	 DB $09 ; ONE
+	 DB $1F ; OUTP
+	 DB $09 ; 1
 	 DB $0E ; LIT8
 	 DB $08
-	 DB $1F ; PORT_OUT
+	 DB $1F ; OUTP
 	 DB $0E ; LIT8
 	 DB $4A
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D08D
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $0E ; LIT8
 	 DB $F5
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D08A
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $0E ; LIT8
 	 DB $07
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D08B
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $0E ; LIT8
 	 DB $94
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D08C
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D08E
 	 DB $1D ; TOKEN_$1D
 	 DB $0E ; LIT8
 	 DB $C8
 	 DB $0E ; LIT8
 	 DB $0A
-	 DB $1F ; PORT_OUT
+	 DB $1F ; OUTP
 	 DB $0E ; LIT8
 	 DB $70
 	 DB $0E ; LIT8
 	 DB $04
-	 DB $1F ; PORT_OUT
+	 DB $1F ; OUTP
 	 DB $0E ; LIT8
 	 DB $53
 	 DB $0E ; LIT8
 	 DB $05
-	 DB $1F ; PORT_OUT
+	 DB $1F ; OUTP
 	 DB $0E ; LIT8
 	 DB $E6
 	 DB $0E ; LIT8
 	 DB $06
-	 DB $1F ; PORT_OUT
+	 DB $1F ; OUTP
 	 DB $0E ; LIT8
 	 DB $6F
 	 DB $0E ; LIT8
 	 DB $07
-	 DB $1F ; PORT_OUT
+	 DB $1F ; OUTP
 	 DB $20 ; TOKEN_$20
 	 DB $06 ; EXIT
 TERSE_FONT_PADDING:
@@ -5681,73 +5705,73 @@ ALIEN_SHIP_DESTROY_SEQUENCE_ALT:
 ; $26D2-$270C: twelve 16-bit literal-return TERSE colon definitions.
 TERSE_COLON_26D2:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D299 ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26D7:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D2E5 ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26DC:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D331 ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26E1:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D37D ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26E6:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D18D ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26EB:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D18E ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26F0:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D18F ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26F5:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D190 ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26FA:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D1A1 ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_26FF:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D1A2 ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_2704:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D19F ; address/value
 	 DB $06 ; TERSE_EXIT
 
 TERSE_COLON_2709:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D1A0 ; address/value
 
 ;==============================================================================
@@ -6119,9 +6143,9 @@ DB $06 ; $2865 token -> native $0044
 ; Select one of four native targets using the byte at RAM $D198.
 TERSE_COLON_2866:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D198 ; RAM location
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; indexed native dispatch
 	 DW $2876 ; end/default continuation
 	 DW $2709 ; native target 0
@@ -6199,27 +6223,27 @@ TERSE_COLON_28AA:
 	 DB $41 ; TOKEN_$41
 	 DB $0E ; LIT8
 	 DB $07
-	 DB $4C ; BITWISE_AND
-	 DB $1B ; LIT16
+	 DB $4C ; AND
+	 DB $1B ; LIT
 	 DW $D011
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_28BD ; inline absolute thread address
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D193
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_28C0 ; inline absolute thread address
 TERSE_THREAD_28BD:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D192
 TERSE_THREAD_28C0:
-	 DB $25 ; BYTE_FETCH
-	 DB $0F ; ADD
-	 DB $09 ; ONE
+	 DB $25 ; B@
+	 DB $0F ; +
+	 DB $09 ; 1
 	 DB $52 ; TOKEN_$52
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D196
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $0E ; LIT8
 	 DB $0C
 	 DB $65 ; TOKEN_$65
@@ -6229,50 +6253,50 @@ TERSE_THREAD_28C0:
 	 DB $57 ; TOKEN_$57
 	 DB $58 ; TOKEN_$58
 	 DB $70 ; TOKEN_$70
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $1E92
 	 DB $6B ; TOKEN_$6B
 	 DB $41 ; TOKEN_$41
 	 DB $0E ; LIT8
 	 DB $03
-	 DB $4C ; BITWISE_AND
+	 DB $4C ; AND
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $28E4 ; table end/default continuation
 	 DW $2888 ; native execution target index 0
 	 DW $288F ; native execution target index 1
 	 DW $2897 ; native execution target index 2
 	 DW $28A1 ; native execution target index 3
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $18 ; TOKEN_$18
 	 DB $17 ; TOKEN_$17
 	 DB $0E ; LIT8
 	 DB $58
 	 DB $5E ; TOKEN_$5E
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFA8
 	 DB $5F ; TOKEN_$5F
 	 DB $0E ; LIT8
 	 DB $58
 	 DB $60 ; TOKEN_$60
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFA8
 	 DB $61 ; TOKEN_$61
 	 DB $41 ; TOKEN_$41
 	 DB $0E ; LIT8
 	 DB $07
-	 DB $4C ; BITWISE_AND
+	 DB $4C ; AND
 	 DB $0E ; LIT8
 	 DB $04
 	 DB $02 ; TOKEN_$02
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D194
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 TERSE_THREAD_2903:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $2912 ; table end/default continuation
 	 DW $2818 ; native execution target index 0
@@ -6280,9 +6304,9 @@ TERSE_THREAD_2903:
 	 DW $281C ; native execution target index 2
 	 DW $281C ; native execution target index 3
 	 DB $7D ; TOKEN_$7D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $2922 ; table end/default continuation
 	 DW $280F ; native execution target index 0
@@ -6290,12 +6314,12 @@ TERSE_THREAD_2903:
 	 DW $2813 ; native execution target index 2
 	 DW $280F ; native execution target index 3
 	 DB $7F ; TOKEN_$7F
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
-	 DB $1B ; LIT16
+	 DB $25 ; B@
+	 DB $1B ; LIT
 	 DW $D194
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_293C ; inline absolute thread address
 	 DB $3D ; INDEXED_DISPATCH
@@ -6315,13 +6339,13 @@ TERSE_THREAD_293C:
 	 DW $2833 ; native execution target index 3
 TERSE_THREAD_2947:
 	 DB $5D ; TOKEN_$5D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $0300
 	 DB $5B ; TOKEN_$5B
 	 DB $66 ; TOKEN_$66
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D194
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2959 ; inline absolute thread address
 	 DB $0E ; LIT8
@@ -6329,7 +6353,7 @@ TERSE_THREAD_2947:
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_295C ; inline absolute thread address
 TERSE_THREAD_2959:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFE0
 TERSE_THREAD_295C:
 	 DB $0E ; LIT8
@@ -6344,9 +6368,9 @@ TERSE_THREAD_295C:
 	 DB $68 ; TOKEN_$68
 	 DB $6C ; TOKEN_$6C
 	 DB $66 ; TOKEN_$66
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D194
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2974 ; inline absolute thread address
 	 DB $0E ; LIT8
@@ -6354,7 +6378,7 @@ TERSE_THREAD_295C:
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2977 ; inline absolute thread address
 TERSE_THREAD_2974:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFE0
 TERSE_THREAD_2977:
 	 DB $0E ; LIT8
@@ -6382,11 +6406,11 @@ TERSE_THREAD_298B:
 	 DW TERSE_THREAD_29CC ; inline absolute thread address
 	 DB $36 ; TOKEN_$36
 	 DB $88 ; TOKEN_$88
-	 DB $82 ; NEGATE
+	 DB $82 ; MINUS
 	 DB $7D ; TOKEN_$7D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $29A2 ; table end/default continuation
 	 DW $2833 ; native execution target index 0
@@ -6394,40 +6418,40 @@ TERSE_THREAD_298B:
 	 DW $007B ; native execution target index 2
 	 DW $007B ; native execution target index 3
 	 DB $5D ; TOKEN_$5D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $29B2 ; table end/default continuation
 	 DW $282B ; native execution target index 0
 	 DW $2824 ; native execution target index 1
 	 DW $2824 ; native execution target index 2
 	 DW $282B ; native execution target index 3
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D198
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $29C5 ; table end/default continuation
 	 DW $282B ; native execution target index 0
 	 DW $2827 ; native execution target index 1
 	 DW $2824 ; native execution target index 2
 	 DW $2821 ; native execution target index 3
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2A06 ; inline absolute thread address
 TERSE_THREAD_29CC:
 	 DB $36 ; TOKEN_$36
 	 DB $89 ; TOKEN_$89
-	 DB $82 ; NEGATE
+	 DB $82 ; MINUS
 	 DB $7F ; TOKEN_$7F
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $29DF ; table end/default continuation
 	 DW $2837 ; native execution target index 0
@@ -6435,35 +6459,35 @@ TERSE_THREAD_29CC:
 	 DW $282F ; native execution target index 2
 	 DW $2837 ; native execution target index 3
 	 DB $5D ; TOKEN_$5D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $29EF ; table end/default continuation
 	 DW $2821 ; native execution target index 0
 	 DW $2821 ; native execution target index 1
 	 DW $2827 ; native execution target index 2
 	 DW $2827 ; native execution target index 3
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D198
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $2A02 ; table end/default continuation
 	 DW $2824 ; native execution target index 0
 	 DW $2821 ; native execution target index 1
 	 DW $282B ; native execution target index 2
 	 DW $2827 ; native execution target index 3
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D197
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 TERSE_THREAD_2A06:
 	 DB $68 ; TOKEN_$68
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D198
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $2A16 ; table end/default continuation
 	 DW $2538 ; native execution target index 0
@@ -6479,35 +6503,35 @@ TERSE_THREAD_2A06:
 	 DB $36 ; TOKEN_$36
 	 DB $0E ; LIT8
 	 DB $1C
-	 DB $0F ; ADD
-	 DB $0C ; FETCH
+	 DB $0F ; +
+	 DB $0C ; @
 	 DB $8C ; TOKEN_$8C
 	 DB $0E ; LIT8
 	 DB $1C
-	 DB $0F ; ADD
-	 DB $10 ; STORE
+	 DB $0F ; +
+	 DB $10 ; !
 	 DB $36 ; TOKEN_$36
 	 DB $0E ; LIT8
 	 DB $1E
-	 DB $0F ; ADD
-	 DB $0C ; FETCH
+	 DB $0F ; +
+	 DB $0C ; @
 	 DB $8C ; TOKEN_$8C
 	 DB $0E ; LIT8
 	 DB $1E
-	 DB $0F ; ADD
-	 DB $10 ; STORE
-	 DB $1B ; LIT16
+	 DB $0F ; +
+	 DB $10 ; !
+	 DB $1B ; LIT
 	 DW $D196
-	 DB $43 ; DECREMENT_BYTE_AT_ADDRESS
-	 DB $1B ; LIT16
+	 DB $43 ; 1-B!
+	 DB $1B ; LIT
 	 DW $D196
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2A96 ; inline absolute thread address
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D198
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $3D ; INDEXED_DISPATCH
 	 DW $2A4B ; table end/default continuation
 	 DW $283B ; native execution target index 0
@@ -6516,20 +6540,20 @@ TERSE_THREAD_2A06:
 	 DW $284F ; native execution target index 3
 	 DB $5D ; TOKEN_$5D
 	 DB $66 ; TOKEN_$66
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D003
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $0E ; LIT8
 	 DB $02
-	 DB $44 ; EQUAL
+	 DB $44 ; =
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2A61 ; inline absolute thread address
 	 DB $0E ; LIT8
 	 DB $02
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D41D
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D155
 	 DB $8D ; TOKEN_$8D
 TERSE_THREAD_2A61:
@@ -6544,40 +6568,40 @@ TERSE_THREAD_2A61:
 	 DW TERSE_THREAD_2A71 ; inline absolute thread address
 TERSE_THREAD_2A6C:
 	 DB $8E ; TOKEN_$8E
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D3C9
 	 DB $55 ; TOKEN_$55
 TERSE_THREAD_2A71:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D003
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $0E ; LIT8
 	 DB $02
-	 DB $44 ; EQUAL
+	 DB $44 ; =
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2A88 ; inline absolute thread address
 	 DB $0E ; LIT8
 	 DB $03
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D41D
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D155
 	 DB $8F ; TOKEN_$8F
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2A8C ; inline absolute thread address
 TERSE_THREAD_2A88:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D41D
 	 DB $1D ; TOKEN_$1D
 TERSE_THREAD_2A8C:
 	 DB $71 ; TOKEN_$71
 	 DB $8B ; TOKEN_$8B
 	 DB $1D ; TOKEN_$1D
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $7B ; TOKEN_$7B
 	 DB $6C ; TOKEN_$6C
-	 DB $09 ; ONE
+	 DB $09 ; 1
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2AC6 ; inline absolute thread address
 TERSE_THREAD_2A96:
@@ -6585,8 +6609,8 @@ TERSE_THREAD_2A96:
 	 DB $6C ; TOKEN_$6C
 	 DB $7A ; TOKEN_$7A
 	 DB $8A ; TOKEN_$8A
-	 DB $25 ; BYTE_FETCH
-	 DB $54 ; BITWISE_OR
+	 DB $25 ; B@
+	 DB $54 ; OR
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2AC5 ; inline absolute thread address
 	 DB $71 ; TOKEN_$71
@@ -6595,35 +6619,35 @@ TERSE_THREAD_2A96:
 	 DB $0E ; LIT8
 	 DB $C8
 	 DB $7B ; TOKEN_$7B
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D003
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $0E ; LIT8
 	 DB $02
-	 DB $44 ; EQUAL
+	 DB $44 ; =
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2ABC ; inline absolute thread address
 	 DB $0E ; LIT8
 	 DB $03
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D41D
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D155
 	 DB $8F ; TOKEN_$8F
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2AC0 ; inline absolute thread address
 TERSE_THREAD_2ABC:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D41D
 	 DB $1D ; TOKEN_$1D
 TERSE_THREAD_2AC0:
 	 DB $6C ; TOKEN_$6C
-	 DB $09 ; ONE
+	 DB $09 ; 1
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2AC6 ; inline absolute thread address
 TERSE_THREAD_2AC5:
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 TERSE_THREAD_2AC6:
 	 DB $8B ; TOKEN_$8B
 	 DB $1D ; TOKEN_$1D
@@ -6632,9 +6656,9 @@ TERSE_THREAD_2AC6:
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2903 ; inline absolute thread address
 	 DB $6D ; TOKEN_$6D
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D014
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2ADF ; inline absolute thread address
 TERSE_THREAD_2AD5:
@@ -6656,18 +6680,18 @@ TERSE_THREAD_2AE1:
 ; $2AE2: original compiled TERSE game-control word.
 TERSE_COLON_2AE2:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D188 ; LIT16
-	 DB $25 ; BYTE_FETCH
-	 DB $44 ; EQUAL
+	 DB $25 ; B@
+	 DB $44 ; =
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2AF1 ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D19A ; LIT16
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2AF4 ; BRANCH
 TERSE_THREAD_2AF1:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D199 ; LIT16
 TERSE_THREAD_2AF4:
 	 DB $49 ; TOKEN_$49
@@ -6675,28 +6699,28 @@ TERSE_THREAD_2AF4:
 ; $2AF6: original compiled TERSE game-control word.
 TERSE_COLON_2AF6:
 	 RST $08
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D189 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $0D ; DUP
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D195 ; LIT16
-	 DB $08 ; BYTE_STORE
-	 DB $09 ; ONE
+	 DB $08 ; B!
+	 DB $09 ; 1
 	 DB $93 ; $2B01 -> TERSE_COMPARE_BRANCH_NE
 	 DW $2B2C ; inline branch-on-not-equal target for token $93
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $94 ; $2B05 -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $95 ; TOKEN_$95
 	 DB $0E ; LIT8
 	 DB $18 ; LIT8
 	 DB $18 ; TOKEN_$18
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $17 ; TOKEN_$17
 	 DB $76 ; TOKEN_$76
 	 DB $96 ; TOKEN_$96
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2B27 ; 0BRANCH
 	 DB $97 ; TOKEN_$97
@@ -6705,7 +6729,7 @@ TERSE_COLON_2AF6:
 	 DB $3B ; TOKEN_$3B
 	 DB $36 ; TOKEN_$36
 	 DB $3B ; TOKEN_$3B
-	 DB $3F ; SUBTRACT
+	 DB $3F ; -
 	 DB $0E ; LIT8
 	 DB $06 ; LIT8
 	 DB $52 ; TOKEN_$52
@@ -6713,11 +6737,11 @@ TERSE_COLON_2AF6:
 	 DB $03 ; LIT8
 	 DB $94 ; $2B20 -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2B29 ; BRANCH
 TERSE_THREAD_2B27:
-	 DB $09 ; ONE
+	 DB $09 ; 1
 	 DB $99 ; TOKEN_$99
 TERSE_THREAD_2B29:
 	 DB $46 ; BRANCH_ABSOLUTE
@@ -6726,17 +6750,17 @@ TERSE_THREAD_2B29:
 	 DB $02 ; LIT8
 	 DB $93 ; $2B2E -> TERSE_COMPARE_BRANCH_NE
 	 DW $2B5B ; inline branch-on-not-equal target for token $93
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $94 ; $2B32 -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $95 ; TOKEN_$95
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $18 ; TOKEN_$18
 	 DB $0E ; LIT8
 	 DB $18 ; LIT8
 	 DB $17 ; TOKEN_$17
 	 DB $9A ; TOKEN_$9A
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2B55 ; 0BRANCH
 	 DB $9B ; TOKEN_$9B
@@ -6745,7 +6769,7 @@ TERSE_THREAD_2B29:
 	 DB $39 ; TOKEN_$39
 	 DB $36 ; TOKEN_$36
 	 DB $39 ; TOKEN_$39
-	 DB $3F ; SUBTRACT
+	 DB $3F ; -
 	 DB $0E ; LIT8
 	 DB $08 ; LIT8
 	 DB $52 ; TOKEN_$52
@@ -6755,7 +6779,7 @@ TERSE_THREAD_2B29:
 	 DB $02 ; LIT8
 	 DB $94 ; $2B4E -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2B58 ; BRANCH
 TERSE_THREAD_2B55:
@@ -6769,28 +6793,28 @@ TERSE_THREAD_2B58:
 	 DB $03 ; LIT8
 	 DB $93 ; $2B5D -> TERSE_COMPARE_BRANCH_NE
 	 DW $2B8B ; inline branch-on-not-equal target for token $93
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $94 ; $2B61 -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $95 ; TOKEN_$95
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFE8 ; LIT16
 	 DB $18 ; TOKEN_$18
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $17 ; TOKEN_$17
 	 DB $9D ; TOKEN_$9D
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2B85 ; 0BRANCH
 	 DB $9E ; TOKEN_$9E
 	 DB $49 ; TOKEN_$49
 	 DB $9F ; TOKEN_$9F
 	 DB $3B ; TOKEN_$3B
-	 DB $82 ; NEGATE
+	 DB $82 ; MINUS
 	 DB $36 ; TOKEN_$36
 	 DB $3B ; TOKEN_$3B
-	 DB $82 ; NEGATE
-	 DB $3F ; SUBTRACT
+	 DB $82 ; MINUS
+	 DB $3F ; -
 	 DB $0E ; LIT8
 	 DB $06 ; LIT8
 	 DB $52 ; TOKEN_$52
@@ -6798,7 +6822,7 @@ TERSE_THREAD_2B58:
 	 DB $03 ; LIT8
 	 DB $94 ; $2B7E -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2B88 ; BRANCH
 TERSE_THREAD_2B85:
@@ -6812,29 +6836,29 @@ TERSE_THREAD_2B88:
 	 DB $04 ; LIT8
 	 DB $93 ; $2B8D -> TERSE_COMPARE_BRANCH_NE
 	 DW $2BBE ; inline branch-on-not-equal target for token $93
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $94 ; $2B91 -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $95 ; TOKEN_$95
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $18 ; TOKEN_$18
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFE8 ; LIT16
 	 DB $17 ; TOKEN_$17
 	 DB $77 ; TOKEN_$77
 	 DB $A0 ; TOKEN_$A0
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2BB8 ; 0BRANCH
 	 DB $A1 ; TOKEN_$A1
 	 DB $49 ; TOKEN_$49
 	 DB $A2 ; TOKEN_$A2
 	 DB $39 ; TOKEN_$39
-	 DB $82 ; NEGATE
+	 DB $82 ; MINUS
 	 DB $36 ; TOKEN_$36
 	 DB $39 ; TOKEN_$39
-	 DB $82 ; NEGATE
-	 DB $3F ; SUBTRACT
+	 DB $82 ; MINUS
+	 DB $3F ; -
 	 DB $0E ; LIT8
 	 DB $08 ; LIT8
 	 DB $52 ; TOKEN_$52
@@ -6844,7 +6868,7 @@ TERSE_THREAD_2B88:
 	 DB $02 ; LIT8
 	 DB $94 ; $2BB1 -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2BBB ; BRANCH
 TERSE_THREAD_2BB8:
@@ -6865,22 +6889,22 @@ TERSE_COLON_2BC0:
 	 DB $71 ; TOKEN_$71
 	 DB $57 ; TOKEN_$57
 	 DB $A3 ; TOKEN_$A3
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $17D2 ; LIT16
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $94 ; $2BCA -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
 	 DB $0E ; LIT8
 	 DB $05 ; LIT8
-	 DB $16 ; MEMORY_COPY
-	 DB $1B ; LIT16
+	 DB $16 ; BMOVE
+	 DB $1B ; LIT
 	 DW $17D7 ; LIT16
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $94 ; $2BD4 -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
 	 DB $0E ; LIT8
 	 DB $05 ; LIT8
-	 DB $16 ; MEMORY_COPY
+	 DB $16 ; BMOVE
 TERSE_THREAD_2BDA:
 	 DB $0E ; LIT8
 	 DB $38 ; LIT8
@@ -6888,53 +6912,53 @@ TERSE_THREAD_2BDA:
 	 DB $03 ; LIT8
 	 DB $94 ; $2BDE -> TERSE_ADD_INLINE16
 	 DW $D1A9 ; inline little-endian displacement for token $94
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $0E ; LIT8
 	 DB $1D ; LIT8
 	 DB $0E ; LIT8
 	 DB $02 ; LIT8
 	 DB $94 ; $2BE6 -> TERSE_ADD_INLINE16
 	 DW $D1A4 ; inline little-endian displacement for token $94
-	 DB $08 ; BYTE_STORE
-	 DB $1B ; LIT16
+	 DB $08 ; B!
+	 DB $1B ; LIT
 	 DW $D418 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2BF3 ; 0BRANCH
 	 DB $35 ; TOKEN_$35
 TERSE_THREAD_2BF3:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D418 ; LIT16
-	 DB $43 ; DECREMENT_BYTE_AT_ADDRESS
+	 DB $43 ; 1-B!
 	 DB $78 ; TOKEN_$78
 	 DB $4E ; TOKEN_$4E
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2C20 ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D014 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2C1F ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D199 ; LIT16
 	 DB $1D ; TOKEN_$1D
 	 DB $A4 ; TOKEN_$A4
 	 DB $A5 ; TOKEN_$A5
-	 DB $09 ; ONE
+	 DB $09 ; 1
 	 DB $4F ; TOKEN_$4F
 	 DB $73 ; TOKEN_$73
 	 DB $A5 ; TOKEN_$A5
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D41D ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2C1E ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D199 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2C1E ; 0BRANCH
 	 DB $A4 ; TOKEN_$A4
@@ -6953,22 +6977,22 @@ TERSE_COLON_2C26:
 	 RST $08
 	 DB $36 ; TOKEN_$36
 	 DB $A6 ; TOKEN_$A6
-	 DB $82 ; NEGATE
+	 DB $82 ; MINUS
 	 DB $A7 ; TOKEN_$A7
 	 DB $36 ; TOKEN_$36
 	 DB $A8 ; TOKEN_$A8
-	 DB $82 ; NEGATE
+	 DB $82 ; MINUS
 	 DB $A9 ; TOKEN_$A9
 	 DB $0E ; LIT8
 	 DB $85 ; LIT8
 	 DB $60 ; TOKEN_$60
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FF7B ; LIT16
 	 DB $61 ; TOKEN_$61
 	 DB $0E ; LIT8
 	 DB $56 ; LIT8
 	 DB $5E ; TOKEN_$5E
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFAA ; LIT16
 	 DB $5F ; TOKEN_$5F
 	 DB $69 ; TOKEN_$69
@@ -6979,7 +7003,7 @@ TERSE_COLON_2C26:
 	 DB $62 ; TOKEN_$62
 	 DB $6A ; TOKEN_$6A
 	 DB $59 ; TOKEN_$59
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $178B ; LIT16
 	 DB $6B ; TOKEN_$6B
 	 DB $0E ; LIT8
@@ -6999,9 +7023,9 @@ TERSE_COLON_2C4E:
 	 DB $56 ; TOKEN_$56
 	 DB $71 ; TOKEN_$71
 TERSE_THREAD_2C55:
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $A9 ; TOKEN_$A9
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $24C8 ; LIT16
 	 DB $5C ; TOKEN_$5C
 	 DB $57 ; TOKEN_$57
@@ -7017,20 +7041,20 @@ TERSE_THREAD_2C55:
 	 DB $0E ; LIT8
 	 DB $84 ; LIT8
 	 DB $17 ; TOKEN_$17
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $18 ; TOKEN_$18
 	 DB $AB ; TOKEN_$AB
-	 DB $82 ; NEGATE
+	 DB $82 ; MINUS
 	 DB $A7 ; TOKEN_$A7
 	 DB $9A ; TOKEN_$9A
 	 DB $49 ; TOKEN_$49
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D003 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2C7C ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D155 ; LIT16
 	 DB $AC ; TOKEN_$AC
 TERSE_THREAD_2C7C:
@@ -7049,8 +7073,8 @@ TERSE_THREAD_2C7C:
 	 DB $1D ; TOKEN_$1D
 	 DB $7A ; TOKEN_$7A
 	 DB $9B ; TOKEN_$9B
-	 DB $25 ; BYTE_FETCH
-	 DB $54 ; BITWISE_OR
+	 DB $25 ; B@
+	 DB $54 ; OR
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2C95 ; 0BRANCH
 	 DB $AF ; TOKEN_$AF
@@ -7060,16 +7084,16 @@ TERSE_THREAD_2C7C:
 TERSE_THREAD_2C95:
 	 DB $8E ; TOKEN_$8E
 	 DB $AD ; TOKEN_$AD
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $7D ; TOKEN_$7D
 	 DB $6C ; TOKEN_$6C
 	 DB $71 ; TOKEN_$71
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D3C9 ; LIT16
 	 DB $55 ; TOKEN_$55
 	 DB $58 ; TOKEN_$58
 	 DB $70 ; TOKEN_$70
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $1DC9 ; LIT16
 	 DB $6B ; TOKEN_$6B
 	 DB $0E ; LIT8
@@ -7096,9 +7120,9 @@ TERSE_COLON_2CB2:
 	 DB $56 ; TOKEN_$56
 	 DB $71 ; TOKEN_$71
 TERSE_THREAD_2CB9:
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $A7 ; TOKEN_$A7
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $24D1 ; LIT16
 	 DB $5C ; TOKEN_$5C
 	 DB $57 ; TOKEN_$57
@@ -7111,24 +7135,24 @@ TERSE_THREAD_2CB9:
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2D13 ; 0BRANCH
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $17 ; TOKEN_$17
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFAB ; LIT16
 	 DB $18 ; TOKEN_$18
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D19C ; LIT16
-	 DB $0C ; FETCH
+	 DB $0C ; @
 	 DB $A9 ; TOKEN_$A9
 	 DB $9D ; TOKEN_$9D
 	 DB $49 ; TOKEN_$49
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D003 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2CE3 ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D155 ; LIT16
 	 DB $AC ; TOKEN_$AC
 TERSE_THREAD_2CE3:
@@ -7138,7 +7162,7 @@ TERSE_THREAD_2CE3:
 	 DB $6B ; TOKEN_$6B
 	 DB $9E ; TOKEN_$9E
 	 DB $79 ; TOKEN_$79
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFE8 ; LIT16
 	 DB $7F ; TOKEN_$7F
 	 DB $6C ; TOKEN_$6C
@@ -7146,8 +7170,8 @@ TERSE_THREAD_2CE3:
 	 DB $1D ; TOKEN_$1D
 	 DB $7A ; TOKEN_$7A
 	 DB $9E ; TOKEN_$9E
-	 DB $25 ; BYTE_FETCH
-	 DB $54 ; BITWISE_OR
+	 DB $25 ; B@
+	 DB $54 ; OR
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2CFC ; 0BRANCH
 	 DB $AF ; TOKEN_$AF
@@ -7157,16 +7181,16 @@ TERSE_THREAD_2CE3:
 TERSE_THREAD_2CFC:
 	 DB $8E ; TOKEN_$8E
 	 DB $AD ; TOKEN_$AD
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $7F ; TOKEN_$7F
 	 DB $6C ; TOKEN_$6C
 	 DB $71 ; TOKEN_$71
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D3C9 ; LIT16
 	 DB $55 ; TOKEN_$55
 	 DB $58 ; TOKEN_$58
 	 DB $70 ; TOKEN_$70
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $1DC9 ; LIT16
 	 DB $6B ; TOKEN_$6B
 	 DB $0E ; LIT8
@@ -7193,9 +7217,9 @@ TERSE_COLON_2D19:
 	 DB $56 ; TOKEN_$56
 	 DB $71 ; TOKEN_$71
 TERSE_THREAD_2D20:
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $A9 ; TOKEN_$A9
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $24C8 ; LIT16
 	 DB $5C ; TOKEN_$5C
 	 DB $57 ; TOKEN_$57
@@ -7208,22 +7232,22 @@ TERSE_THREAD_2D20:
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2D77 ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FF7C ; LIT16
 	 DB $17 ; TOKEN_$17
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $18 ; TOKEN_$18
 	 DB $AB ; TOKEN_$AB
 	 DB $A7 ; TOKEN_$A7
 	 DB $A0 ; TOKEN_$A0
 	 DB $49 ; TOKEN_$49
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D003 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2D47 ; 0BRANCH
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D155 ; LIT16
 	 DB $AC ; TOKEN_$AC
 TERSE_THREAD_2D47:
@@ -7233,7 +7257,7 @@ TERSE_THREAD_2D47:
 	 DB $6B ; TOKEN_$6B
 	 DB $A1 ; TOKEN_$A1
 	 DB $79 ; TOKEN_$79
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFE8 ; LIT16
 	 DB $7D ; TOKEN_$7D
 	 DB $6C ; TOKEN_$6C
@@ -7241,8 +7265,8 @@ TERSE_THREAD_2D47:
 	 DB $1D ; TOKEN_$1D
 	 DB $7A ; TOKEN_$7A
 	 DB $A1 ; TOKEN_$A1
-	 DB $25 ; BYTE_FETCH
-	 DB $54 ; BITWISE_OR
+	 DB $25 ; B@
+	 DB $54 ; OR
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2D60 ; 0BRANCH
 	 DB $AF ; TOKEN_$AF
@@ -7252,16 +7276,16 @@ TERSE_THREAD_2D47:
 TERSE_THREAD_2D60:
 	 DB $8E ; TOKEN_$8E
 	 DB $AD ; TOKEN_$AD
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $7D ; TOKEN_$7D
 	 DB $6C ; TOKEN_$6C
 	 DB $71 ; TOKEN_$71
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D3C9 ; LIT16
 	 DB $55 ; TOKEN_$55
 	 DB $58 ; TOKEN_$58
 	 DB $70 ; TOKEN_$70
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $1DC9 ; LIT16
 	 DB $6B ; TOKEN_$6B
 	 DB $0E ; LIT8
@@ -7617,14 +7641,14 @@ TERSE_COLON_2ED6:
 	 DB $57 ; TOKEN_$57
 	 DB $35 ; TOKEN_$35
 TERSE_THREAD_2EE0:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D014 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2EFE ; 0BRANCH
 	 DB $62 ; TOKEN_$62
 	 DB $57 ; TOKEN_$57
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $178B ; LIT16
 	 DB $6B ; TOKEN_$6B
 	 DB $0E ; LIT8
@@ -7634,27 +7658,27 @@ TERSE_THREAD_2EE0:
 	 DB $6A ; TOKEN_$6A
 TERSE_THREAD_2EF2:
 	 DB $35 ; TOKEN_$35
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D014 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2EF2 ; 0BRANCH
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2F62 ; BRANCH
 TERSE_THREAD_2EFE:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D18A ; LIT16
-	 DB $25 ; BYTE_FETCH
-	 DB $09 ; ONE
+	 DB $25 ; B@
+	 DB $09 ; 1
 	 DB $93 ; $2F03 -> TERSE_COMPARE_BRANCH_NE
 	 DW $2F13 ; inline branch-on-not-equal target for token $93
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $17 ; TOKEN_$17
 	 DB $0E ; LIT8
 	 DB $10 ; LIT8
 	 DB $18 ; TOKEN_$18
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $17B9 ; LIT16
 	 DB $1A ; TOKEN_$1A
 	 DB $19 ; TOKEN_$19
@@ -7667,9 +7691,9 @@ TERSE_THREAD_2EFE:
 	 DB $0E ; LIT8
 	 DB $10 ; LIT8
 	 DB $17 ; TOKEN_$17
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $18 ; TOKEN_$18
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $179D ; LIT16
 	 DB $77 ; TOKEN_$77
 	 DB $19 ; TOKEN_$19
@@ -7679,55 +7703,55 @@ TERSE_THREAD_2EFE:
 	 DB $03 ; LIT8
 	 DB $93 ; $2F27 -> TERSE_COMPARE_BRANCH_NE
 	 DW $2F38 ; inline branch-on-not-equal target for token $93
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $17 ; TOKEN_$17
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFF0 ; LIT16
 	 DB $18 ; TOKEN_$18
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $17B9 ; LIT16
 	 DB $1A ; TOKEN_$1A
 	 DB $76 ; TOKEN_$76
 	 DB $46 ; BRANCH_ABSOLUTE
 	 DW TERSE_THREAD_2F44 ; BRANCH
 	 DB $05 ; DROP
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $FFF0 ; LIT16
 	 DB $17 ; TOKEN_$17
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $18 ; TOKEN_$18
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $179D ; LIT16
 	 DB $1A ; TOKEN_$1A
 	 DB $19 ; TOKEN_$19
 TERSE_THREAD_2F44:
 	 DB $95 ; TOKEN_$95
 	 DB $A5 ; TOKEN_$A5
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D014 ; LIT16
-	 DB $25 ; BYTE_FETCH
+	 DB $25 ; B@
 	 DB $27 ; TOKEN_$27
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D189 ; LIT16
-	 DB $25 ; BYTE_FETCH
-	 DB $1B ; LIT16
+	 DB $25 ; B@
+	 DB $1B ; LIT
 	 DW $D18A ; LIT16
-	 DB $25 ; BYTE_FETCH
-	 DB $44 ; EQUAL
-	 DB $4C ; BITWISE_AND
+	 DB $25 ; B@
+	 DB $44 ; =
+	 DB $4C ; AND
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2F59 ; 0BRANCH
 	 DB $35 ; TOKEN_$35
 TERSE_THREAD_2F59:
-	 DB $1B ; LIT16
+	 DB $1B ; LIT
 	 DW $D189 ; LIT16
-	 DB $25 ; BYTE_FETCH
-	 DB $1B ; LIT16
+	 DB $25 ; B@
+	 DB $1B ; LIT
 	 DW $D18A ; LIT16
-	 DB $08 ; BYTE_STORE
+	 DB $08 ; B!
 	 DB $6D ; TOKEN_$6D
 TERSE_THREAD_2F62:
-	 DB $0B ; ZERO
+	 DB $0B ; 0
 	 DB $03 ; ZERO_BRANCH
 	 DW TERSE_THREAD_2EE0 ; 0BRANCH
 	 DB $06 ; EXIT
@@ -10232,43 +10256,43 @@ SPACE_ZAP_MAIN_TRAILING_BYTE:
 ; Derived from the official ROM. Undefined tokens remain $FFFF.
 TERSE_TOKEN_VECTORS:
 	 DW $0000	; token $00 (zero vector)
-	 DW TERSE_2DUP	; token $01
+	 DW TERSE_2DUP	; token $01 — 2DUP
 	 DW $010C	; token $02
-	 DW TERSE_ZERO_BRANCH	; token $03
-	 DW TERSE_SWAP	; token $04
-	 DW TERSE_DROP	; token $05
-	 DW TERSE_EXIT	; token $06
+	 DW TERSE_ZERO_BRANCH	; token $03 — ZERO_BRANCH
+	 DW TERSE_SWAP	; token $04 — SWAP
+	 DW TERSE_DROP	; token $05 — DROP
+	 DW TERSE_EXIT	; token $06 — EXIT
 	 DW $0134	; token $07
-	 DW TERSE_BYTE_STORE	; token $08
-	 DW TERSE_ONE	; token $09
+	 DW TERSE_BYTE_STORE	; token $08 — B!
+	 DW TERSE_ONE	; token $09 — 1
 	 DW $025E	; token $0A
-	 DW TERSE_ZERO	; token $0B
-	 DW TERSE_FETCH	; token $0C
-	 DW TERSE_DUP	; token $0D
-	 DW TERSE_LIT8	; token $0E
-	 DW TERSE_ADD	; token $0F
-	 DW TERSE_STORE	; token $10
+	 DW TERSE_ZERO	; token $0B — 0
+	 DW TERSE_FETCH	; token $0C — @
+	 DW TERSE_DUP	; token $0D — DUP
+	 DW TERSE_LIT8	; token $0E — LIT8
+	 DW TERSE_ADD	; token $0F — +
+	 DW TERSE_STORE	; token $10 — !
 	 DW $FFFF	; token $11 (unassigned)
 	 DW $040B	; token $12
-	 DW TERSE_STACK_ROTATE	; token $13
-	 DW TERSE_INCREMENT	; token $14
-	 DW TERSE_DECREMENT	; token $15
-	 DW TERSE_MEMORY_COPY	; token $16
+	 DW TERSE_STACK_ROTATE	; token $13 — ROT
+	 DW TERSE_INCREMENT	; token $14 — 1+
+	 DW TERSE_DECREMENT	; token $15 — 1-
+	 DW TERSE_MEMORY_COPY	; token $16 — BMOVE
 	 DW $10DA	; token $17
 	 DW $10EC	; token $18
 	 DW $11FC	; token $19
 	 DW $1207	; token $1A
-	 DW TERSE_LIT16	; token $1B
-	 DW TERSE_ZERO_WORD_AT_ADDRESS	; token $1C
+	 DW TERSE_LIT16	; token $1B — LIT
+	 DW TERSE_ZERO_WORD_AT_ADDRESS	; token $1C — ZERO
 	 DW $0266	; token $1D
 	 DW $027E	; token $1E
-	 DW TERSE_PORT_OUT	; token $1F
+	 DW TERSE_PORT_OUT	; token $1F — OUTP
 	 DW $05E5	; token $20
-	 DW TERSE_PORT_IN	; token $21
+	 DW TERSE_PORT_IN	; token $21 — INP
 	 DW $0D43	; token $22
 	 DW $016D	; token $23
-	 DW TERSE_LOOP_INDEX	; token $24
-	 DW TERSE_BYTE_FETCH	; token $25
+	 DW TERSE_LOOP_INDEX	; token $24 — I
+	 DW TERSE_BYTE_FETCH	; token $25 — B@
 	 DW $0188	; token $26
 	 DW $0139	; token $27
 	 DW $2193	; token $28
@@ -10289,25 +10313,25 @@ TERSE_TOKEN_VECTORS:
 	 DW $21AA	; token $37
 	 DW $21D8	; token $38
 	 DW $111E	; token $39
-	 DW TERSE_ARITH_SHIFT_RIGHT	; token $3A
+	 DW TERSE_ARITH_SHIFT_RIGHT	; token $3A — ARITH_SHIFT_RIGHT
 	 DW $112D	; token $3B
 	 DW $20FE	; token $3C
-	 DW $023E	; token $3D
+	 DW $023E	; token $3D — INDEXED_DISPATCH
 	 DW $2223	; token $3E
-	 DW TERSE_SUBTRACT	; token $3F
+	 DW TERSE_SUBTRACT	; token $3F — -
 	 DW $2154	; token $40
 	 DW $12B1	; token $41
 	 DW $218D	; token $42
-	 DW TERSE_DECREMENT_BYTE_AT_ADDRESS	; token $43
-	 DW $00EE	; token $44
-	 DW TERSE_STACK_PICK	; token $45
-	 DW TERSE_BRANCH_ABSOLUTE	; token $46
+	 DW TERSE_DECREMENT_BYTE_AT_ADDRESS	; token $43 — 1-B!
+	 DW $00EE	; token $44 — =
+	 DW TERSE_STACK_PICK	; token $45 — PICK
+	 DW TERSE_BRANCH_ABSOLUTE	; token $46 — BRANCH_ABSOLUTE
 	 DW $1F01	; token $47
 	 DW $2350	; token $48
 	 DW $0262	; token $49
 	 DW $1F08	; token $4A
 	 DW $1237	; token $4B
-	 DW TERSE_BITWISE_AND	; token $4C
+	 DW TERSE_BITWISE_AND	; token $4C — AND
 	 DW $1EF8	; token $4D
 	 DW $013F	; token $4E
 	 DW $0EC7	; token $4F
@@ -10315,7 +10339,7 @@ TERSE_TOKEN_VECTORS:
 	 DW $12B7	; token $51
 	 DW $0217	; token $52
 	 DW $1F18	; token $53
-	 DW TERSE_BITWISE_OR	; token $54
+	 DW TERSE_BITWISE_OR	; token $54 — OR
 	 DW $04BB	; token $55
 	 DW $11C3	; token $56
 	 DW $121C	; token $57
@@ -10361,7 +10385,7 @@ TERSE_TOKEN_VECTORS:
 	 DW $1026	; token $7F
 	 DW $282F	; token $80
 	 DW $2837	; token $81
-	 DW $00CD	; token $82
+	 DW $00CD	; token $82 — MINUS
 	 DW $0E4D	; token $83
 	 DW $0FEE	; token $84
 	 DW $0FFC	; token $85
@@ -10378,8 +10402,8 @@ TERSE_TOKEN_VECTORS:
 	 DW $047E	; token $90
 	 DW $26B6	; token $91
 	 DW $275C	; token $92
-	 DW $0229	; token $93
-	 DW $006B	; token $94
+	 DW $0229	; token $93 — COMPARE_BRANCH_NE
+	 DW $006B	; token $94 — ADD_INLINE16
 	 DW $1188	; token $95
 	 DW $26E6	; token $96
 	 DW $2704	; token $97
@@ -10425,7 +10449,7 @@ TERSE_TOKEN_VECTORS:
 	 DW $31EC	; token $BF
 	 DW $31CB	; token $C0
 	 DW $3201	; token $C1
-	 DW $00FD	; token $C2
+	 DW $00FD	; token $C2 — U>=
 	 DW $0209	; token $C3
 	 DW $1306	; token $C4
 	 DW $32B0	; token $C5

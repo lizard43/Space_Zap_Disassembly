@@ -1,8 +1,20 @@
 # Space Zap — active RE sprint plan
 
-Development continues on PR #1. A correct build must match all four original 4 KB ROM SHA-1 values.
+PR #1 established the recovered runtime and initial RE, and was merged into `main` at `0183fadf948425654e08d8f690bfb0a35f37c807` after the user reported a successful build with matching original ROM SHA-1 values. PR #2 now targets `main` and carries the remaining sprint work. Maintain the four-ROM SHA-1 verification gate for subsequent source changes.
 
-## Changes completed on this PR — source readability
+## PR #2 — original DNA TERSE vocabulary and source-structure recovery
+
+- [ ] Audit **every recovered primitive** against the DNA September 21, 1981 TERSE Standard Glossary and the actual Space Zap native implementation and stack/inline-operand contracts.
+- [x] Replace 24 invented dictionary names with **original DNA TERSE spellings** on matching implementations; keep assembly identifiers syntactically legal. Continue matching remaining primitives as they are recovered.
+- [x] Name matching recovered primitives using the original DNA TERSE words, without speculative historical naming caveats. Only actual unidentified behavior or word identity remains unresolved.
+- [ ] Investigate remaining unidentified words through vector targets, native control flow, callers and matching DNA sources; provisional naming must not be presented as historical terminology.
+- [ ] Transcribe the original TERSE BNF from MISC6 pages 3–4, correct transcription errors against the page images, and verify ambiguous productions against original TERSE behavior. Use one working grammar, grounded in the original source, rather than parallel competing versions.
+- [ ] Apply the BNF to identify colon, CODE, control-flow, variable, constant, array and data structures in decoded Space Zap threads; distinguish recovered source structure from exact original source text where names are lost.
+- [ ] Resolve remaining return/dispatch identities (`NEXT`, compiled definition return, `;`, current `EXIT`) by their actual native behavior; use DNA word names directly when matched.
+- [ ] Preserve exact original byte stream, address layout and compiled operands. Require a complete 16,384-byte zmac build and all four official ROM SHA-1 matches; no padding, synthetic code, or token-rewriting workaround.
+- [ ] Carry forward the existing P0/P1/P2 recovery work and track unresolved items in [TECHNICAL-DEBT.md](TECHNICAL-DEBT.md).
+
+## Previously completed on PR #1 — source readability
 
 - [x] Remove redundant ROM ZIP ownership discussion from README.
 - [x] Repair orphaned inline-add comment by labeling its native entry; standardize TERSE constant stack contracts.
@@ -13,7 +25,8 @@ Development continues on PR #1. A correct build must match all four original 4 K
 
 ## P0 — Finish executable reconstruction
 
-- [ ] Run zmac, verify the 16 KB output and all four ROM SHA-1 values; repair any source discrepancies.
+- [x] PR #1 baseline: user reported a successful 16 KB build and all four matching original ROM SHA-1 values.
+- [ ] Re-run zmac and all four SHA-1 checks after any new source changes; repair any discrepancies.
 - [ ] Classify the mixed display/message region $3096–$327B and other code/data boundaries; preserve genuine strings, graphics and tables.
 - [ ] Resolve remaining native JP/CALL/branch targets using actual code entry boundaries; document stack/register contracts.
 - [ ] Trace game-state flow: reset/attract, service, RAM/ROM tests, coin/start, direction/fire, collision, score, graphics and sound.
@@ -50,5 +63,9 @@ Destination: [DNA TERSE WB](https://github.com/lizard43/dnaTERSE-WB). Add Space 
 - [ ] Update WB library index and cross-link the Space Zap architecture, dictionary, vector and compiled-program documentation.
 
 ## Engineering rules
+
+**Original DNA TERSE vocabulary is authoritative. Match by implementation and stack behavior, use the correct name, and move on.**
+
+**Mandatory bidirectional source/dictionary round trip:** Every recovered word-name or execution-contract change must be propagated consistently among `Space_Zap_Disassembly.asm`, `docs/TERSE-WORD-DICTIONARY.md`, `docs/TERSE-TOKEN-VECTORS.md`, and decoded-program references. The same requirement applies in reverse: source changes must update the dictionary and vector records. Run `node tools/verify-terse-word-alignment.mjs` after nomenclature changes; for every ROM-affecting change, also require `./build.sh` and all four official ROM SHA-1 matches. A documentation-only change is not complete while the source still uses contradictory TERSE word names.
 
 Original DNA software and languages first. Discuss deviations before changing architecture or adding substitute tooling. Ordinary Git history provides revision tracking; do not create preservation branches, snapshots or duplicate versioned artifacts. Increment the ASM revision for source changes; only report a verified build after four-ROM SHA-1 PASS.
